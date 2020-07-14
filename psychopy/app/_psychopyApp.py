@@ -177,6 +177,7 @@ class PsychoPyApp(wx.App, themes.ThemeMixin):
         self.version = psychopy.__version__
         # set default paths and prefs
         self.prefs = psychopy.prefs
+        self.prefs.loadCommunityThemes(self.prefs.app['communityThemes'])
         self._currentThemeSpec = None
 
         self.keys = self.prefs.keys

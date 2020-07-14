@@ -12,6 +12,7 @@ from psychopy.constants import PY3
 from pkg_resources import parse_version
 import shutil
 import json
+import github
 
 try:
     import configobj
@@ -282,5 +283,28 @@ class Preferences(object):
             else:
                 msg = "Section [%s] was missing in file '%s'"
                 print(msg % (', '.join(sectionList), cfg.filename))
+
+    def loadCommunityThemes(self, communityThemes=[]):
+        """Install any community themes to user's folder"""
+        try:
+            g = github.Github()
+            repo = g.get_repo("psychopy/themes")
+        except:
+            print("Could not connect to GitHub")
+            return
+        communityThemes = communityThemes.replace("\"", "").split(",")
+        for theme in communityThemes:
+            if not theme.endswith(".json"):
+                theme = theme + ".json"
+            if "/" not in theme:
+                theme = "{}/{}".format(theme.replace(".json", ""), theme)
+            try:
+                spec = repo.get_contents("/Themes/" + theme)
+            except:
+                continue
+            spec_encoded = json.loads(spec.decoded_content)
+            outputFile = os.path.join(self.paths['themes'], os.path.split(theme)[-1])
+            with open(outputFile, "w+") as json_file:
+                json.dump(spec_encoded, json_file)
 
 prefs = Preferences()
