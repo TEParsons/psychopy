@@ -63,6 +63,8 @@
     errorDialog = boolean(default='True')
     # Theme
     theme = string(default='PsychopyLight')
+    # Install community themes from GitHub
+    communityThemes = string(default='')
 
 # Settings for the Coder window
 [coder]
