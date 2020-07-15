@@ -292,7 +292,6 @@ class Preferences(object):
         except:
             print("Could not connect to GitHub")
             return
-        communityThemes = communityThemes.replace("\"", "").split(",")
         for theme in communityThemes:
             if not theme.endswith(".json"):
                 theme = theme + ".json"
