@@ -832,7 +832,7 @@ class PreferencesDlg(wx.Dialog):
                     # item -1 is 'default=x' from spec
                     options = vals.replace(", ", ",").split(',')[:-1]
                     self.prefsCfg[sectionName][prefName] = options[thisPref]
-
+        prefs.loadCommunityThemes(prefs.app['communityThemes'])
         self.app.prefs.saveUserPrefs()  # includes a validation
         # maybe then go back and set GUI from prefs again, because validation
         # may have changed vals?
