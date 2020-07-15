@@ -68,7 +68,7 @@
     # Theme
     theme = string(default='PsychopyLight')
     # Install community themes from GitHub
-    communityThemes = string(default='')
+    communityThemes = list(default=list("GitHub", "Monokai", "Visual Studio/VSLight", "Visual Studio/VSDark"))
 
 # Settings for the Coder window
 [coder]
