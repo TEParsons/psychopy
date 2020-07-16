@@ -20,12 +20,8 @@ import re
 import wx
 
 import psychopy.experiment.utils
-
-try:
-    from wx.lib.agw import flatnotebook
-except ImportError:  # was here wx<4.0:
-    from wx.lib import flatnotebook
-
+from psychopy.app.themes import ThemeMixin
+from wx.lib.agw import aui
 from ... import dialogs
 from .. import experiment
 from .. validators import NameValidator, CodeSnippetValidator
@@ -401,7 +397,7 @@ class ParamCtrls(object):
             print("setChangesCallback doesn't know how to handle ctrl {}"
                   .format(type(self.valueCtrl)))
 
-class _BaseParamsDlg(wx.Dialog):
+class _BaseParamsDlg(wx.Dialog, ThemeMixin):
     _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.TAB_TRAVERSAL
 
     def __init__(self, frame, title, params, order,
@@ -480,16 +476,10 @@ class _BaseParamsDlg(wx.Dialog):
 
         # create main sizer
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-        agwStyle = flatnotebook.FNB_NO_X_BUTTON
-        if hasattr(flatnotebook, "FNB_NAV_BUTTONS_WHEN_NEEDED"):
-            # not available in wxPython 2.8
-            agwStyle |= flatnotebook.FNB_NAV_BUTTONS_WHEN_NEEDED
-        if hasattr(flatnotebook, "FNB_NO_TAB_FOCUS"):
-            # not available in wxPython 2.8.10
-            agwStyle |= flatnotebook.FNB_NO_TAB_FOCUS
-        self.ctrls = flatnotebook.FlatNotebook(self, style=agwStyle)
+        self.ctrls = aui.AuiNotebook(self, style=wx.BORDER_NONE)
+        self.ctrls.app = self.app
         if self.__class__ != DlgExperimentProperties:
-            self.mainSizer.Add(self.ctrls,  # ctrls is the notebook of params
+            self.mainSizer.Add(self.ctrls, # ctrls is the notebook of params
                                proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
         categNames = sorted(categs)
         if 'Basic' in categNames:
@@ -512,9 +502,9 @@ class _BaseParamsDlg(wx.Dialog):
                       'Audio':_translate('Audio')}
         for categName in categNames:
             theseParams = categs[categName]
-            page = wx.Panel(self.ctrls, -1)
-            page.app = self.app
-            ctrls = self.addCategoryOfParams(theseParams, parent=page)
+            page = ParamCategoryPanel(self, self.ctrls, theseParams)
+            ctrls = page.sizer
+            #ctrls = self.addCategoryOfParams(theseParams, parent=page)
             if categName in categLabel:
                 cat = categLabel[categName]
             else:
@@ -545,6 +535,7 @@ class _BaseParamsDlg(wx.Dialog):
             paramCtrl = self.paramCtrls[paramName]  # hint : ParamCtrl
             paramCtrl.setChangesCallback(self.checkDepends)
         self.checkDepends()
+        self._applyAppTheme()
 
     def checkDepends(self, event=None):
         """Checks the relationships between params that depend on each other
@@ -579,65 +570,6 @@ class _BaseParamsDlg(wx.Dialog):
             self.mainSizer.Layout()
             self.Fit()
             self.Refresh()
-
-    def addCategoryOfParams(self, paramNames, parent):
-        """Add all the params for a single category
-        (after its tab has been created)
-        """
-        # create the sizers to fit the params and set row to zero
-        sizer = wx.GridBagSizer(vgap=2, hgap=2)
-        currRow = 0
-        # does the dlg need an 'updates' row (do any params use it?)
-        self.useUpdates = False
-
-        # create a header row of titles
-        if not self.suppressTitles:
-            size = wx.Size(1.5 * self.dpi, -1)
-            sizer.Add(wx.StaticText(parent, -1, 'Parameter', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 0))
-            sizer.Add(wx.StaticText(parent, -1, 'Value', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 1))
-            # self.sizer.Add(wx.StaticText(self,-1,'Value Type',size=size,
-            #   style=wx.ALIGN_CENTER),(currRow,3))
-            sizer.Add(wx.StaticText(parent, -1, 'Updates', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 2))
-            currRow += 1
-            sizer.Add(wx.StaticLine(parent, size=wx.Size(100, 20)),
-                      (currRow, 0), (1, 2), wx.ALIGN_CENTER | wx.EXPAND)
-        currRow += 1
-
-        # get all params and sort
-        remaining = copy.copy(paramNames)
-
-        # start with the name (always)
-        if 'name' in remaining:
-            self.addParam('name', parent, sizer, currRow)
-            currRow += 1
-            remaining.remove('name')
-            if 'name' in self.order:
-                self.order.remove('name')
-            currRow += 1
-        # add start/stop info
-        if 'startType' in remaining:
-            remaining, currRow = self.addStartStopCtrls(remaining,
-                                                        parent, sizer,
-                                                        currRow)
-        currRow += 1
-        # loop through the prescribed order (the most important?)
-        for fieldName in self.order:
-            if fieldName not in paramNames:
-                continue  # skip advanced params
-            self.addParam(fieldName, parent, sizer, currRow,
-                          valType=self.params[fieldName].valType)
-            currRow += 1
-            remaining.remove(fieldName)
-        # add any params that weren't specified in the order
-        for fieldName in remaining:
-            self.addParam(fieldName, parent, sizer, currRow,
-                          valType=self.params[fieldName].valType)
-            currRow += 1
-        sizer.AddGrowableCol(1)
-        return sizer
 
     def addStartStopCtrls(self, remaining, parent, sizer, currRow):
         """Add controls for startType, startVal, stopType, stopVal
@@ -765,7 +697,7 @@ class _BaseParamsDlg(wx.Dialog):
 
         # add the controls to the sizer
         _flag = wx.LEFT | wx.RIGHT
-        sizer.Add(ctrls.nameCtrl, (currRow, 0), border=5, flag=_flag)
+        sizer.Add(ctrls.nameCtrl, (currRow, 0), border=25, flag=_flag)
         if ctrls.updateCtrl:
             sizer.Add(ctrls.updateCtrl, (currRow, 2), flag=_flag)
         if ctrls.typeCtrl:
@@ -1899,6 +1831,68 @@ class DlgExperimentProperties(_BaseParamsDlg):
             self.OK = False
         return wx.ID_OK
 
+
+class ParamCategoryPanel(wx.Panel, ThemeMixin):
+    """Add all the params for a single category
+    (after its tab has been created)
+    """
+    def __init__(self, dlg, notebook, paramNames):
+        wx.Panel.__init__(self, dlg, style=wx.BORDER_NONE)
+        # create the sizers to fit the params and set row to zero
+        self.sizer = wx.GridBagSizer(vgap=2, hgap=2) #todo: Read up on grid bag sizers
+        self.app = dlg.app
+        currRow = 0
+        # does the dlg need an 'updates' row (do any params use it?)
+        dlg.useUpdates = False
+
+        # create a header row of titles
+        size = wx.Size(1.5 * self.app.dpi, 0.25*self.app.dpi)
+        self.sizer.Add(wx.StaticText(self, -1, 'Parameter', size=size,
+                                style=wx.ALIGN_RIGHT), (currRow, 0))
+        self.sizer.Add(wx.StaticText(self, -1, 'Value', size=size,
+                                style=wx.ALIGN_LEFT), (currRow, 1))
+        # self.sizer.Add(wx.StaticText(self,-1,'Value Type',size=size,
+        #   style=wx.ALIGN_CENTER),(currRow,3))
+        self.sizer.Add(wx.StaticText(self, -1, 'Updates', size=size,
+                                style=wx.ALIGN_LEFT), (currRow, 2))
+        currRow += 1
+        self.sizer.Add(wx.StaticLine(self, size=wx.Size(100, 20)),
+                  (currRow, 0), (1, 2), wx.ALIGN_LEFT | wx.EXPAND)
+        currRow += 1
+        # get all params and sort
+        remaining = copy.copy(paramNames)
+
+        # start with the name (always)
+        if 'name' in remaining:
+            dlg.addParam('name', self, self.sizer, currRow)
+            currRow += 1
+            remaining.remove('name')
+            if 'name' in dlg.order:
+                dlg.order.remove('name')
+            currRow += 1
+        # add start/stop info
+        if 'startType' in remaining:
+            remaining, currRow = dlg.addStartStopCtrls(remaining,
+                                                        self, self.sizer,
+                                                        currRow)
+        currRow += 1
+        # loop through the prescribed order (the most important?)
+        for fieldName in dlg.order:
+            if fieldName not in paramNames:
+                continue  # skip advanced params
+            dlg.addParam(fieldName, self, self.sizer, currRow,
+                          valType=dlg.params[fieldName].valType)
+            currRow += 1
+            remaining.remove(fieldName)
+        # add any params that weren't specified in the order
+        for fieldName in remaining:
+            dlg.addParam(fieldName, self, self.sizer, currRow,
+                          valType=dlg.params[fieldName].valType)
+            currRow += 1
+        self.sizer.AddGrowableCol(1)
+
+    def _applyAppTheme(self, target=None):
+        self.SetBackgroundColour(ThemeMixin.appColors['tab_bg'])
 
 def _relpath(path, start='.'):
     """This code is based on os.path.relpath in the Python 2.6 distribution,

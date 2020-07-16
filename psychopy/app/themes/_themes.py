@@ -139,6 +139,12 @@ class ThemeMixin:
             target.SetBackgroundColour(ThemeMixin.appColors['panel_bg'])
             target.SetForegroundColour(ThemeMixin.appColors['text'])
 
+        def applyToDlg(target):
+            target.SetBackgroundColour(ThemeMixin.appColors['panel_bg'])
+            target.SetForegroundColour(ThemeMixin.appColors['text'])
+            if hasattr(target, 'ctrls'):
+                target._applyAppTheme(target.ctrls)
+
         def applyToNotebook(target):
             # Dict of icons to apply to specific tabs
             tabIcons = {
@@ -154,7 +160,8 @@ class ThemeMixin:
                 if page.GetName() in tabIcons:
                     bmp = IconCache.getBitmap(IconCache(), tabIcons[page.GetName()])
                     target.SetPageBitmap(index, bmp)
-                page._applyAppTheme()
+                if hasattr(page, '_applyAppTheme'):
+                    page._applyAppTheme()
 
         def applyToCodeEditor(target):
             spec = ThemeMixin.codeColors
@@ -264,7 +271,8 @@ class ThemeMixin:
             wx.richtext.RichTextCtrl: applyToRichText,
             wx.py.shell.Shell: applyToCodeEditor,
             wx.ToolBar: applyToToolbar,
-            wx.StatusBar: applyToStatusBar
+            wx.StatusBar: applyToStatusBar,
+            wx.Dialog: applyToDlg
         }
 
         # If no target supplied, default to using self
