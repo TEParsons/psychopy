@@ -480,7 +480,7 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         self.ctrls.app = self.app
         if self.__class__ != DlgExperimentProperties:
             self.mainSizer.Add(self.ctrls, # ctrls is the notebook of params
-                               proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+                               proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
         categNames = sorted(categs)
         if 'Basic' in categNames:
             # move it to be the first category we see
