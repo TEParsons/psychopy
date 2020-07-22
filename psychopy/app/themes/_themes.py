@@ -963,6 +963,18 @@ class PsychopyDockArt(aui.AuiDefaultDockArt):
 class ThemeSwitcher(wx.Menu):
     """Class to make a submenu for switching theme, meaning that the menu will always be the same across frames."""
     def __init__(self, frame):
+        # Make menu
+        wx.Menu.__init__(self)
+        self.frame = frame
+        self.Update()
+
+    def openThemeFolder(self, event):
+        subprocess.call("explorer %(themes)s" % prefs.paths, shell=True)
+
+    def Update(self):
+        # Clear menu
+        for item in self.GetMenuItems():
+            self.DestroyItem(item)
         # Get list of themes
         themePath = Path(prefs.paths['themes'])
         themeList = {}
@@ -976,12 +988,10 @@ class ThemeSwitcher(wx.Menu):
                         themeList[themeFile.stem] = []
             except (FileNotFoundError, IsADirectoryError):
                 pass
-        # Make menu
-        wx.Menu.__init__(self)
         # Make buttons
         for theme in themeList:
             item = self.AppendRadioItem(wx.ID_ANY, _translate(theme))
-            frame.Bind(wx.EVT_MENU, frame.app.onThemeChange, item)
+            self.frame.Bind(wx.EVT_MENU, self.frame.app.onThemeChange, item)
             if item.ItemLabel.lower() == ThemeMixin.codetheme.lower():
                 item.Check(True)
             else:
@@ -989,7 +999,4 @@ class ThemeSwitcher(wx.Menu):
         self.AppendSeparator()
         # Add Theme Folder button
         item = self.Append(wx.ID_ANY, _translate("Open theme folder"))
-        frame.Bind(wx.EVT_MENU, self.openThemeFolder, item)
-
-    def openThemeFolder(self, event):
-        subprocess.call("explorer %(themes)s" % prefs.paths, shell=True)
+        self.frame.Bind(wx.EVT_MENU, self.openThemeFolder, item)
