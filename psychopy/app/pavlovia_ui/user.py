@@ -47,8 +47,10 @@ class UserEditor(wx.Dialog):
         nameLabel = wx.StaticText(panel, id=wx.ID_ANY, label=_translate("Full name:"))
         self.nameField = wx.StaticText(panel, wx.ID_ANY, self.user.name)
         bitmapFile = self.user.avatar or "user128invisible.png"
-        self.avatarBtn = self.app.iconCache.makeBitmapButton(panel, wx.ID_ANY,
-                                                    name=bitmapFile)
+        self.avatarBtn = self.app.iconCache.makeBitmapButton(
+                    parent=panel,
+                    filename=bitmapFile, label=nameLabel, name=nameLabel,
+                    size=self.tbSize)
 
         org = self.user.organization or ""
         orgLabel = wx.StaticText(panel, wx.ID_ANY, _translate("Organization:"))
@@ -67,8 +69,8 @@ class UserEditor(wx.Dialog):
 
         # layout
         userAndLogout = wx.BoxSizer(wx.VERTICAL)
-        userAndLogout.Add(userField, 1, wx.ALL | wx.CENTER | wx.ALIGN_CENTER_VERTICAL, 5)
-        userAndLogout.Add(logoutBtn, 0, wx.ALL | wx.CENTER | wx.ALIGN_CENTER_VERTICAL , 5)
+        userAndLogout.Add(userField, 1, wx.ALL | wx.CENTER, 5)
+        userAndLogout.Add(logoutBtn, 0, wx.ALL | wx.CENTER , 5)
         topRow = wx.BoxSizer(wx.HORIZONTAL)
         topRow.Add(userAndLogout, 1, wx.ALL | wx.CENTER, 5)
         topRow.Add(self.avatarBtn, 0, wx.ALL | wx.RIGHT, 5)

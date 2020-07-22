@@ -6,6 +6,8 @@
 # Distributed under the terms of the GNU General Public License (GPL).
 import json
 
+from psychopy.app.themes._themes import ThemeSwitcher
+
 from ..themes import ThemeMixin
 
 import wx
@@ -20,7 +22,7 @@ import webbrowser
 from pathlib import Path
 from subprocess import Popen, PIPE
 
-from psychopy import experiment, prefs
+from psychopy import experiment
 from psychopy.app.utils import PsychopyPlateBtn, PsychopyToolbar
 from psychopy.constants import PY3
 from psychopy.localization import _translate
@@ -169,12 +171,9 @@ class RunnerFrame(wx.Frame, ThemeMixin):
             except:
                 pass
         # Add Theme Switcher
-        self.themesMenu = wx.Menu()
+        self.themesMenu = ThemeSwitcher(self)
         viewMenu.AppendSubMenu(self.themesMenu,
-                           _translate("Themes..."))
-        for theme in self.themeList:
-            self.themeList[theme] = self.themesMenu.Append(wx.ID_ANY, _translate(theme))
-            self.Bind(wx.EVT_MENU, self.app.onThemeChange, self.themeList[theme])
+                           _translate("Themes"))
 
         # Create menus
         self.runnerMenu.Append(fileMenu, 'File')
@@ -262,8 +261,7 @@ class RunnerFrame(wx.Frame, ThemeMixin):
         self.app.coder.setFileModified(False)
 
     def showRunner(self):
-        if self.app.prefs.general['useRunner']:
-            self.app.showRunner()
+        self.app.showRunner()
 
     @property
     def taskList(self):
@@ -376,49 +374,54 @@ class RunnerPanel(wx.Panel, ScriptProcess, ThemeMixin):
     def _applyAppTheme(self, target=None):
         if target == None:
             target = self
-
+        ThemeMixin._applyAppTheme(self, self)
         self.alertsCtrl._applyAppTheme()
         self.stdoutCtrl._applyAppTheme()
         ThemeMixin._applyAppTheme(self.expCtrl)
-        target.SetBackgroundColour(ThemeMixin.appColors['frame_bg'])
-        target.SetForegroundColour(ThemeMixin.appColors['text'])
-
-        buttons = {
-            self.plusBtn: {'main': 'addExp32.png'},
-            self.negBtn: {'main':'removeExp32.png'},
-            self.runBtn: {'main':'run32.png'},
-            self.stopBtn: {'main':'stop32.png'},
-            self.onlineBtn: {'main':'globe32.png', 'emblem':'run16.png'},
-            self.onlineDebugBtn: {'main':'globe32.png', 'emblem':'bug16.png'},
-        }
+        for btn in [self.plusBtn, self.negBtn, self.runBtn, self.stopBtn, self.onlineBtn, self.onlineDebugBtn]:
+            btn.SetBackgroundColour(ThemeMixin.appColors['panel_bg'])
 
     def makeButtons(self):
         # Set buttons
         icons = self.app.iconCache  # type: IconCache
         self.plusBtn = icons.makeBitmapButton(
                 parent=self,
-                name='addExp.png', size=32,
-                tip=_translate("Add experiment to list"))
+                filename='addExp.png',
+                name='addExp',
+                tip=_translate(
+                        "Add experiment to list"),
+                size=32)
         self.negBtn = icons.makeBitmapButton(
                 parent=self,
-                name='removeExp.png', size=32,
-                tip=_translate("Remove experiment to list"))
+                filename='removeExp.png',
+                name='removeExp',
+                tip=_translate(
+                        "Remove experiment to list"),
+                size=32)
         self.runBtn = icons.makeBitmapButton(
-                parent=self,
-                name='run.png', size=32,
-                tip=_translate("Run the current script in Python"))
+                parent=self, filename='run.png',
+                name='run',
+                tip=_translate(
+                        "Run the current script in Python"),
+                size=32)
         self.stopBtn = icons.makeBitmapButton(
-                parent=self,
-                name='stop.png', size=32,
-                tip=_translate("Stop task"))
+                parent=self, filename='stop.png',
+                name='stop',
+                tip=_translate("Stop task"),
+                size=32)
         self.onlineBtn = icons.makeBitmapButton(
                 parent=self,
-                name='globe.png', size=32, emblem='run',
-                tip=_translate("Run PsychoJS task from Pavlovia"))
+                filename='globe.png',
+                emblem='run', tip=_translate(
+                        "Run PsychoJS task from Pavlovia"), size=32)
         self.onlineDebugBtn = icons.makeBitmapButton(
                 parent=self,
-                name='globe.png', size=32, emblem='bug',
-                tip=_translate("Run PsychoJS task in local debug mode"))
+                filename='globe.png',
+                name='globe',
+                emblem='bug',
+                tip=_translate(
+                        "Run PsychoJS task in local debug mode"),
+                size=32)
 
         # Bind events to buttons
         self.Bind(wx.EVT_BUTTON, self.addTask, self.plusBtn)
@@ -514,6 +517,7 @@ class RunnerPanel(wx.Panel, ScriptProcess, ThemeMixin):
         if self.currentSelection is None:
             return
 
+        # we only want one server process open
         if self.serverProcess is not None:
             self.serverProcess.kill()
             self.serverProcess = None
@@ -531,21 +535,19 @@ class RunnerPanel(wx.Panel, ScriptProcess, ThemeMixin):
                   'Try exporting your HTML, and try again #####\n'.format(self.outputPath))
             return
 
-        if self.currentProject not in [None, "None", '']:
-            if self.serverProcess is None:
-                self.serverProcess = Popen(command,
-                                           bufsize=1,
-                                           cwd=htmlPath,
-                                           stdout=PIPE,
-                                           stderr=PIPE,
-                                           shell=False,
-                                           universal_newlines=True,
-                                           )
+        self.serverProcess = Popen(command,
+                                   bufsize=1,
+                                   cwd=htmlPath,
+                                   stdout=PIPE,
+                                   stderr=PIPE,
+                                   shell=False,
+                                   universal_newlines=True,
+                                   )
 
-            time.sleep(.1)  # Wait for subprocess to start server
-            webbrowser.open("http://localhost:{}".format(port))
-            print("##### Local server started! #####\n\n"
-                  "##### Running PsychoJS task from {} #####\n".format(htmlPath))
+        time.sleep(.1)  # Wait for subprocess to start server
+        webbrowser.open("http://localhost:{}".format(port))
+        print("##### Local server started! #####\n\n"
+              "##### Running PsychoJS task from {} #####\n".format(htmlPath))
 
     def onURL(self, evt):
         self.parent.onURL(evt)

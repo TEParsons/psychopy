@@ -15,6 +15,7 @@ from builtins import range
 import wx
 import wx.stc
 import wx.richtext
+from psychopy.app.themes._themes import ThemeSwitcher
 from wx.html import HtmlEasyPrinting
 
 import wx.lib.agw.aui as aui  # some versions of phoenix
@@ -588,6 +589,7 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
         self.AutoCompSetIgnoreCase(True)
         self.AutoCompSetAutoHide(True)
         self.AutoCompStops('. ')
+        self.openBrackets = 0
 
         # better font rendering and less flicker on Windows by using Direct2D
         # for rendering instead of GDI
@@ -695,9 +697,17 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
                 if self.coder.useAutoComp:
                     if not self.CallTipActive():
                         wx.CallAfter(self.ShowCalltip)
+
+                    self.openBrackets += 1
                 else:
                     self.coder.SetStatusText(
                         'Press Ctrl+Space to show calltip', 0)
+            elif keyCode == ord('0') and wx.MOD_SHIFT == _mods:  # close if brace matches
+                if self.CallTipActive():
+                    self.openBrackets -= 1
+                    if self.openBrackets <= 0:
+                        self.CallTipCancel()
+                        self.openBrackets = 0
             else:
                 self.coder.SetStatusText('', 0)
 
@@ -745,6 +755,7 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
                 self.AutoCompCancel()  # close the auto completion list
             if self.CallTipActive():
                 self.CallTipCancel()
+                self.openBrackets = 0
 
         elif keyCode == wx.WXK_RETURN: # and not self.AutoCompActive():
             if not self.AutoCompActive():
@@ -754,6 +765,10 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
                 self.smartIdentThisLine()
                 self.analyseScript()
                 return  # so that we don't reach the skip line at end
+
+            if self.CallTipActive():
+                self.CallTipCancel()
+                self.openBrackets = 0
 
         # quote line
         elif keyCode == ord("'"):
@@ -997,6 +1012,9 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
                 start = 0
                 loc = textstring.find(findstring, start)
 
+        # Adjust for offset
+        loc += 2
+
         # was it still not found?
         if loc == -1:
             dlg = dialogs.MessageDialog(self, message=_translate(
@@ -1013,8 +1031,8 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
             if loc == -1:
                 wx.CallAfter(findDlg.SetFocus)
                 return
-            else:
-                findDlg.Close()
+            # else:
+            #     findDlg.Close()
 
 
 class CoderFrame(wx.Frame, ThemeMixin):
@@ -1034,7 +1052,6 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.fileStatusCheckInterval = 5 * 60  # sec
         self.showingReloadDialog = False
         self.btnHandles = {}  # stores toolbar buttons so they can be altered
-        self.useAutoComp = False
 
         # we didn't have the key or the win was minimized/invalid
         if self.appData['winH'] == 0 or self.appData['winW'] == 0:
@@ -1098,7 +1115,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
         # Create menus and status bar
         self.makeMenus()
         self.makeStatusBar()
-        self.statusBar.SetStatusText("PsychoPy v{}".format(psychopy.__version__), 3)
+        #self.statusBar.SetStatusText("PsychoPy v{}".format(psychopy.__version__), 3)
         self.fileMenu = self.editMenu = self.viewMenu = None
         self.helpMenu = self.toolsMenu = None
 
@@ -1149,10 +1166,11 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.Bind(wx.EVT_DROP_FILES, self.filesDropped)
         self.Bind(wx.EVT_FIND, self.OnFindNext)
         self.Bind(wx.EVT_FIND_NEXT, self.OnFindNext)
-        self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
+        #self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
         self.Bind(wx.EVT_END_PROCESS, self.onProcessEnded)
 
         # take files from arguments and append the previously opened files
+        filename = ""
         if files not in [None, [], ()]:
             for filename in files:
                 if not os.path.isfile(filename):
@@ -1160,7 +1178,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
                 self.setCurrentDoc(filename, keepHidden=True)
 
         # Create shelf notebook
-        self.shelf = aui.AuiNotebook(self.pnlMain, wx.ID_ANY, size=wx.Size(600, 600), style=wx.BORDER_NONE)
+        self.shelf = aui.AuiNotebook(self.pnlMain, wx.ID_ANY, size=wx.Size(600, 600), agwStyle=aui.AUI_NB_CLOSE_ON_ALL_TABS)
         #self.shelf.SetArtProvider(PsychopyTabArt())
         # Create shell
         self._useShell = None
@@ -1184,6 +1202,9 @@ class CoderFrame(wx.Frame, ThemeMixin):
             # Add shell to output pane
             self.shell.SetName("PythonShell")
             self.shelf.AddPage(self.shell, _translate('Shell'))
+            # Hide close button
+            for i in range(self.shelf.GetPageCount()):
+                self.shelf.SetCloseButton(i, False)
         # Add shelf panel
         self.paneManager.AddPane(self.shelf,
                                  aui.AuiPaneInfo().
@@ -1215,15 +1236,22 @@ class CoderFrame(wx.Frame, ThemeMixin):
             self.Fit()
         # Update panes
         self._applyAppTheme()
+        isExp = filename.endswith(".py") or filename.endswith(".psyexp")
+        self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
+        self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
         self.paneManager.Update()
 
         self.sourceAsstChk.Check(
             self.paneManager.GetPane('SourceAsst').IsShown()
         )
         #self.chkShowAutoComp.Check(self.prefs['autocomplete'])
-        self.useAutoComp = self.prefs['autocomplete']
         self.SendSizeEvent()
         self.app.trackFrame(self)
+
+    @property
+    def useAutoComp(self):
+        """Show autocomplete while typing."""
+        return self.prefs['autocomplete']
 
     def GetAuiManager(self):
         return self.paneManager
@@ -1536,13 +1564,9 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.showEOLsChk.Check(self.appData['showEOLs'])
         self.Bind(wx.EVT_MENU, self.setShowEOLs, id=self.showEOLsChk.GetId())
         # Theme Switcher
-        self.themesMenu = wx.Menu()
+        self.themesMenu = ThemeSwitcher(self)
         menu.AppendSubMenu(self.themesMenu,
-                           _translate("Themes..."))
-        for theme in self.themeList:
-            self.themeList[theme] = self.themesMenu.Append(wx.ID_ANY, _translate(theme))
-            self.Bind(wx.EVT_MENU, self.app.onThemeChange, self.themeList[theme])
-
+                           _translate("Themes"))
         menu.AppendSeparator()
         # output window
         key = keyCodes['toggleOutputPanel']
@@ -1923,12 +1947,12 @@ class CoderFrame(wx.Frame, ThemeMixin):
             self.OnFindOpen(event)
             return
         self.currentDoc.DoFindNext(self.findData, self.findDlg)
-        if self.findDlg is not None:
-            self.OnFindClose(None)
+        # if self.findDlg is not None:
+        #     self.OnFindClose(None)
 
-    def OnFindClose(self, event):
-        self.findDlg.Destroy()
-        self.findDlg = None
+    # def OnFindClose(self, event):
+    #     self.findDlg.Destroy()
+    #     self.findDlg = None
 
     def OnFileHistory(self, evt=None):
         # get the file based on the menu ID
@@ -2138,11 +2162,11 @@ class CoderFrame(wx.Frame, ThemeMixin):
                 self.fileHistory.AddFileToHistory(filename)
             else:
                 # set name for an untitled document
-                filename = shortName = 'untitled.py'
+                filename = 'untitled.py'
                 allFileNames = self.getOpenFilenames()
                 n = 1
                 while filename in allFileNames:
-                    filename = shortName = 'untitled%i.py' % n
+                    filename = 'untitled%i.py' % n
                     n += 1
 
                 # create modification time for in memory document
@@ -2176,6 +2200,10 @@ class CoderFrame(wx.Frame, ThemeMixin):
         if readonly:
             self.currentDoc.SetReadOnly(True)
         self._applyAppTheme()
+        isExp = filename.endswith(".py") or filename.endswith(".psyexp")
+        self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
+        self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
+
 
     def fileOpen(self, event=None, filename=None):
         if not filename:
@@ -2229,8 +2257,9 @@ class CoderFrame(wx.Frame, ThemeMixin):
         If the ``filename`` is ``None`` then the ``doc``'s current filename
         is used or a dlg is presented to get a new filename.
         """
-        if self.currentDoc.AutoCompActive():
-            self.currentDoc.AutoCompCancel()
+        if hasattr(self.currentDoc, 'AutoCompActive'):
+            if self.currentDoc.AutoCompActive():
+                self.currentDoc.AutoCompCancel()
 
         if doc is None:
             doc = self.currentDoc
@@ -2416,11 +2445,11 @@ class CoderFrame(wx.Frame, ThemeMixin):
                 self.fileSave(None)  # save then run
             elif resp == wx.ID_NO:
                 pass  # just run
-        if self.app.prefs.general['useRunner']:
-            self.app.runner.addTask(fileName=fullPath)
-            self.app.showRunner()
-        else:
-            self.app.runner.panel.runFile(fileName=fullPath)
+        self.app.runner.addTask(fileName=fullPath)
+        self.app.showRunner()
+        if event:
+            if event.Id == self.cdrBtnRun.Id:
+                self.app.runner.panel.runFile(fileName=fullPath)
 
     def copy(self, event):
         foc = self.FindFocus()
@@ -2588,7 +2617,8 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.onIdle(event=None)
         self.scriptProcess = None
         self.scriptProcessID = None
-        self.toolbar.EnableTool(self.IDs.cdrBtnRun, True)
+        self.toolbar.EnableTool(self.cdrBtnRun.Id, True)
+        self.toolbar.EnableTool(self.cdrBtnRunner.Id, True)
 
     def onURL(self, evt):
         """decompose the URL of a file and line number"""

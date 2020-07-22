@@ -199,8 +199,14 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
                     shortcut='compileScript',
                     tooltip=_translate("Compile to script"),
                     func=self.frame.compileScript)  # Compile
-            self.frame.bldrBtnRun = self.addPsychopyTool(
+            self.frame.bldrBtnRunner = self.addPsychopyTool(
                     name='runner',
+                    label=_translate('Runner'),
+                    shortcut='runnerScript',
+                    tooltip=_translate("Send experiment to Runner"),
+                    func=self.frame.runFile)  # Run
+            self.frame.bldrBtnRun = self.addPsychopyTool(
+                    name='run',
                     label=_translate('Run'),
                     shortcut='runScript',
                     tooltip=_translate("Run experiment"),
@@ -210,7 +216,7 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
         elif frame.__class__.__name__ == 'CoderFrame':
             self.addPsychopyTool('filenew', 'New', 'new',
                                  "Create new experiment file",
-                                 self.frame.app.newBuilderFrame)  # New
+                                 self.frame.fileNew)  # New
             self.addPsychopyTool('fileopen', 'Open', 'open',
                                  "Open an existing experiment file",
                                  self.frame.fileOpen)  # Open
@@ -237,10 +243,12 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
                                  "Color Picker -> clipboard",
                                  self.frame.app.colorPicker)
             self.AddSeparator()
-            self.frame.cdrBtnRun = self.addPsychopyTool(
-                    'runner', 'Run', 'runScript',
-                                                         "Run experiment",
-                    self.frame.runFile)
+            self.frame.cdrBtnRunner = self.addPsychopyTool('runner', 'Runner', 'runnerScript',
+                                                        "Send experiment to Runner",
+                                                        self.frame.runFile)
+            self.frame.cdrBtnRun = self.addPsychopyTool('run', 'Run', 'runScript',
+                                                        "Run experiment",
+                                                        self.frame.runFile)
             self.AddSeparator()
             pavButtons.addPavloviaTools(
                 buttons=['pavloviaSync', 'pavloviaSearch', 'pavloviaUser'])
@@ -251,12 +259,14 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
                         emblem=None):
         if not name.endswith('.png'):
             name += '.png'
-        item = self.app.iconCache.makeBitmapButton(
-                parent=self,
-                name=name, emblem=emblem, size=self.iconSize,
-                label=_translate(label + " [%s]") % self.keys[shortcut],
-                tip=tooltip,
-                toolbar=self)
+        item = self.app.iconCache.makeBitmapButton(parent=self, filename=name,
+                                                   name=label,
+                                                   label=_translate(
+                                                       label + " [%s]") %
+                                                         self.keys[shortcut],
+                                                   emblem=emblem, toolbar=self,
+                                                   tip=tooltip,
+                                                   size=self.iconSize)
         # Bind function
         self.Bind(wx.EVT_TOOL, func, item)
         return item

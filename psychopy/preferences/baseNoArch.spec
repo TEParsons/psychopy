@@ -99,6 +99,8 @@
 [builder]
     # whether to automatically reload a previously open experiment
     reloadPrevExp = boolean(default=False)
+    # Default to when writing code components
+    codeComponentLanguage = option('Py', 'JS', 'Both', 'Auto->JS', default='Auto->JS')
     # if False will create scripts with an 'easier' but more cluttered namespace
     unclutteredNamespace = boolean(default=False)
     # folder names for custom components; expects a comma-separated list
@@ -205,6 +207,8 @@
     compileScript = string(default='F5')
     # launch a script, Builder or Coder, or run unit-tests
     runScript = string(default='Ctrl+R')
+    # launch a script, Builder or Coder, or run unit-tests
+    runnerScript = string(default='Ctrl+Shift+R')
     # attempt to interrupt and halt a running script
     stopScript = string(default='Ctrl+.')
 
