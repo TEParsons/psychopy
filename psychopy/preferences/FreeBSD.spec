@@ -110,7 +110,7 @@
     # folder names for custom components; expects a comma-separated list
     componentsFolders = list(default=list('/Users/Shared/PsychoPy3/components'))
     # a list of components to hide (eg, because you never use them)
-    hiddenComponents = list(default=list('PatchComponent'))
+    hiddenComponents = list(default=list('PatchComponent', 'UnknownComponent'))
     # where the Builder demos are located on this computer (after unpacking)
     unpackedDemosDir = string(default='')
     # name of the folder where subject data should be saved (relative to the script)
@@ -210,9 +210,9 @@
     # convert a Builder .psyexp script into a python script and open it in the Coder
     compileScript = string(default='F5')
     # launch a script, Builder or Coder, or run unit-tests
-    runScript = string(default='Ctrl+R')
+    runScript = string(default='Ctrl+Shift+R')
     # launch a script, Builder or Coder, or run unit-tests
-    runnerScript = string(default='Ctrl+Shift+R')
+    runnerScript = string(default='Ctrl+R')
     # attempt to interrupt and halt a running script
     stopScript = string(default='Ctrl+.')
 

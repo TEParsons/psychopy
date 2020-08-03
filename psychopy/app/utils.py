@@ -19,6 +19,8 @@ import sys
 import wx
 import wx.lib.agw.aui as aui
 from wx.lib import platebtn
+
+import psychopy
 from psychopy import logging
 from . import pavlovia_ui
 from . import icons
@@ -115,6 +117,7 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
         wx.ToolBar.__init__(self, frame)
         self.frame = frame
         self.app = self.frame.app
+        self._needMakeTools = True
         # Configure toolbar appearance
         self.SetWindowStyle(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT | wx.TB_NODIVIDER)
         #self.SetBackgroundColour(ThemeMixin.appColors['frame_bg'])
@@ -133,7 +136,7 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
         self.keys = {k: self.frame.app.keys[k].replace('Ctrl+', ctrlKey)
                 for k in self.frame.app.keys}
         self.keys['none'] = ''
-        # self.makeTools()  # will be done when theme is applied
+        self.makeTools()  # will be done when theme is applied
         # Finished setup. Make it happen
 
     def makeTools(self):
@@ -243,12 +246,14 @@ class PsychopyToolbar(wx.ToolBar, ThemeMixin):
                                  "Color Picker -> clipboard",
                                  self.frame.app.colorPicker)
             self.AddSeparator()
-            self.frame.cdrBtnRunner = self.addPsychopyTool('runner', 'Runner', 'runnerScript',
-                                                        "Send experiment to Runner",
-                                                        self.frame.runFile)
-            self.frame.cdrBtnRun = self.addPsychopyTool('run', 'Run', 'runScript',
-                                                        "Run experiment",
-                                                        self.frame.runFile)
+            self.frame.cdrBtnRunner = self.addPsychopyTool(
+                    'runner', 'Runner', 'runnerScript',
+                    "Send experiment to Runner",
+                    self.frame.runFile)
+            self.frame.cdrBtnRun = self.addPsychopyTool(
+                    'run', 'Run', 'runScript',
+                    "Run experiment",
+                    self.frame.runFile)
             self.AddSeparator()
             pavButtons.addPavloviaTools(
                 buttons=['pavloviaSync', 'pavloviaSearch', 'pavloviaUser'])
@@ -340,3 +345,80 @@ class PsychopyScrollbar(wx.ScrollBar):
             range=1,
             pageSize=vsz
         )
+
+
+class FrameSwitcher(wx.Menu):
+    """Menu for switching between different frames"""
+    def __init__(self, parent):
+        wx.Menu.__init__(self)
+        self.parent = parent
+        self.itemFrames = {}
+
+        self.builderBtn = None
+        self.coderBtn = None
+        self.runnerBtn = None
+        self.Update()
+
+    @property
+    def frames(self):
+        return self.parent.app.getAllFrames()
+
+    def Update(self):
+        """Set items according to which windows are open"""
+        if sys.platform == 'win32':  # on mac DestroyItem segfaults. Linux?
+            for item in self.GetMenuItems():
+                self.DestroyItem(item)
+
+            # Determine whether to show standard buttons based on open state
+            # only needed
+            showBuilder = not any(isinstance(frame, psychopy.app.builder.BuilderFrame) and hasattr(frame, 'filename')
+                                 for frame in self.parent.app.getAllFrames())
+            showCoder = not any(isinstance(frame, psychopy.app.coder.CoderFrame) and hasattr(frame, 'filename')
+                                 for frame in self.parent.app.getAllFrames())
+            showRunner = not any(isinstance(frame, psychopy.app.runner.RunnerFrame) and hasattr(frame, 'filename')
+                                for frame in self.parent.app.getAllFrames())
+        else:
+            # on mac/linux we won't show one per frame, just the std buttons
+            showRunner = showCoder = showBuilder = True
+
+        # Add standard buttons
+        if showBuilder and not isinstance(self.parent, psychopy.app.builder.BuilderFrame):
+            self.builderBtn = self.Append(wx.ID_ANY,
+                                          _translate("Builder"),
+                                          _translate("Builder View"))
+            self.Bind(wx.EVT_MENU, self.parent.app.showBuilder, self.builderBtn)
+        if showCoder and not isinstance(self.parent,
+                                        psychopy.app.coder.CoderFrame):
+            self.coderBtn = self.Append(wx.ID_ANY,
+                                        _translate("Coder"),
+                                        _translate("Coder View"))
+            self.Bind(wx.EVT_MENU, self.parent.app.showCoder, self.coderBtn)
+        if showRunner and not isinstance(self.parent,
+                                         psychopy.app.runner.RunnerFrame):
+            self.runnerBtn = self.Append(wx.ID_ANY,
+                                         _translate("Runner"),
+                                         _translate("Runner View"))
+            self.Bind(wx.EVT_MENU, self.parent.app.showRunner, self.runnerBtn)
+
+        # Make buttons for each open file
+        # While only win32 can safely DestroyItem, only do this on win32
+        if sys.platform == 'win32':
+            for frame in self.frames:
+                if hasattr(frame, "filename") and frame != self.parent:
+                    if frame.filename:
+                        filenameAddition = ": " + os.path.basename(frame.filename)
+                    else:
+                        filenameAddition = ""
+                    label = type(frame).__name__.replace("Frame", "")
+                    item = self.Append(wx.ID_ANY,
+                                       _translate(label) + filenameAddition,
+                                       _translate(label) + filenameAddition)
+                    self.itemFrames[item.GetId()] = frame
+                    self.Bind(wx.EVT_MENU, self.showFrame, item)
+
+    def showFrame(self, event):
+        frame = self.itemFrames[event.Id]
+        frame.Show(True)
+        frame.Raise()
+        self.parent.app.SetTopWindow(frame)
+        self.Update()
