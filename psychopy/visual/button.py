@@ -11,120 +11,74 @@ from __future__ import absolute_import, print_function
 
 from psychopy import event
 from psychopy.visual.shape import BaseShapeStim
-from psychopy.visual.text import TextStim
+from psychopy.visual.textbox2 import TextBox2
 
-__author__ = 'Anthony Haffey'
+__author__ = 'Anthony Haffey, Todd Parsons'
 
 class ButtonStim(BaseShapeStim):
     """A class for putting a button into your experiment.
 
     """
 
-    def __init__(self,
-                 win,
-                 borderThickness=.003,
-                 labelSize=0.03,
-                 pos=(0, 0),
-                 labelText="text for button",
-                 textColor='blue',
+    def __init__(self, win, text,
+                 borderWidth=1,
+                 pos=(0, 0), units=None, size=(0,0),
+                 colorSpace='rgb',
+                 color=(1.0, 1.0, 1.0),
                  borderColor='blue',
-                 buttonColor='white',
-                 buttonEnabled=False,
+                 fillColor='white',
+                 font='Arial',
+                 enabled=True,
+                 forceEndRoutineOnPress="any click",
+                 autoLog=None,
                  ):
 
         # local variables
         super(ButtonStim, self).__init__(win)
-        button_width = len(labelText) * .025
-        button_x_inner_margin = .02
-        button_x_outer_margin = button_x_inner_margin + borderThickness
-        button_y_inner_margin = labelSize
-        button_y_outer_margin = labelSize + borderThickness
-        button_x_range = (0 - button_width / 2 + pos[0], 0 + button_width / 2 + pos[0])
-
         self.win = win
-        self.borderThickness = borderThickness
-        self.labelSize = labelSize
+        self.text = text
+        self.borderWidth = borderWidth
         self.pos = pos
-        self.labelText = labelText
-        self.textColor = textColor
+        self.units = units
+        self.size = size
+        self.colorSpace = colorSpace
+        self.color = color
         self.borderColor = borderColor
-        self.buttonColor = buttonColor
-        self.buttonEnabled = buttonEnabled
+        self.fillColor = fillColor
+        self.font = font
+        self.forceEndRoutineOnPress = forceEndRoutineOnPress
+        self.autoLog = autoLog
 
-        self._dragging = False
-        self.mouse = event.Mouse()
-        self.buttonSelected = False
-        self.buttonItems = []
-
-        self.buttonBorder = BaseShapeStim(self.win, fillColor=self.borderColor, vertices=(
-            (button_x_range[0] - button_x_outer_margin, -button_y_outer_margin + self.pos[1]),
-            (button_x_range[0] - button_x_outer_margin, button_y_outer_margin + self.pos[1]),
-            (button_x_range[1] + button_x_outer_margin, button_y_outer_margin + self.pos[1]),
-            (button_x_range[1] + button_x_outer_margin, -button_y_outer_margin + self.pos[1])))
-        self.buttonInner = BaseShapeStim(self.win, fillColor=self.buttonColor, vertices=(
-            (button_x_range[0] - button_x_inner_margin, -button_y_inner_margin + self.pos[1]),
-            (button_x_range[0] - button_x_inner_margin, button_y_inner_margin + self.pos[1]),
-            (button_x_range[1] + button_x_inner_margin, button_y_inner_margin + self.pos[1]),
-            (button_x_range[1] + button_x_inner_margin, -button_y_inner_margin + self.pos[1])))
-        self.buttonInnerText = TextStim(self.win, text=self.labelText, color=self.textColor, pos=self.pos,
-                                               height=self.labelSize)
-        self.buttonItems.append(self.buttonBorder)
-        self.buttonItems.append(self.buttonInner)
-        self.buttonItems.append(self.buttonInnerText)
+        self.box = TextBox2(win, text,
+                 pos=pos, units=units, size=size,
+                 colorSpace=colorSpace, fillColor=fillColor,
+                 color=color, font=font, bold=True, padding=size[1]/10,
+                 borderColor=borderColor, borderWidth=borderWidth,
+                 alignment='center',
+                 autoLog=autoLog)
+        self.mouse = event.Mouse(win=win)
+        self.enabled = enabled
 
     def draw(self):
-        self.getMouseResponses()
-        for item in self.buttonItems:
-            item.draw()
+        """Draw button"""
+        self.box.draw()
 
-    def buttonSwitch(self, switch):
-        if switch:
-            self.buttonBorder.color = self.buttonColor
-            self.buttonInner.color = self.borderColor
-            self.buttonInnerText.color = self.buttonColor
+    def isPressed(self):
+        """Check whether button has been pressed"""
+        return self.buttonEnabled and self.mouse.isPressedIn(self.box)
+
+    @property
+    def enabled(self):
+        return self._enabled
+    @enabled.setter
+    def enabled(self, value):
+        """If button is disabled, change colours to grey"""
+        self._enabled = value
+        if value:
+            self.box.borderColor = self.borderColor
+            self.box.fillColor = self.fillColor
+            self.box.color = self.color
         else:
-            self.buttonBorder.color = self.borderColor
-            self.buttonInner.color = self.buttonColor
-            self.buttonInnerText.color = self.borderColor
-
-    def buttonContains(self, mouse):
-        return self.buttonBorder.contains(mouse)
-
-    def buttonClicked(self, mouse):
-        self.buttonSelected = bool(self.buttonContains(mouse)
-                                   and mouse.getPressed()[0])
-        return self.buttonSelected
-
-    def buttonGuard(self, condition):
-        if not self.buttonEnabled:
-            self.buttonBorder.color = 'dimgrey'
-            self.buttonInner.color = 'darkgrey'
-            self.buttonInnerText.color = 'dimgrey'
-        else:
-            self.buttonBorder.color = self.buttonColor
-            self.buttonInner.color = self.borderColor
-            self.buttonInnerText.color = self.buttonColor
-
-    def getMouseResponses(self):
-        self.buttonGuard(self.buttonEnabled)
-        if not self.buttonEnabled:
-            return
-
-        if not self.buttonClicked(self.mouse):  # hovering
-            self.buttonSwitch(self.buttonContains(self.mouse))
-
-        if self.buttonClicked(self.mouse):
-            self._dragging = True
-            # Update current but don't set Rating (mouse is still down)
-            # Dragging has to start inside a "valid" area (i.e., on the
-            # slider), but may continue even if the mouse moves away from
-            # the slider, as long as the mouse button is not released.
-        else:  # mouse is up - check if it *just* came up
-            if self._dragging:
-                if self.buttonContains(self.mouse):
-                    self.buttonSelected = True
-                self._dragging = False
-            else:
-                # is up and was already up - move along
-                return None
-
+            self.box.borderColor = 'dimgrey'
+            self.box.fillColor = 'darkgrey'
+            self.box.color = 'dimgrey'
