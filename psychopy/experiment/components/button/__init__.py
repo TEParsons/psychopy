@@ -42,12 +42,12 @@ class ButtonComponent(BaseVisualComponent):
     targets = ['PsychoPy', 'PsychoJS']
     def __init__(self, exp, parentName,
                  text="",
-                 borderWidth=1,
-                 pos=(0, 0), units=None, size=(0,0),
-                 colorSpace='rgb',
+                 borderWidth=4,
+                 pos=(0, 0), units=None, size=None,
+                 colorSpace=None,
                  color='white',
-                 borderColor='blue',
-                 fillColor='white',
+                 borderColor='white',
+                 fillColor='blue', #(-0.98, 0.32, 0.84)
                  font='Arial',
                  enabled=True,
                  forceEndRoutineOnPress=True,
@@ -94,7 +94,7 @@ class ButtonComponent(BaseVisualComponent):
             borderWidth, valType='int', allowedTypes=[],
             updates='constant', allowedUpdates=_allow3[:],
             hint=_translate("Button border width, set to 0 for no border"),
-            label=_localized['borderColor'],
+            label=_localized['borderWidth'],
             categ="Appearance")
         self.params['autoLog'] = Param(
             autoLog, valType='bool', allowedTypes=[],
@@ -130,7 +130,7 @@ class ButtonComponent(BaseVisualComponent):
         if self.params['units'].val == 'from exp settings':
             unitsStr = ""
         else:
-            unitsStr = "units=%(units)s," % self.params
+            unitsStr = "units=%(units)s, " % self.params
 
         # replace variable params with defaults
         inits = getInitVals(self.params)
@@ -138,19 +138,19 @@ class ButtonComponent(BaseVisualComponent):
             inits['size'].val = '[1.0, 1.0]'
 
         code = ("%(name)s = visual.ButtonStim(\n"
-                "  win, %(text)s,\n"
-                "  borderWidth=%(borderWidth)s,\n"
-                "  pos=%(pos)s, units=" + unitsStr + ", size=%(size)s,\n"
-                "  colorSpace=%(colorSpace)s,\n"
-                "  color=%(color)s,\n"
-                "  borderColor=%(borderColor)s,\n"
-                "  fillColor=%(fillColor)s,\n"
-                "  font=%(font)s,\n"
-                "  enabled=%(enabled)s,\n"
-                "  forceEndRoutineOnPress=%(forceEndRoutineOnPress)s,\n"
-                "  autoLog=%(autoLog)s\n"
+                "   win, \"%(name)s\", %(text)s,\n"
+                "   borderWidth=%(borderWidth)s,\n"
+                "   pos=%(pos)s, " + unitsStr + "size=%(size)s,\n"
+                "   colorSpace=%(colorSpace)s,\n"
+                "   color=%(color)s,\n"
+                "   borderColor=%(borderColor)s,\n"
+                "   fillColor=%(fillColor)s,\n"
+                "   font=%(font)s,\n"
+                "   enabled=%(enabled)s,\n"
+                "   forceEndRoutineOnPress=%(forceEndRoutineOnPress)s,\n"
+                "   autoLog=%(autoLog)s\n"
                 ")\n"
-                "%(name)s.draw()\n")
+                "%(name)s.draw()")
         buff.writeIndentedLines(code % inits)
 
     def writeInitCodeJS(self, buff):
@@ -163,8 +163,10 @@ class ButtonComponent(BaseVisualComponent):
         if inits['size'].val in ['1.0', '1']:
             inits['size'].val = '[1.0, 1.0]'
         code = ("if %(name)s.isPressed():\n"
-                "   #continueRoutine = %(forceEndRoutineOnPress)s\n"
-                "   %(callback)s\n")
+                "    %(callback)s\n"
+                "    if %(forceEndRoutineOnPress)s:\n"
+                "        continueRoutine = False\n"
+                "%(name)s.setAutoDraw(True)")
         buff.writeIndentedLines(code % inits)
 
     def writeFrameCodeJS(self, buff):

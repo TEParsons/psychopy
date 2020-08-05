@@ -48,7 +48,8 @@ defaultLetterHeight = {'cm': 1.0,
                        'norm': 0.1,
                        'height': 0.2,
                        'pix': 20,
-                       'pixels': 20}
+                       'pixels': 20,
+                       'height': 0.1}
 
 defaultBoxWidth = {'cm': 15.0,
                    'deg': 15.0,
@@ -151,7 +152,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self.italic = italic
         self.lineSpacing = lineSpacing
         if padding is None:
-            padding = letterHeight / 2.0
+            padding = self.letterHeight / 2.0
         self.padding = padding
         self.glFont = None  # will be set by the self.font attribute setter
         self.font = font
