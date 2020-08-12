@@ -282,7 +282,11 @@ class ColorMixin(object):
     # def __init__(self):
     #    super(ColorStim, self).__init__()
 
-    @attributeSetter
+    @property
+    def color(self):
+        if hasattr(self, '_color'):
+            return self.color
+    @color.setter
     def color(self, value):
         """Color of the stimulus
 
@@ -334,34 +338,22 @@ class ColorMixin(object):
             stim.colorSpace = 'rgb255'
             stim.color = (0, 128, 255)
         """
-        self.setColor(
-            value, log=False)  # logging already done by attributeSettter
+        if not isinstance(self.color, Color) and not isinstance(self.color, AdvancedColor):
+            if Color.getSpace(value):
+                self.color = Color(value)
+            else:
+                self.color = AdvancedColor(value)
 
-    @attributeSetter
+
+    @property
+    def colorSpace(self):
+        if isinstance(self.color, Color) or isinstance(self.color, AdvancedColor):
+            return self.color._requestedSpace
+    @colorSpace.setter
     def colorSpace(self, value):
-        """The name of the color space currently being used
-
-        Value should be: a string or None
-
-        For strings and hex values this is not needed.
-        If None the default colorSpace for the stimulus is
-        used (defined during initialisation).
-
-        Please note that changing colorSpace does not change stimulus
-        parameters. Thus you usually want to specify colorSpace before
-        setting the color. Example::
-
-            # A light green text
-            stim = visual.TextStim(win, 'Color me!',
-                                   color=(0, 1, 0), colorSpace='rgb')
-
-            # An almost-black text
-            stim.colorSpace = 'rgb255'
-
-            # Make it light green again
-            stim.color = (128, 255, 128)
+        """Deprecated function, colours now exist in all spaces
         """
-        self.__dict__['colorSpace'] = value
+        pass
 
     @attributeSetter
     def contrast(self, value):
@@ -417,10 +409,12 @@ class ColorMixin(object):
         but use this method if you need to suppress the log message
         and/or set colorSpace simultaneously.
         """
-        # NB: the setColor helper function! Not this function itself :-)
-        setColor(self, color, colorSpace=colorSpace, operation=operation,
-                 rgbAttrib='rgb',  # or 'fillRGB' etc
-                 colorAttrib='color')
+        if not isinstance(self.color, Color) and not isinstance(self.color, AdvancedColor):
+            if Color.getSpace(color):
+                self.color = Color(color, colorSpace)
+            else:
+                self.color = AdvancedColor(color, colorSpace)
+
         if self.__class__.__name__ == 'TextStim' and not self.useShaders:
             self._needSetText = True
         logAttrib(self, log, 'color',
@@ -432,18 +426,25 @@ class ColorMixin(object):
         """
         setAttribute(self, 'contrast', newContrast, log, operation)
 
-    def _getDesiredRGB(self, rgb, colorSpace, contrast):
+    def _getDesiredRGB(self, rgb=None, colorSpace=None, contrast=0):
         """ Convert color to RGB while adding contrast.
         Requires self.rgb, self.colorSpace and self.contrast
         """
-        # Ensure that we work on 0-centered color (to make negative contrast
-        # values work)
-        if colorSpace not in ['rgb', 'dkl', 'lms', 'hsv']:
-            rgb = rgb / 127.5 - 1
-
+        # If rgb not specified, use self.color
+        if not rgb:
+            rgb = self.color
+        # Make a colour object if not one
+        if not isinstance(rgb, Color) and not isinstance(rgb, AdvancedColor):
+            if Color.getSpace(rgb):
+                col = Color(rgb, colorSpace)
+            else:
+                col = AdvancedColor(rgb, colorSpace)
+        else:
+            col = self.color
         # Convert to RGB in range 0:1 and scaled for contrast
         # NB glColor will clamp it to be 0-1 (whether or not we use FBO)
-        desiredRGB = (rgb * contrast + 1) / 2.0
+        desiredRGB = tuple((c * contrast + 1) / 2.0 for c in col.rgb)
+
         if not self.win.useFBO:
             # Check that boundaries are not exceeded. If we have an FBO that
             # can handle this
