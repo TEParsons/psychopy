@@ -19,7 +19,7 @@ some more added:
 import numpy as np
 import OpenGL.GL as gl
 
-from ..basevisual import BaseVisualStim, ColorMixin, ContainerMixin
+from ..basevisual import BaseVisualStim, ColorMixin, ContainerMixin, Color, AdvancedColor
 from psychopy.tools.attributetools import attributeSetter, setAttribute
 from psychopy.tools.arraytools import val2array
 from psychopy.tools.monitorunittools import convertToPix
@@ -200,11 +200,10 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
                 lineWidth=1, lineColor=None, fillColor=fillColor, opacity=0.1,
                 autoLog=False)
         self.pallette = { # If no focus
-                'lineColor': borderColor,
-                'lineRGB': self.box.lineRGB,
-                'lineWidth': borderWidth,
-                'fillColor': fillColor,
-                'fillRGB': self.box.fillRGB
+            'borderWidth': borderWidth,
+            'borderColor': borderColor,
+            'foreColor': color,
+            'fillColor': fillColor,
         }
         # then layout the text (setting text triggers _layout())
         self.text = text
@@ -224,29 +223,30 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
     @pallette.setter
     def pallette(self, value):
-        pal = {}
+        nofocus = {}
+        yesfocus = {}
+        # Set textbox values from pallette
+        for key in value:
+            if value[key]:
+                setattr(self, key, value[key])
         # Double border width
-        if value['lineWidth']:
-            pal['lineWidth'] = max(value['lineWidth'], 2) * 2
-        else:
-            pal['lineWidth'] = 5 * 2
+        nofocus['borderWidth'] = self.borderWidth
+        yesfocus['borderWidth'] = max(self.borderWidth, 2) * 2
         # Darken border
-        if value['lineColor']:
-            pal['lineRGB'] = pal['lineColor'] = [max(c - 0.05, 0.05) for c in value['lineRGB']]
-        else:
-            # Use window colour as base if border colour is none
-            pal['lineRGB'] = pal['lineColor'] = [max(c - 0.05, 0.05) for c in self.win.color]
+        nofocus['borderColor'] = self.borderColor.copy()
+        yesfocus['borderColor'] = self.borderColor.copy()
+        yesfocus['borderColor'].luminance -= 0.1
         # Lighten background
-        if value['fillColor']:
-            pal['fillRGB'] = pal['fillColor'] = [min(c + 0.05, 0.95) for c in value['fillRGB']]
-        else:
-            # Use window colour as base if fill colour is none
-            pal['fillRGB'] = pal['fillColor'] = [min(c + 0.05, 0.95) for c in self.win.color]
+        nofocus['fillColor'] = self.fillColor.copy()
+        yesfocus['fillColor'] = self.fillColor.copy()
+        yesfocus['fillColor'].luminance += 0.1
+        # Also store text color
+        nofocus['foreColor'] = yesfocus['foreColor'] = self.foreColor
+        # Create pallette dict
         self._pallette = {
-            False: value,
-            True: pal
+            False: nofocus,
+            True: yesfocus
         }
-        print(self._pallette)
 
     @attributeSetter
     def font(self, fontName, italic=False, bold=False):
@@ -321,7 +321,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         text = text.replace('</i>', codes['ITAL_END'])
         text = text.replace('<b>', codes['BOLD_START'])
         text = text.replace('</b>', codes['BOLD_END'])
-        rgb = self._getDesiredRGB(self.rgb, self.colorSpace, self.contrast)
+        rgb = self.color.rgb
         font = self.glFont
 
         # the vertices are initially pix (natural for freetype)
