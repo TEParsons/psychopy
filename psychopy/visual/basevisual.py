@@ -281,11 +281,18 @@ class ColorMixin(object):
     """
     # def __init__(self):
     #    super(ColorStim, self).__init__()
+    _color = None
+    _fillColor = None
+    _borderColor = None
+    _foreColor = None
 
     @property
     def color(self):
-        if hasattr(self, '_color'):
-            return self.color
+        # Set color if not set yet
+        if not isinstance(self._color, Color):
+            self.color = self._color = Color(self._color)
+
+        return self._color
     @color.setter
     def color(self, value):
         """Color of the stimulus
@@ -338,13 +345,16 @@ class ColorMixin(object):
             stim.colorSpace = 'rgb255'
             stim.color = (0, 128, 255)
         """
-        if not isinstance(self.color, Color) and not isinstance(self.color, AdvancedColor):
+        if isinstance(value, Color):
+            # Set to input if input is already a Color object
+            self._color = value
+        else:
             if Color.getSpace(value):
-                self.color = Color(value)
+                # If input is a valid color, create a Color object
+                self._color = Color(value)
             else:
-                self.color = AdvancedColor(value)
-
-
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._color = AdvancedColor(value)
     @property
     def colorSpace(self):
         if isinstance(self.color, Color) or isinstance(self.color, AdvancedColor):
@@ -354,6 +364,66 @@ class ColorMixin(object):
         """Deprecated function, colours now exist in all spaces
         """
         pass
+
+    @property
+    def fillColor(self):
+        # Set color if not set yet
+        if not isinstance(self._fillColor, Color):
+            self.color = self._fillColor = Color(self._fillColor)
+
+        return self._fillColor
+    @fillColor.setter
+    def fillColor(self, color):
+        if isinstance(color, Color):
+            # Set to input if input is already a Color object
+            self._fillColor = color
+        else:
+            if Color.getSpace(color):
+                # If input is a valid color, create a Color object
+                self._fillColor = Color(color)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._fillColor = AdvancedColor(color)
+
+    @property
+    def borderColor(self):
+        # Set color if not set yet
+        if not isinstance(self._borderColor, Color):
+            self.color = self._borderColor = Color(self._borderColor)
+
+        return self._borderColor
+    @borderColor.setter
+    def borderColor(self, color):
+        if isinstance(color, Color):
+            # Set to input if input is already a Color object
+            self._borderColor = color
+        else:
+            if Color.getSpace(color):
+                # If input is a valid color, create a Color object
+                self._borderColor = Color(color)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._borderColor = AdvancedColor(color)
+
+    @property
+    def foreColor(self):
+        # Set color if not set yet
+        if not isinstance(self._foreColor, Color):
+            self.color = self._foreColor = Color(self._foreColor)
+
+        return self._foreColor
+    @foreColor.setter
+    def foreColor(self, color):
+        if isinstance(color, Color):
+            # Set to input if input is already a Color object
+            self._foreColor = color
+        else:
+            if Color.getSpace(color):
+                # If input is a valid color, create a Color object
+                self._foreColor = Color(color)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._foreColor = AdvancedColor(color)
 
     @attributeSetter
     def contrast(self, value):
