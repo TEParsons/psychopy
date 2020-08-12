@@ -235,11 +235,11 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         # Darken border
         nofocus['borderColor'] = self.borderColor.copy()
         yesfocus['borderColor'] = self.borderColor.copy()
-        yesfocus['borderColor'].luminance -= 0.1
+        yesfocus['borderColor'].contrast -= 0.1
         # Lighten background
         nofocus['fillColor'] = self.fillColor.copy()
         yesfocus['fillColor'] = self.fillColor.copy()
-        yesfocus['fillColor'].luminance += 0.1
+        yesfocus['fillColor'].contrast += 0.1
         # Also store text color
         nofocus['foreColor'] = yesfocus['foreColor'] = self.foreColor
         # Create pallette dict
