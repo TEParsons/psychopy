@@ -81,6 +81,9 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
                  padding=None,  # gap between box and text
                  anchor='center',
                  alignment='left',
+                 fillColor=None,
+                 borderWidth=2,
+                 borderColor=None,
                  flipHoriz=False,
                  flipVert=False,
                  editable=False,
@@ -187,14 +190,20 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         # box border and fill
         w, h = self.size
         self.borderWidth = borderWidth
-        self.borderColor = borderColor
-        self.fillColor = fillColor
+        self.borderColor = Color(borderColor, borderSpace)
+        self.fillColor = Color(None, None)
+        self.foreColor = Color(None, None)
+        print('border', self.borderColor)
+        print('fill', self.fillColor)
+        print('fore', self.foreColor)
+        self.fillColor.alpha = self.borderColor.alpha = self.foreColor.alpha = opacity # Synonymise opacity with alpha, for now
+        self.pallette = {} # Set pallette from init colours
 
         self.box = Rect(
                 win, pos=self.pos,
                 units=self.units,
-                lineWidth=borderWidth, lineColor=borderColor,
-                fillColor=fillColor, opacity=self.opacity,
+                lineWidth=self.borderWidth, lineColor=self.borderColor,
+                fillColor=self.fillColor, opacity=opacity,
                 autoLog=False, fillColorSpace=self.colorSpace)
         # also bounding box (not normally drawn but gives tight box around chrs)
         self.boundingBox = Rect(
@@ -202,12 +211,6 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
                 units=self.units,
                 lineWidth=1, lineColor=None, fillColor=fillColor, opacity=0.1,
                 autoLog=False)
-        self.pallette = { # If no focus
-            'borderWidth': borderWidth,
-            'borderColor': borderColor,
-            'foreColor': color,
-            'fillColor': fillColor,
-        }
         # then layout the text (setting text triggers _layout())
         self.text = text if text is not None else ""
 
