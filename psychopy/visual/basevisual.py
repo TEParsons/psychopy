@@ -349,21 +349,16 @@ class ColorMixin(object):
             # Set to input if input is already a Color object
             self._color = value
         else:
+            if hasattr(self, 'colorSpace'):
+                space = self.colorSpace
+            else:
+                space = None
             if Color.getSpace(value):
                 # If input is a valid color, create a Color object
                 self._color = Color(value)
             else:
                 # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
                 self._color = AdvancedColor(value)
-    @property
-    def colorSpace(self):
-        if isinstance(self.color, Color) or isinstance(self.color, AdvancedColor):
-            return self.color._requestedSpace
-    @colorSpace.setter
-    def colorSpace(self, value):
-        """Deprecated function, colours now exist in all spaces
-        """
-        pass
 
     @property
     def fillColor(self):
@@ -378,12 +373,16 @@ class ColorMixin(object):
             # Set to input if input is already a Color object
             self._fillColor = color
         else:
+            if hasattr(self, 'fillColorSpace'):
+                space = self.fillColorSpace
+            else:
+                space = None
             if Color.getSpace(color):
                 # If input is a valid color, create a Color object
-                self._fillColor = Color(color)
+                self._fillColor = Color(color, space)
             else:
                 # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
-                self._fillColor = AdvancedColor(color)
+                self._fillColor = AdvancedColor(color, space)
 
     @property
     def borderColor(self):
@@ -398,6 +397,10 @@ class ColorMixin(object):
             # Set to input if input is already a Color object
             self._borderColor = color
         else:
+            if hasattr(self, 'borderColorSpace'):
+                space = self.borderColorSpace
+            else:
+                space = None
             if Color.getSpace(color):
                 # If input is a valid color, create a Color object
                 self._borderColor = Color(color)
@@ -418,6 +421,10 @@ class ColorMixin(object):
             # Set to input if input is already a Color object
             self._foreColor = color
         else:
+            if hasattr(self, 'foreColorSpace'):
+                space = self.foreColorSpace
+            else:
+                space = None
             if Color.getSpace(color):
                 # If input is a valid color, create a Color object
                 self._foreColor = Color(color)
