@@ -1319,12 +1319,8 @@ class ColorMixin(object):
         but use this method if you need to suppress the log message
         and/or set colorSpace simultaneously.
         """
-        if not isinstance(self.color, Color) and not isinstance(self.color, AdvancedColor):
-            if Color.getSpace(color):
-                self.color = Color(color, colorSpace)
-            else:
-                self.color = AdvancedColor(color, colorSpace)
-
+        self.colorSpace = colorSpace
+        self.color = color
         if self.__class__.__name__ == 'TextStim' and not self.useShaders:
             self._needSetText = True
         logAttrib(self, log, 'color',
@@ -1334,37 +1330,19 @@ class ColorMixin(object):
         """Usually you can use 'stim.attribute = value' syntax instead,
         but use this method if you need to suppress the log message
         """
-        setAttribute(self, 'contrast', newContrast, log, operation)
+        self.color.contrast = newContrast
 
-    def _getDesiredRGB(self, rgb=None, colorSpace=None, contrast=0):
+    def _getDesiredRGB(self, rgb=None, colorSpace=None, contrast=None):
         """ Convert color to RGB while adding contrast.
         Requires self.rgb, self.colorSpace and self.contrast
         """
-        # If rgb not specified, use self.color
-        if not rgb:
-            rgb = self.color
-        # Make a colour object if not one
-        if not isinstance(rgb, Color) and not isinstance(rgb, AdvancedColor):
-            if Color.getSpace(rgb):
-                col = Color(rgb, colorSpace)
-            else:
-                col = AdvancedColor(rgb, colorSpace)
-        else:
-            col = self.color
-        # Convert to RGB in range 0:1 and scaled for contrast
-        # NB glColor will clamp it to be 0-1 (whether or not we use FBO)
-        desiredRGB = tuple((c * contrast + 1) / 2.0 for c in col.rgb)
+        self.colorSpace = colorSpace
+        self.color = rgb
+        if contrast:
+            self.color.contrast = contrast
+        logging.warning("_getDesiredRGB is deprecated, please set color attribute directly.")
 
-        if not self.win.useFBO:
-            # Check that boundaries are not exceeded. If we have an FBO that
-            # can handle this
-            if numpy.any(desiredRGB > 1.0) or numpy.any(desiredRGB < 0):
-                msg = ('Desired color %s (in RGB 0->1 units) falls '
-                       'outside the monitor gamut. Drawing blue instead')
-                logging.warning(msg % desiredRGB)
-                desiredRGB = [0.0, 0.0, 1.0]
-
-        return desiredRGB
+        return self.color.rgb
 
 
 class ContainerMixin(object):
