@@ -208,13 +208,12 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
 
         # Color stuff
         self.colorSpace = colorSpace
-        if rgb != None:
-            msg = ("Use of rgb arguments to stimuli are deprecated. Please "
+        self.color = color
+        if rgb:
+            logging.warning("Use of rgb arguments to stimuli are deprecated. Please "
                    "use color and colorSpace args instead")
-            logging.warning(msg)
-            self.setColor(rgb, colorSpace='rgb', log=False)
-        else:
-            self.setColor(color, log=False)
+            self.colorSpace = 'rgb'
+            self.color = rgb
 
         self.__dict__['fontFiles'] = []
         self.fontFiles = list(fontFiles)  # calls attributeSetter
@@ -381,10 +380,7 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
                 anchor_x=self.anchorHoriz,
                 anchor_y=self.anchorVert,  # the point we rotate around
                 align=self.alignText,
-                color = (int(127.5 * self.rgb[0] + 127.5),
-                      int(127.5 * self.rgb[1] + 127.5),
-                      int(127.5 * self.rgb[2] + 127.5),
-                      int(255 * self.opacity)),
+                color = self.color.rgba255,
                 multiline=True, width=self._wrapWidthPix)  # width of the frame
             self.width = self._pygletTextObj.width
             self._fontHeightPix = self._pygletTextObj.height
@@ -502,25 +498,18 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
     def _setTextNoShaders(self, value=None):
         """Set the text to be rendered using the current font
         """
-        desiredRGB = self._getDesiredRGB(self.rgb, self.colorSpace,
-                                         self.contrast)
         if self.win.winType in ["pyglet", "glfw"]:
             self._pygletTextObj = pyglet.text.Label(
                 self.text, self.font, int(self._heightPix*0.75),
                 anchor_x=self.anchorHoriz,
                 anchor_y=self.anchorVert,  # the point we rotate around
                 align=self.alignText,
-                color = (int(127.5 * self.rgb[0] + 127.5),
-                      int(127.5 * self.rgb[1] + 127.5),
-                      int(127.5 * self.rgb[2] + 127.5),
-                      int(255 * self.opacity)),
+                color = self.color.rgba255,
                 multiline=True, width=self._wrapWidthPix)  # width of the frame
             self.width = self._pygletTextObj.width
         else:
             self._surf = self._font.render(value, self.antialias,
-                                           [desiredRGB[0] * 255,
-                                            desiredRGB[1] * 255,
-                                            desiredRGB[2] * 255])
+                                           self.color.rgb255)
             self.width, self._fontHeightPix = self._surf.get_size()
             if self.antialias:
                 smoothing = GL.GL_LINEAR
@@ -812,10 +801,8 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
 
         if self.useShaders:  # then rgb needs to be set as glColor
             # setup color
-            desiredRGB = self._getDesiredRGB(
-                self.rgb, self.colorSpace, self.contrast)
-            GL.glColor4f(desiredRGB[0], desiredRGB[1],
-                         desiredRGB[2], self.opacity)
+            GL.glColor4f(self.color.rgb[0], self.color.rgb[1],
+                         self.color.rgb[2], self.color.alpha)
 
             GL.glUseProgram(self.win._progSignedTexFont)
             # GL.glUniform3iv(GL.glGetUniformLocation(
@@ -824,7 +811,7 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
             #  # set the texture to be texture unit 0
             GL.glUniform3f(
                 GL.glGetUniformLocation(self.win._progSignedTexFont, b"rgb"),
-                desiredRGB[0], desiredRGB[1], desiredRGB[2])
+                self.color.rgb[0], self.color.rgb[1], self.color.rgb[2])
 
         else:  # color is set in texture, so set glColor to white
             GL.glColor4f(1, 1, 1, 1)
