@@ -93,8 +93,8 @@ class ImageStim(BaseVisualStim, ContainerMixin, ColorMixin, TextureMixin):
         # color and contrast etc
         self.contrast = float(contrast)
         self.opacity = float(opacity)
-        self.__dict__['colorSpace'] = colorSpace  # omit decorator
-        self.setColor(color, colorSpace=colorSpace, log=False)
+        self.colorSpace = colorSpace
+        self.color = color
         # does an rgb pedestal make sense for an image?
         self.rgbPedestal = [0, 0, 0]
 
@@ -252,10 +252,8 @@ class ImageStim(BaseVisualStim, ContainerMixin, ColorMixin, TextureMixin):
         GL.glPushMatrix()  # push before the list, pop after
         win.setScale('pix')
 
-        desiredRGB = self._getDesiredRGB(self.rgb, self.colorSpace,
-                                         self.contrast)
-        GL.glColor4f(desiredRGB[0], desiredRGB[1], desiredRGB[2],
-                     self.opacity)
+        GL.glColor4f(self.color.rgb[0], self.color.rgb[1], self.color.rgb[2],
+                     self.color.alpha)
 
         if self._needTextureUpdate:
             self.setImage(value=self._imName, log=False)
