@@ -343,12 +343,12 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
         if nVerts > 2:  # draw a filled polygon first
             # then draw
-            GL.glColor4f(self.fillColor.rgb[0], self.fillColor.rgb[1], self.fillColor.rgb[2], self.fillColor.alpha)
+            GL.glColor4f(self.fillColor.rgb1[0], self.fillColor.rgb1[1], self.fillColor.rgb1[2], self.fillColor.alpha)
             GL.glDrawArrays(GL.GL_POLYGON, 0, nVerts)
         if self.borderColor.alpha > 0 and self.lineWidth != 0.0:
             # then draw
             GL.glLineWidth(self.lineWidth)
-            GL.glColor4f(self.borderColor.rgb[0], self.borderColor.rgb[1], self.borderColor.rgb[2], self.borderColor.alpha)
+            GL.glColor4f(self.borderColor.rgb1[0], self.borderColor.rgb1[1], self.borderColor.rgb1[2], self.borderColor.alpha)
             if self.closeShape:
                 GL.glDrawArrays(GL.GL_LINE_LOOP, 0, nVerts)
             else:
@@ -561,18 +561,16 @@ class ShapeStim(BaseShapeStim):
         # fill interior triangles if there are any
         if (self.closeShape and
                 self.verticesPix.shape[0] > 2 and
-                self.fillRGB is not None):
+                self.fillColor.alpha > 0):
             GL.glVertexPointer(2, GL.GL_DOUBLE, 0, self.verticesPix.ctypes)
-            fillRGB = self._getDesiredRGB(self.fillRGB, self.fillColorSpace,
-                                          self.contrast)
-            GL.glColor4f(fillRGB[0], fillRGB[1], fillRGB[2], self.opacity)
+            GL.glColor4f(self.fillColor.rgb1[0], self.fillColor.rgb1[1], self.fillColor.rgb1[2], self.fillColor.alpha)
             GL.glDrawArrays(GL.GL_TRIANGLES, 0, self.verticesPix.shape[0])
 
         # draw the border (= a line connecting the non-tesselated vertices)
-        if self.lineRGB is not None and self.lineWidth:
+        if self.fillColor.alpha > 0 and self.lineWidth:
             GL.glVertexPointer(2, GL.GL_DOUBLE, 0, self._borderPix.ctypes)
             GL.glLineWidth(self.lineWidth)
-            GL.glColor4f(self.borderColor.rgb[0], self.borderColor.rgb[1], self.borderColor.rgb[2], self.borderColor.opacity)
+            GL.glColor4f(self.borderColor.rgb1[0], self.borderColor.rgb1[1], self.borderColor.rgb1[2], self.borderColor.alpha)
             if self.closeShape:
                 gl_line = GL.GL_LINE_LOOP
             else:
