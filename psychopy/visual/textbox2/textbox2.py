@@ -73,10 +73,10 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
                  color='white', # this is synonymous with foreColor
                  colorSpace=None,
                  fillColor=None,
-                 fillSpace=None,
+                 fillColorSpace=None,
                  borderWidth=2,
                  borderColor=None,
-                 borderSpace=None,
+                 borderColorSpace=None,
                  contrast=1,
                  opacity=1.0,
                  bold=False,
@@ -127,10 +127,8 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
         BaseVisualStim.__init__(self, win, units=units, name=name)
         self.win = win
-        self.colorSpace = colorSpace
-        self.color = color
-        self.contrast = contrast
-        self.opacity = opacity
+        self.foreColorSpace = colorSpace
+        self.foreColor = color
         self.onTextCallback = onTextCallback
 
         # first set params needed to create font (letter sizes etc)
@@ -186,33 +184,34 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         # box border and fill
         w, h = self.size
         self.borderWidth = borderWidth
-        self.borderColor = Color(borderColor, borderSpace)
-        self.fillColor = Color(None, None)
-        self.foreColor = Color(None, None)
-        print('border', self.borderColor)
-        print('fill', self.fillColor)
-        print('fore', self.foreColor)
+        self.borderColorSpace = borderColorSpace
+        self.borderColor = borderColor
+        self.fillColor = fillColor
+        self.fillColor = fillColorSpace
+        self.foreColor = color
+        self.foreColorSpace = colorSpace
         self.fillColor.alpha = self.borderColor.alpha = self.foreColor.alpha = opacity # Synonymise opacity with alpha, for now
+        self.fillColor.contrast = self.borderColor.contrast = self.foreColor.contrast = contrast
         self.pallette = {} # Set pallette from init colours
 
         self.box = Rect(
                 win, pos=self.pos,
                 units=self.units,
                 lineWidth=self.borderWidth, lineColor=self.borderColor,
-                fillColor=self.fillColor, opacity=opacity,
-                autoLog=False, fillColorSpace=self.colorSpace)
+                fillColor=self.fillColor,
+                autoLog=False, fillColorSpace=self.foreColorSpace)
         # also bounding box (not normally drawn but gives tight box around chrs)
         self.boundingBox = Rect(
                 win, pos=self.pos,
                 units=self.units,
-                lineWidth=1, lineColor=None, fillColor=fillColor, opacity=0.1,
+                lineWidth=1, lineColor=None, fillColor=self.fillColor, opacity=0,
                 autoLog=False)
         # then layout the text (setting text triggers _layout())
         self.text = text
 
         # caret
         self.editable = editable
-        self.caret = Caret(self, color=self.color, width=5)
+        self.caret = Caret(self, color=self.foreColor, colorSpace=self.foreColorSpace, width=5)
         self._hasFocus = False
         if editable:  # may yet gain focus if the first editable obj
             self.win.addEditable(self)
@@ -323,7 +322,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         text = text.replace('</i>', codes['ITAL_END'])
         text = text.replace('<b>', codes['BOLD_START'])
         text = text.replace('</b>', codes['BOLD_END'])
-        rgb = self.color.rgb
+        rgb = self.foreColor.rgb
         font = self.glFont
 
         # the vertices are initially pix (natural for freetype)
@@ -421,7 +420,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
             vertices[i * 4:i * 4 + 4] = theseVertices
             self._texcoords[i * 4:i * 4 + 4] = texcoords
             self._colors[i*4 : i*4+4, :3] = rgb
-            self._colors[i*4 : i*4+4, 3] = self.opacity
+            self._colors[i*4 : i*4+4, 3] = self.foreColor.alpha
             self._lineNs[i] = lineN
             current[0] = current[0] + glyph.advance[0] + fakeBold / 2
             current[1] = current[1] + glyph.advance[1]
@@ -503,13 +502,13 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
     def draw(self):
         """Draw the text to the back buffer"""
         # Border width
-        self.box.setLineWidth(self.pallette['lineWidth']) # Use 1 as base if border width is none
+        self.box.setLineWidth(self.pallette['borderWidth']) # Use 1 as base if border width is none
         #self.borderWidth = self.box.lineWidth
         # Border colour
-        self.box.setLineColor(self.pallette['lineRGB'], colorSpace='rgb')
+        self.box.borderColor = self.pallette['borderColor']
         #self.borderColor = self.box.lineColor
         # Background
-        self.box.setFillColor(self.pallette['fillRGB'], colorSpace='rgb')
+        self.box.fillColor = self.pallette['fillColor']
         #self.fillColor = self.box.fillColor
 
         if self._needVertexUpdate:
@@ -817,22 +816,14 @@ class Caret(ColorMixin):
             Caret colour
     """
 
-    def __init__(self, textbox, color, width):
+    def __init__(self, textbox, color, colorSpace, width):
         self.textbox = textbox
         self.index = len(textbox.text)  # start off at the end
         self.autoLog = False
         self.width = width
         self.units = textbox.units
-        self.color = color
-
-    @attributeSetter
-    def color(self, color):
-        self.setColor(color)
-        self._desiredRGB = [0.89, -0.35, -0.28]
-        # if self.colorSpace not in ['rgb', 'dkl', 'lms', 'hsv']:
-        #     self._desiredRGB = [c / 127.5 - 1 for c in self.rgb]
-        # else:
-        #     self._desiredRGB = self.rgb
+        self.foreColorSpace = colorSpace
+        self.foreColor = color
 
     def draw(self):
         if not self.visible:
@@ -840,9 +831,8 @@ class Caret(ColorMixin):
         if core.getTime() % 1 > 0.6:  # Flash every other second
             return
         gl.glLineWidth(self.width)
-        rgb = self._desiredRGB
         gl.glColor4f(
-            rgb[0], rgb[1], rgb[2], self.textbox.opacity
+            self.foreColor.rgb[0], self.foreColor.rgb[1], self.foreColor.rgb[2], self.foreColor.alpha
         )
         gl.glBegin(gl.GL_LINES)
         gl.glVertex2f(self.vertices[0, 0], self.vertices[0, 1])
