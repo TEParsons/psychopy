@@ -1197,7 +1197,7 @@ class ColorMixin(object):
     def fillColor(self):
         # Set color if not set yet
         if not isinstance(self._fillColor, Color):
-            self.color = self._fillColor = Color(self._fillColor)
+            self._fillColor = Color(self._fillColor)
 
         return self._fillColor
     @fillColor.setter
