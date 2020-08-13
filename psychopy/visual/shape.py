@@ -78,16 +78,16 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
                  win,
                  units='',
                  lineWidth=1.5,
-                 lineColor=(1.0, 1.0, 1.0),
+                 lineColor='white',
                  lineRGB=None,
                  lineColorSpace=None,
-                 lineOpacity=1.0,
-                 lineContrast=1.0,
+                 lineOpacity=None,
+                 lineContrast=None,
                  fillColor=None,
                  fillRGB=None,
                  fillColorSpace=None,
-                 fillOpacity=1.0,
-                 fillContrast=1.0,
+                 fillOpacity=None,
+                 fillContrast=None,
                  color=None,
                  colorRGB=None,
                  colorSpace=None,
@@ -118,15 +118,19 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         self.fillColor = fillColor
         if "Invalid" in str(self.fillColor):
             logging.error("Invalid value "+fillColor+" for fillColor in shape "+self.name+" with fillColorSpace "+self.fillColorSpace)
-        self.fillColor.alpha = fillOpacity
-        self.fillColor.contrast = fillContrast
+        if fillOpacity:
+            self.fillColor.alpha = fillOpacity
+        if fillContrast:
+            self.fillColor.contrast = fillContrast
         # Set border colour (points to ColorMixin setters)
         self.borderColorSpace = lineColorSpace
         self.borderColor = lineColor
         if "Invalid" in str(self.fillColor):
             logging.error("Invalid value "+lineColor+" for lineColor in shape "+self.name+" with fillColorSpace "+self.borderColorSpace)
-        self.borderColor.alpha = lineOpacity
-        self.borderColor.contrast = lineContrast
+        if lineOpacity:
+            self.borderColor.alpha = lineOpacity
+        if lineContrast:
+            self.borderColor.contrast = lineContrast
         # RGB inputs are just legacy - if specified, overrides original colour
 
         if fillRGB:
@@ -166,7 +170,6 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
             self.borderColor.contrast = contrast
             logging.warning("Use of contrast arguments to stimuli are deprecated."
                             " Please use fillContrast/lineContrast instead")
-
         self.pos = numpy.array(pos, float)
         self.closeShape = closeShape
         self.lineWidth = lineWidth
@@ -227,11 +230,13 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
     def setLineRGB(self, value, operation=''):
         """DEPRECATED since v1.60.05: Please use :meth:`~ShapeStim.lineColor`
         """
+        self.borderColorSpace = 'rgb'
         self.borderColor = value
 
     def setFillRGB(self, value, operation=''):
         """DEPRECATED since v1.60.05: Please use :meth:`~ShapeStim.fillColor`
         """
+        self.fillColorSpace = 'rgb'
         self.fillColor = value
 
     def setLineColor(self, color, colorSpace=None, operation='', log=None):
