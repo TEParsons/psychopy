@@ -1290,7 +1290,7 @@ class ColorMixin(object):
             stim.contrast =  1.2  # increases contrast
             stim.contrast = -1.2  # inverts with increased contrast
         """
-        self.__dict__['contrast'] = value
+        self.color.contrast = value
 
         # If we don't have shaders we need to rebuild the stimulus
         if hasattr(self, 'useShaders'):
@@ -1330,7 +1330,12 @@ class ColorMixin(object):
         """Usually you can use 'stim.attribute = value' syntax instead,
         but use this method if you need to suppress the log message
         """
-        self.color.contrast = newContrast
+        if operation == '+':
+            self.color.contrast += newContrast
+        elif operation == '-':
+            self.color.contrast -= newContrast
+        elif operation == '=':
+            self.color.contrast = newContrast
 
     def _getDesiredRGB(self, rgb=None, colorSpace=None, contrast=None):
         """ Convert color to RGB while adding contrast.
