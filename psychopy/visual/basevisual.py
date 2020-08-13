@@ -355,10 +355,10 @@ class ColorMixin(object):
                 space = None
             if Color.getSpace(value):
                 # If input is a valid color, create a Color object
-                self._color = Color(value)
+                self._color = Color(value, space)
             else:
                 # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
-                self._color = AdvancedColor(value)
+                self._color = AdvancedColor(value, space)
 
     @property
     def fillColor(self):
@@ -403,10 +403,10 @@ class ColorMixin(object):
                 space = None
             if Color.getSpace(color):
                 # If input is a valid color, create a Color object
-                self._borderColor = Color(color)
+                self._borderColor = Color(color, space)
             else:
                 # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
-                self._borderColor = AdvancedColor(color)
+                self._borderColor = AdvancedColor(color, space)
 
     @property
     def foreColor(self):
@@ -427,10 +427,10 @@ class ColorMixin(object):
                 space = None
             if Color.getSpace(color):
                 # If input is a valid color, create a Color object
-                self._foreColor = Color(color)
+                self._foreColor = Color(color, space)
             else:
                 # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
-                self._foreColor = AdvancedColor(color)
+                self._foreColor = AdvancedColor(color, space)
 
     @attributeSetter
     def contrast(self, value):
