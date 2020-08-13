@@ -82,7 +82,7 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
                  lms=None,
                  color=(1.0, 1.0, 1.0),
                  colorSpace='rgb',
-                 contrast=1.0,
+                 contrast=None,
                  opacity=1.0,
                  depth=0,
                  rgbPedestal=(0.0, 0.0, 0.0),
@@ -142,7 +142,8 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
                             " Please use color and colorSpace args instead")
             self.colorSpace = 'lms'
             self.colorSpace = lms
-        self.color.contrast = contrast
+        if contrast:
+            self.color.contrast = contrast
 
         # set other parameters
         self.ori = float(ori)
