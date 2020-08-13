@@ -86,7 +86,7 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
                  color=(1.0, 1.0, 1.0),
                  colorSpace='rgb',
                  opacity=1.0,
-                 contrast=1.0,
+                 contrast=None,
                  units="",
                  ori=0.0,
                  height=None,
@@ -214,14 +214,16 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
                    "use color and colorSpace args instead")
             self.colorSpace = 'rgb'
             self.color = rgb
+        if opacity:
+            self.color.alpha = opacity
+        if contrast:
+            self.color.contrast = contrast
 
         self.__dict__['fontFiles'] = []
         self.fontFiles = list(fontFiles)  # calls attributeSetter
         self.setHeight(height, log=False)  # calls setFont() at some point
         # calls attributeSetter without log
         setAttribute(self, 'wrapWidth', wrapWidth, log=False)
-        self.__dict__['opacity'] = float(opacity)
-        self.__dict__['contrast'] = float(contrast)
         # self.width and self._fontHeightPix get set with text and
         # calcSizeRendered is called
         self.setText(text, log=False)
