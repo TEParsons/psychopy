@@ -1145,10 +1145,10 @@ class RatingScale(MinimalStim):
             # fix the marker position on the line
             if not self.markerPosFixed:
                 try:
-                    self.marker.setFillColor('DarkGray', log=False)
+                    self.marker.fillColor = 'DarkGray'
                 except AttributeError:
                     try:
-                        self.marker.setColor('DarkGray', log=False)
+                        self.marker.color = 'DarkGray'
                     except Exception:
                         pass
                 # drop it onto the line
@@ -1191,11 +1191,9 @@ class RatingScale(MinimalStim):
                 self.marker.draw()
             if self.showAccept and self.markerPlacedBySubject:
                 self.frame = (self.frame + 1) % 100
-                self.acceptBox.setFillColor(
-                    self.pulseColor[self.frame], log=False)
-                self.acceptBox.setLineColor(
-                    self.pulseColor[self.frame], log=False)
-                self.accept.setColor(self.acceptTextColor, log=False)
+                self.acceptBox.fillColor = self.pulseColor[self.frame]
+                self.acceptBox.borderColor = self.pulseColor[self.frame]
+                self.accept.color = self.acceptTextColor
                 if self.showValue and self.markerPlacedAt is not False:
                     if self.choices:
                         val = str(self.choices[int(self.markerPlacedAt)])
@@ -1304,8 +1302,8 @@ class RatingScale(MinimalStim):
             # minimum time is enforced during key and mouse handling
             self.status = FINISHED
             if self.showAccept:
-                self.acceptBox.setFillColor(self.acceptFillColor, log=False)
-                self.acceptBox.setLineColor(self.acceptLineColor, log=False)
+                self.acceptBox.fillColor = self.acceptFillColor
+                self.acceptBox.borderColor = self.acceptLineColor
         else:
             # build up response history if no decision or skip yet:
             tmpRating = self.getRating()
@@ -1352,9 +1350,9 @@ class RatingScale(MinimalStim):
         self.frame = 0  # a counter used only to 'pulse' the 'accept' box
 
         if self.showAccept:
-            self.acceptBox.setFillColor(self.acceptFillColor, log=False)
-            self.acceptBox.setLineColor(self.acceptLineColor, log=False)
-            self.accept.setColor('#444444', log=False)  # greyed out
+            self.acceptBox.fillColor = self.acceptFillColor
+            self.acceptBox.borderColor = self.acceptLineColor
+            self.accept.color = '#444444' # greyed out
             self.accept.setText(self.keyClick, log=False)
         if log and self.autoLog:
             logging.exp('RatingScale %s: reset()' % self.name)

@@ -593,12 +593,12 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
                                       style='slider',
                                       pos=(self.rightEdge - .008, self.pos[1]),
                                       autoLog=False)
-        scroll.line.lineColorSpace = self.colorScheme['space']
-        scroll.line.lineColor = self.colorScheme['bg']
-        scroll.line.fillColorSpace = self.colorScheme['space']
-        scroll.line.fillColor = self.colorScheme['bg']
-        scroll.marker.lineColorSpace = self.colorScheme['space']
-        scroll.marker.lineColor = self.colorScheme['em']
+        scroll.line.borderColorSpace = self.colorScheme['space']
+        scroll.line.borderColor = self.colorScheme['bg']
+        scroll.line.borderColorSpace = self.colorScheme['space']
+        scroll.line.borderColor = self.colorScheme['bg']
+        scroll.marker.borderColorSpace = self.colorScheme['space']
+        scroll.marker.borderColor = self.colorScheme['em']
         scroll.marker.fillColorSpace = self.colorScheme['space']
         scroll.marker.fillColor = self.colorScheme['em']
 
@@ -894,22 +894,22 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
         # Default colours
         self.colorScheme = {
             'space': 'rgb',  # Colour space
-            'em': [0.89, -0.35, -0.28],  # emphasis
-            'bg': [0,0,0],  # background
-            'fg': [1,1,1],  # foreground
+            'em': (0.89, -0.35, -0.28),  # emphasis
+            'bg': (0,0,0),  # background
+            'fg': (1,1,1),  # foreground
         }
         if 'light' in style:
             self.colorScheme = {
                 'space': 'rgb', # Colour space
-                'em': [0.89, -0.35, -0.28],  # emphasis
-                'bg': [0.89,0.89,0.89],  # background
-                'fg': [-1,-1,-1],  # foreground
+                'em': (0.89, -0.35, -0.28),  # emphasis
+                'bg': (0.89,0.89,0.89),  # background
+                'fg': (-1,-1,-1),  # foreground
             }
 
         if 'dark' in style:
             self.colorScheme = {
                 'space': 'rgb',  # Colour space
-                'em': [0.89, -0.35, -0.28],  # emphasis
-                'bg': [-0.19,-0.19,-0.14],  # background
-                'fg': [0.89,0.89,0.89],  # foreground
+                'em': (0.89, -0.35, -0.28),  # emphasis
+                'bg': (-0.19,-0.19,-0.14),  # background
+                'fg': (0.89,0.89,0.89),  # foreground
             }
