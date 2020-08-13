@@ -801,8 +801,8 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
 
         if self.useShaders:  # then rgb needs to be set as glColor
             # setup color
-            GL.glColor4f(self.color.rgb[0], self.color.rgb[1],
-                         self.color.rgb[2], self.color.alpha)
+            GL.glColor4f(self.color.rgb1[0], self.color.rgb1[1],
+                         self.color.rgb1[2], self.color.alpha)
 
             GL.glUseProgram(self.win._progSignedTexFont)
             # GL.glUniform3iv(GL.glGetUniformLocation(
@@ -811,7 +811,7 @@ class TextStim(BaseVisualStim, ColorMixin, ContainerMixin):
             #  # set the texture to be texture unit 0
             GL.glUniform3f(
                 GL.glGetUniformLocation(self.win._progSignedTexFont, b"rgb"),
-                self.color.rgb[0], self.color.rgb[1], self.color.rgb[2])
+                self.color.rgb1[0], self.color.rgb1[1], self.color.rgb1[2])
 
         else:  # color is set in texture, so set glColor to white
             GL.glColor4f(1, 1, 1, 1)
