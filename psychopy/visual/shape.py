@@ -413,7 +413,7 @@ class ShapeStim(BaseShapeStim):
                  size=1,
                  ori=0.0,
                  opacity=1.0,
-                 contrast=1.0,
+                 contrast=None,
                  depth=0,
                  interpolate=True,
                  name=None,
