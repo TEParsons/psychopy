@@ -188,7 +188,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self.borderColorSpace = borderColorSpace
         self.borderColor = borderColor
         self.fillColor = fillColor
-        self.fillColor = fillColorSpace
+        self.fillColorSpace = fillColorSpace
         self.foreColor = color
         self.foreColorSpace = colorSpace
         self.fillColor.alpha = self.borderColor.alpha = self.foreColor.alpha = opacity # Synonymise opacity with alpha, for now
@@ -241,7 +241,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         # Lighten background
         nofocus['fillColor'] = self.fillColor.copy()
         yesfocus['fillColor'] = self.fillColor.copy()
-        yesfocus['fillColor'].contrast += 0.1
+        yesfocus['fillColor'].contrast -= 0.1
         # Also store text color
         nofocus['foreColor'] = yesfocus['foreColor'] = self.foreColor
         # Create pallette dict
