@@ -241,6 +241,8 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         nofocus['fillColor'] = self.fillColor.copy()
         yesfocus['fillColor'] = self.fillColor.copy()
         yesfocus['fillColor'].contrast -= 0.2
+        if yesfocus['fillColor'].contrast == 0:
+            yesfocus['fillColor'].brightness += 0.2
         yesfocus['fillColor'].alpha += 0.2
         # Also store text color
         nofocus['foreColor'] = yesfocus['foreColor'] = self.foreColor
@@ -249,6 +251,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
             False: nofocus,
             True: yesfocus
         }
+        print(self._pallette)
 
     @attributeSetter
     def font(self, fontName, italic=False, bold=False):
@@ -514,8 +517,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
         if self._needVertexUpdate:
             self._updateVertices()
-        if self.fillColor is not None or self.borderColor is not None:
-            self.box.draw()
+        self.box.draw()
 
         # self.boundingBox.draw()  # could draw for debug purposes
         gl.glPushMatrix()
