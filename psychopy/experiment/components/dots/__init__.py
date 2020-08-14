@@ -38,7 +38,7 @@ class DotsComponent(BaseVisualComponent):
                  dotSize=2,
                  dotLife=3, signalDots='same', noiseDots='direction', refreshDots='repeat',
                  fieldShape='circle', fieldSize=1.0, fieldPos=(0.0, 0.0),
-                 color='$[1.0,1.0,1.0]', colorSpace='rgb',
+                 color='white', colorSpace='None',
                  opacity=1.0,
                  units='from exp settings',
                  startType='time (s)', startVal=0.0,

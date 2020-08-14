@@ -11,6 +11,8 @@ from os import path
 from psychopy.experiment.components import BaseVisualComponent, Param, getInitVals, _translate
 
 # the absolute path to the folder containing this path
+from psychopy.visual.basevisual import color_spaces
+
 thisFolder = path.abspath(path.dirname(__file__))
 iconFile = path.join(thisFolder, 'textbox.png')
 tooltip = _translate('Textbox: present text stimuli but cooler')
@@ -27,8 +29,12 @@ _localized = {'text': _translate('Text'),
               'lineSpacing': _translate('Line Spacing'),
               'padding': _translate('Padding'),
               'anchor': _translate('Anchor'),
-              'fillColor': _translate('Fill Colour'),
-              'borderColor': _translate('Border Colour'),
+              'color': _translate('Text Color'),
+              'colorSpace': _translate('Text Color Space'),
+              'fillColor': _translate('Fill Color'),
+              'fillColorSpace': _translate('Fill Color Space'),
+              'borderColor': _translate('Border Color'),
+              'borderColorSpace': _translate('Border Color Space'),
               'borderWidth': _translate('Border Width'),
               'editable': _translate('Editable?'),
               'autoLog': _translate('Auto Log')
@@ -44,14 +50,14 @@ class TextboxComponent(BaseVisualComponent):
                  # effectively just a display-value
                  text=_translate('Any text\n\nincluding line breaks'),
                  font='Arial', units='from exp settings', bold=False, italic=False,
-                 color='white', colorSpace='rgb', opacity=1.0,
+                 color='white', colorSpace='None', opacity=1.0,
                  pos=(0, 0), size=None, letterHeight=0.05, ori=0,
                  lineSpacing=1.0,padding=None,  # gap between box and text
                  startType='time (s)', startVal=0.0, anchor='center',
                  stopType='duration (s)', stopVal=1.0,
                  startEstim='', durationEstim='',
-                 languageStyle='LTR', fillColor=None,
-                 borderColor=None, borderWidth=2,
+                 languageStyle='LTR', fillColor=None, fillColorSpace='None',
+                 borderColor=None, borderColorSpace='None', borderWidth=2,
                  flipHoriz=False,
                  flipVert=False,
                  editable=False, autoLog=True):
@@ -161,12 +167,26 @@ class TextboxComponent(BaseVisualComponent):
             hint=_translate("Textbox background colour"),
             label=_localized['fillColor'],
             categ='Color')
+        self.params['fillColorSpace'] = Param(
+            fillColorSpace,
+            valType='str', allowedVals=['None']+list(color_spaces),
+            updates='constant',
+            hint="Choice of color space for the fill color "
+                 "(rgb, dkl, lms, hsv)",
+            label=_localized['fillColorSpace'], categ='Color')
         self.params['borderColor'] = Param(
             borderColor, valType='str', allowedTypes=[],
             updates='constant', allowedUpdates=_allow3[:],
             hint=_translate("Textbox border colour"),
             label=_localized['borderColor'],
             categ='Color')
+        self.params['borderColorSpace'] = Param(
+            borderColorSpace, valType='str',
+            allowedVals=['None']+list(color_spaces),
+            updates='constant',
+            hint="Choice of color space for the fill color "
+                 "(rgb, dkl, lms, hsv)",
+            label=_localized['borderColorSpace'], categ='Color')
         self.params['borderWidth'] = Param(
             borderWidth, valType='num', allowedTypes=[],
             updates='constant', allowedUpdates=_allow3[:],
@@ -191,6 +211,7 @@ class TextboxComponent(BaseVisualComponent):
             self.params[param].categ = 'Layout'
         for param in ('colorSpace',):
             self.params[param].categ = 'Color'
+            self.params[param].label = _localized[param]
 
     def writeInitCode(self, buff):
         # do we need units code?

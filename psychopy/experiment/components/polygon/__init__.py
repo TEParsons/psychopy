@@ -12,6 +12,7 @@ from os import path
 import copy
 from psychopy.experiment.components import BaseVisualComponent, Param, getInitVals, _translate
 from psychopy import logging
+from psychopy.visual.basevisual import color_spaces
 
 # the absolute path to the folder containing this path
 thisFolder = path.abspath(path.dirname(__file__))
@@ -36,8 +37,8 @@ class PolygonComponent(BaseVisualComponent):
 
     def __init__(self, exp, parentName, name='polygon', interpolate='linear',
                  units='from exp settings',
-                 lineColor='$[1,1,1]', lineColorSpace='rgb', lineWidth=1,
-                 fillColor='$[1,1,1]', fillColorSpace='rgb',
+                 lineColor='white', lineColorSpace='None', lineWidth=1,
+                 fillColor='white', fillColorSpace='None',
                  shape='triangle', nVertices=4,
                  pos=(0, 0), size=(0.5, 0.5), ori=0,
                  startType='time (s)', startVal=0.0,
@@ -88,7 +89,7 @@ class PolygonComponent(BaseVisualComponent):
                          "(rgb, dkl, lms, hsv)")
         self.params['fillColorSpace'] = Param(
             fillColorSpace,
-            valType='str', allowedVals=['rgb', 'dkl', 'lms', 'hsv', 'rgb255'],
+            valType='str', allowedVals=list(color_spaces),
             updates='constant',
             hint=msg,
             label=_localized['fillColorSpace'], categ='Advanced')
@@ -106,7 +107,7 @@ class PolygonComponent(BaseVisualComponent):
                          "(rgb, dkl, lms, hsv)")
         self.params['lineColorSpace'] = Param(
             lineColorSpace, valType='str',
-            allowedVals=['rgb', 'dkl', 'lms', 'hsv'],
+            allowedVals=['None']+list(color_spaces),
             updates='constant',
             hint=msg,
             label=_localized['lineColorSpace'], categ='Advanced')
