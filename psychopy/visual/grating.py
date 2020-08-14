@@ -157,8 +157,6 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
 
         self.tex = tex
         self.mask = mask
-        self.contrast = float(contrast)
-        self.opacity = float(opacity)
         self.autoLog = autoLog
         self.autoDraw = autoDraw
         self.blendmode=blendmode
@@ -307,7 +305,7 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
         win.setScale('pix')
         # the list just does the texture mapping
         GL.glColor4f(self.color.rgb[0], self.color.rgb[1], self.color.rgb[2],
-                     self.opacity)
+                     self.color.alpha)
 
         if self._needTextureUpdate:
             self.setTex(value=self.tex, log=False)
