@@ -49,7 +49,7 @@ class NoiseStimComponent(BaseVisualComponent):
 
     def __init__(self, exp, parentName, name='noise', noiseImage='None',
                  mask='None', sf='None', interpolate='nearest',
-                 units='from exp settings', color='$[1,1,1]', colorSpace='rgb',
+                 units='from exp settings', color='white', colorSpace='None',
                  pos=(0, 0), size=(0.5, 0.5), ori=0, phase=0.0, contrast=1.0, texRes='128',
                  noiseType='Binary',noiseElementSize=0.0625,noiseBaseSf=8.0,
                  noiseBW=1,noiseBWO=30, noiseOri=0.0,

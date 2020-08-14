@@ -43,7 +43,7 @@ class EnvGratingComponent(BaseVisualComponent):
 
     def __init__(self, exp, parentName, name='env_grating', carrier='sin',
                  mask='None', sf=1.0, interpolate='linear',
-                 units='from exp settings', color='$[1,1,1]', colorSpace='rgb',
+                 units='from exp settings', color='white', colorSpace='None',
                  pos=(0, 0), size=(0.5, 0.5), ori=0, phase=0.0, texRes='128',
                  envelope='sin',envsf=1.0,envori=0.0,envphase=0.0, 
                  beat=False, power=1.0,
