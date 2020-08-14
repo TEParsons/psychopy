@@ -19,6 +19,7 @@ from psychopy.experiment.utils import CodeGenerationException
 from psychopy.experiment.utils import unescapedDollarSign_re
 from psychopy.experiment.params import getCodeFromParamStr
 from psychopy.alerts import alerttools
+from psychopy.visual.basevisual import color_spaces, advanced_spaces
 
 from psychopy.localization import _translate, _localized
 
@@ -574,7 +575,7 @@ class BaseVisualComponent(BaseComponent):
 
     def __init__(self, exp, parentName, name='',
                  units='from exp settings', color='$[1,1,1]',
-                 pos=(0, 0), size=(0, 0), ori=0, colorSpace='rgb', opacity=1,
+                 pos=(0, 0), size=(0, 0), ori=0, colorSpace='None', opacity=1,
                  startType='time (s)', startVal='',
                  stopType='duration (s)', stopVal='',
                  startEstim='', durationEstim='',
@@ -621,7 +622,7 @@ class BaseVisualComponent(BaseComponent):
             "Choice of color space for the color (rgb, dkl, lms, hsv)")
         self.params['colorSpace'] = Param(
             colorSpace, valType='str',
-            allowedVals=['rgb', 'dkl', 'lms', 'hsv'],
+            allowedVals=['None']+list(color_spaces),
             updates='constant',
             hint=msg,
             label=_localized['colorSpace'])
