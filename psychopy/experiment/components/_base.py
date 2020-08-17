@@ -19,7 +19,7 @@ from psychopy.experiment.utils import CodeGenerationException
 from psychopy.experiment.utils import unescapedDollarSign_re
 from psychopy.experiment.params import getCodeFromParamStr
 from psychopy.alerts import alerttools
-from psychopy.visual.basevisual import color_spaces, advanced_spaces
+from psychopy.visual.basevisual import color_spaces, advancedSpaces
 
 from psychopy.localization import _translate, _localized
 
