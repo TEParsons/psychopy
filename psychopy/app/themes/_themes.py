@@ -1,8 +1,11 @@
+import os
+import subprocess
 import sys
 
 import wx
 import wx.lib.agw.aui as aui
 import wx.stc as stc
+from psychopy.localization import _translate
 from wx import py
 import keyword
 import builtins
@@ -63,7 +66,7 @@ class ThemeMixin:
     }
     # these are populated and modified by PsychoPyApp.theme.setter
     spec = None
-    codetheme = 'PsychopyDark'
+    codetheme = 'PsychopyLight'
     mode = 'light'
     icons = 'light'
     codeColors = {}
@@ -122,7 +125,7 @@ class ThemeMixin:
             target.SetBackgroundColour(ThemeMixin.appColors['frame_bg'])
             # Clear tools
             target.ClearTools()
-            # # Redraw tools
+            # Redraw tools
             target.makeTools()
 
         def applyToStatusBar(target):
@@ -157,8 +160,19 @@ class ThemeMixin:
                 page._applyAppTheme()
 
         def applyToCodeEditor(target):
-            spec = ThemeMixin.codeColors
+            spec = ThemeMixin.codeColors.copy()
             base = spec['base']
+            # Set margin size according to text size
+            if not isinstance(target, wx.py.shell.Shell):
+                target.SetMarginWidth(0, 4 * prefs.coder['codeFontSize'])
+            # Override base font with user spec if present
+            prefkey = 'outputFont' if isinstance(target, wx.py.shell.Shell) else 'codeFont'
+            if prefs.coder[prefkey].lower() != "From Theme...".lower():
+                for key in spec:
+                    if 'font' in spec[key]:
+                        spec[key]['font'] = prefs.coder[prefkey] if spec[key]['font'] == base['font'] \
+                            else base['font']
+                base['font'] = prefs.coder[prefkey]
 
             # Check that key is in tag list
             invalid = []
@@ -179,11 +193,6 @@ class ThemeMixin:
                 spec.update({key: lang[key] for key in lang})
             else:
                 lang = {}
-
-            # Override base font with user spec if present
-            key = 'outputFont' if isinstance(target, wx.py.shell.Shell) else 'codeFont'
-            if prefs.coder[key].lower() != "From Theme...".lower():
-                base['font'] = [prefs.coder[key]]
 
             # Set style for undefined lexers
             for key in [getattr(wx._stc, item) for item in dir(wx._stc) if item.startswith("STC_LEX")]:
@@ -227,7 +236,12 @@ class ThemeMixin:
             # Then construct default styles
             bold = wx.FONTWEIGHT_BOLD if "bold" in base['font'] else wx.FONTWEIGHT_NORMAL
             italic = wx.FONTSTYLE_ITALIC if "italic" in base['font'] else wx.FONTSTYLE_NORMAL
-            fontName = base['font'].replace("bold", "").replace("italic", "").replace(",", "")
+            # Override base font with user spec if present
+            if prefs.coder['outputFont'].lower() == "From Theme...".lower():
+                fontName = base['font'].replace("bold", "").replace("italic", "").replace(",", "")
+            else:
+                fontName = prefs.coder['outputFont']
+
             _font = wx.Font(
                 int(prefs.coder['outputFontSize']),
                 wx.FONTFAMILY_TELETYPE, italic,
@@ -247,6 +261,11 @@ class ThemeMixin:
                     ln) + 1  # +1 as \n is not included in character count
             target.SetStyle(0, i, _style)
 
+        def applyToTextCtrl(target):
+            base = ThemeMixin.codeColors['base']
+            target.SetForegroundColour(base['fg'])
+            target.SetBackgroundColour(base['bg'])
+
         # Define dict linking object types to subfunctions
         handlers = {
             wx.Frame: applyToFrame,
@@ -256,7 +275,8 @@ class ThemeMixin:
             wx.richtext.RichTextCtrl: applyToRichText,
             wx.py.shell.Shell: applyToCodeEditor,
             wx.ToolBar: applyToToolbar,
-            wx.StatusBar: applyToStatusBar
+            wx.StatusBar: applyToStatusBar,
+            wx.TextCtrl: applyToTextCtrl
         }
 
         # If no target supplied, default to using self
@@ -318,19 +338,19 @@ class ThemeMixin:
             else:
                 # if not then use our own recursive method to search
                 if hasattr(c, 'Window') and c.Window is not None:
-                    self._applyAppTheme(c.Window)
+                    ThemeMixin._applyAppTheme(c.Window)
                 elif hasattr(c, 'Sizer') and c.Sizer is not None:
-                    self._applyAppTheme(c.Sizer)
+                    ThemeMixin._applyAppTheme(c.Sizer)
                 # and then apply
                 # try:
-                #     self._applyAppTheme(c)
+                #     ThemeMixin._applyAppTheme(c)
                 # except AttributeError:
                 #     pass
 
-        if hasattr(self, 'Refresh'):
-            self.Refresh()
-        if hasattr(self, 'Update'):
-            self.Update()
+        if hasattr(target, 'Refresh'):
+            target.Refresh()
+        if hasattr(target, '_mgr'):
+            target._mgr.Update()
 
     @property
     def lexkw(self):
@@ -465,7 +485,7 @@ class ThemeMixin:
             })
         return tags
 
-    def hex2rgb(self, hex, base=(0, 0, 0, 0)):
+    def hex2rgb(self, hex, base=(0, 0, 0, 255)):
         if not isinstance(hex, str):
             return base
         # Make hex code case irrelevant
@@ -483,7 +503,7 @@ class ThemeMixin:
         r = hexkeys[hex[1]] * 16 + hexkeys[hex[2]]
         g = hexkeys[hex[3]] * 16 + hexkeys[hex[4]]
         b = hexkeys[hex[5]] * 16 + hexkeys[hex[6]]
-        return wx.Colour(r, g, b, 1)
+        return wx.Colour(r, g, b, 255)
 
     def shiftColour(self, col, offset=15):
         """Shift colour up or down by a set amount"""
@@ -502,7 +522,6 @@ class ThemeMixin:
 
     def extractFont(self, fontList, base=[]):
         """Extract specified font from theme spec"""
-        global fm
         # Convert to list if not already
         if isinstance(base, str):
             base = base.split(",")
@@ -530,7 +549,7 @@ class ThemeMixin:
             finalFont = [wx.SystemSettings.GetFont(wx.SYS_ANSI_FIXED_FONT).GetFaceName()]
         # Cycle through font names, stop at first valid font
         for font in fontList:
-            if fm.findfont(font, fallback_to_default=False) not in fm.defaultFont.values():
+            if fm.findfont(font) not in fm.defaultFont.values():
                 finalFont = [font] + bold + italic
                 break
 
@@ -538,8 +557,8 @@ class ThemeMixin:
 
     def _setCodeColors(self, spec):
         """To be called from _psychopyApp only"""
-        if not self.GetTopWindow() == self:
-            psychopy.logging.warning("This function should only be called from _psychopyApp")
+        #if not self.GetTopWindow() == self:
+        #    psychopy.logging.warning("This function should only be called from _psychopyApp")
 
         base = spec['base']
         base['font'] = self.extractFont(base['font'])
@@ -766,12 +785,15 @@ class IconCache:
             self._loadBitmap(name, theme, emblem=emblem, size=size)
         return IconCache._bitmaps[identifier]
 
-    def makeBitmapButton(self, parent, name, theme=None, size=None, emblem=None,
-                         toolbar=None, tip=None, label="",
-                         tbKind=wx.ITEM_NORMAL):
+    def makeBitmapButton(self, parent, filename,
+                         name="",  # name of Component e.g. TextComponent
+                         label="", # label on the button, often short name
+                         emblem=None,
+                         toolbar=None, tip=None, size=None,
+                         tbKind=wx.ITEM_NORMAL, theme=None):
         if theme is None:
             theme = ThemeMixin.icons
-        bmp = self.getBitmap(name, theme, size, emblem)
+        bmp = self.getBitmap(filename, theme, size, emblem)
         if toolbar:
             if 'phoenix' in wx.PlatformInfo:
                 button = toolbar.AddTool(wx.ID_ANY, label=label,
@@ -783,16 +805,16 @@ class IconCache:
                                                kind=tbKind)
         else:
             button = wx.Button(parent, wx.ID_ANY,
-                               label=label, style=wx.NO_BORDER)
+                               label=label, name=name, style=wx.NO_BORDER)
             button.SetBitmap(bmp)
             button.SetBitmapPosition(wx.TOP)
             button.SetBackgroundColour(ThemeMixin.appColors['frame_bg'])
             # just for regular buttons (not toolbar objects) we can re-use
-            buttonInfo = {'btn':button,
-                          'name':name,
-                          'size':size,
-                          'emblem':emblem,
-                          'theme':theme}
+            buttonInfo = {'btn': button,
+                          'filename': filename,
+                          'size': size,
+                          'emblem': emblem,
+                          'theme': theme}
             self._buttons.append(buttonInfo)
 
             if tip:
@@ -800,15 +822,17 @@ class IconCache:
 
         return button
 
-    def getComponentButton(self, parent, name, theme=None, size=None, emblem=None,
-                         tip="", label="",):
+    def getComponentButton(self, parent, name, label,
+                           theme=None, size=None, emblem=None,
+                           tip=""):
         """Checks in the experiment.components.iconFiles for filename and
         loads it into a wx.Bitmap"""
         if name in components.iconFiles:
             filename = components.iconFiles[name]
-            btn = self.makeBitmapButton(parent=parent,
-                                        name=filename, size=size,
-                                        label=label, tip=tip)
+            btn = self.makeBitmapButton(
+                    parent=parent,
+                    filename=filename, name=name, label=label,
+                    tip=tip, size=size)
             return btn
 
     def getComponentBitmap(self, name, size=None):
@@ -828,17 +852,17 @@ class IconCache:
     def setTheme(self, theme):
         if theme.icons != IconCache._lastIcons:
             for thisBtn in IconCache._buttons:
-                newBmp = self.getBitmap(name=thisBtn['name'],
-                                        size=thisBtn['size'],
-                                        theme=theme.icons,
-                                        emblem=thisBtn['emblem'])
-
-                thisBtn['btn'].SetBitmap(newBmp)
-                thisBtn['btn'].SetBitmapCurrent(newBmp)
-                thisBtn['btn'].SetBitmapPressed(newBmp)
-                thisBtn['btn'].SetBitmapFocus(newBmp)
-                thisBtn['btn'].SetBitmapDisabled(newBmp)
-                thisBtn['btn'].SetBitmapPosition(wx.TOP)
+                if thisBtn['btn']:  # Check that button hasn't been deleted
+                    newBmp = self.getBitmap(name=thisBtn['filename'],
+                                            size=thisBtn['size'],
+                                            theme=theme.icons,
+                                            emblem=thisBtn['emblem'])
+                    thisBtn['btn'].SetBitmap(newBmp)
+                    thisBtn['btn'].SetBitmapCurrent(newBmp)
+                    thisBtn['btn'].SetBitmapPressed(newBmp)
+                    thisBtn['btn'].SetBitmapFocus(newBmp)
+                    thisBtn['btn'].SetBitmapDisabled(newBmp)
+                    thisBtn['btn'].SetBitmapPosition(wx.TOP)
         IconCache._lastIcons = theme.icons
         if theme.appColors['frame_bg'] != IconCache._lastBGColor:
             for thisBtn in IconCache._buttons:
@@ -935,3 +959,50 @@ class PsychopyDockArt(aui.AuiDefaultDockArt):
         # self._caption_font
         self._caption_size = 25
         self._button_size = 20
+
+
+class ThemeSwitcher(wx.Menu):
+    """Class to make a submenu for switching theme, meaning that the menu will
+    always be the same across frames."""
+    def __init__(self, frame):
+        # Get list of themes
+        themePath = Path(prefs.paths['themes'])
+        themeList = {}
+        for themeFile in themePath.glob("*.json"):
+            try:
+                with open(themeFile, "rb") as fp:
+                    theme = json.load(fp)
+                    # Add themes to list only if min spec is defined
+                    base = theme['base']
+                    if all(key in base for key in ['bg', 'fg', 'font']):
+                            themeList[themeFile.stem] = theme['info'] if "info" in theme else ""
+
+            except (FileNotFoundError, IsADirectoryError):
+                pass
+        # Make menu
+        wx.Menu.__init__(self)
+        # Make priority theme buttons
+        priority = ["PsychopyDark", "PsychopyLight", "ClassicDark", "Classic"]
+        for theme in priority:
+            tooltip = themeList.pop(theme)
+            item = self.AppendRadioItem(wx.ID_ANY, _translate(theme), tooltip)
+            frame.Bind(wx.EVT_MENU, frame.app.onThemeChange, item)
+            if item.ItemLabel.lower() == ThemeMixin.codetheme.lower():
+                item.Check(True)
+            else:
+                item.Check(False)
+        # Make other theme buttons
+        for theme in themeList:
+            item = self.AppendRadioItem(wx.ID_ANY, _translate(theme), help=themeList[theme])
+            frame.Bind(wx.EVT_MENU, frame.app.onThemeChange, item)
+            if item.ItemLabel.lower() == ThemeMixin.codetheme.lower():
+                item.Check(True)
+            else:
+                item.Check(False)
+        self.AppendSeparator()
+        # Add Theme Folder button
+        item = self.Append(wx.ID_ANY, _translate("Open theme folder"))
+        frame.Bind(wx.EVT_MENU, self.openThemeFolder, item)
+
+    def openThemeFolder(self, event):
+        subprocess.call("explorer %(themes)s" % prefs.paths, shell=True)

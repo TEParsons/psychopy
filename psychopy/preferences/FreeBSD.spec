@@ -46,17 +46,15 @@
     shutdownKeyModifiers = list(default=list())
     # What to do if gamma-correction not possible
     gammaErrorPolicy = option('abort', 'warn', default='abort')
-    # Should the Builder and Coder "run" buttons add the experiment to runner view or skip straight to running it?
-    useRunner = boolean(default='True')
+    # Add plugin names here to load when a PsychoPy session starts.
+    startUpPlugins = list(default=list())
 
 # Application settings, applied to coder, builder, & prefs windows
 [app]
     # display tips when starting PsychoPy
     showStartupTips = boolean(default='True')
-    # size of icons in the Coder and Builder toolbars (top of window)
-    largeIcons = boolean(default='True')
     # what windows to display when PsychoPy starts
-    defaultView = option('last', 'builder', 'coder', 'both', default='last')
+    defaultView = option('builder', 'coder', 'runner', 'all', default='all')
     # reset preferences to defaults on next restart of PsychoPy
     resetPrefs = boolean(default='False') # default must be False!
     # save any unsaved preferences before closing the window
@@ -101,12 +99,14 @@
 [builder]
     # whether to automatically reload a previously open experiment
     reloadPrevExp = boolean(default=False)
+    # Default to when writing code components
+    codeComponentLanguage = option('Py', 'JS', 'Both', 'Auto->JS', default='Auto->JS')
     # if False will create scripts with an 'easier' but more cluttered namespace
     unclutteredNamespace = boolean(default=False)
     # folder names for custom components; expects a comma-separated list
     componentsFolders = list(default=list('/Users/Shared/PsychoPy3/components'))
     # a list of components to hide (eg, because you never use them)
-    hiddenComponents = list(default=list('PatchComponent'))
+    hiddenComponents = list(default=list('PatchComponent', 'UnknownComponent'))
     # where the Builder demos are located on this computer (after unpacking)
     unpackedDemosDir = string(default='')
     # name of the folder where subject data should be saved (relative to the script)
@@ -206,7 +206,9 @@
     # convert a Builder .psyexp script into a python script and open it in the Coder
     compileScript = string(default='F5')
     # launch a script, Builder or Coder, or run unit-tests
-    runScript = string(default='Ctrl+R')
+    runScript = string(default='Ctrl+Shift+R')
+    # launch a script, Builder or Coder, or run unit-tests
+    runnerScript = string(default='Ctrl+Alt+R')
     # attempt to interrupt and halt a running script
     stopScript = string(default='Ctrl+.')
 
@@ -229,12 +231,8 @@
     toggleOutputPanel = string(default='Ctrl+Shift+O')
     #Builder: rename an existing routine
     renameRoutine = string(default='Ctrl+Shift+R')
-    # switch to Builder window from Coder
-    switchToBuilder = string(default='Ctrl+L')
-    # switch to Coder window from Builder
-    switchToCoder = string(default='Ctrl+L')
-    # switch to Runner
-    switchToRunner = string(default='Ctrl+Alt+R')
+    # switch between windows
+    cycleWindows = string(default='Ctrl+L')
     # increase display size in Flow
     largerFlow = string(default='Ctrl+=')
     # decrease display size in Flow

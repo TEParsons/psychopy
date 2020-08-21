@@ -1,6 +1,7 @@
 {
   "app": "light",
   "icons": "light",
+  "info": "Psychopy Light with more minimal code colours",
   "base": {
     "fg": "#030308",
     "bg": "#FFFFFF",
@@ -8,7 +9,7 @@
   },
   "margin": {
     "fg": "",
-    "bg": "#F2F2F2",
+    "bg": "#FFFFFF",
     "font": ""
   },
   "caret": {
