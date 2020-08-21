@@ -1214,7 +1214,6 @@ class CoderFrame(wx.Frame, ThemeMixin):
         #self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
         self.Bind(wx.EVT_END_PROCESS, self.onProcessEnded)
 
-        self._applyAppTheme()
         # take files from arguments and append the previously opened files
         filename = ""
         if files not in [None, [], ()]:
@@ -1283,8 +1282,11 @@ class CoderFrame(wx.Frame, ThemeMixin):
             self.Fit()
         # Update panes PsychopyToolbar
         isExp = filename.endswith(".py") or filename.endswith(".psyexp")
-        self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
-        self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
+
+        # if the toolbar is done then adjust buttons
+        if hasattr(self, 'cdrBtnRunner'):
+            self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
+            self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
         self.paneManager.Update()
 
         self.sourceAsstChk.Check(
@@ -1640,7 +1642,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
             item = menu.Append(wx.ID_ANY,
                                _translate("Unit &testing...\tCtrl-T"),
                                _translate("Show dialog to run unit tests"))
-        self.Bind(wx.EVT_MENU, self.onUnitTests, id=item.GetId())
+            self.Bind(wx.EVT_MENU, self.onUnitTests, id=item.GetId())
 
         # ---_demos---#000000#FFFFFF------------------------------------------
         self.demosMenu = wx.Menu()
@@ -2240,8 +2242,10 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.currentDoc._applyAppTheme()
         isExp = filename.endswith(".py") or filename.endswith(".psyexp")
 
-        self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
-        self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
+        # if the toolbar is done then adjust buttons
+        if hasattr(self, 'cdrBtnRunner'):
+            self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
+            self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
         self.app.updateWindowMenu()
 
     def fileOpen(self, event=None, filename=None):
