@@ -288,10 +288,13 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         self.Bind(wx.EVT_MENU, self.fileSaveAs, id=wx.ID_SAVEAS)
         self.Bind(wx.EVT_MENU, self.fileOpen, id=wx.ID_OPEN)
         self.Bind(wx.EVT_MENU, self.commandCloseFrame, id=wx.ID_CLOSE)
+        self.fileMenu.AppendSeparator()
         item = menu.Append(
             wx.ID_PREFERENCES,
             _translate("&Preferences\t%s") % keys['preferences'])
         self.Bind(wx.EVT_MENU, self.app.showPrefs, item)
+        # item = menu.Append(wx.NewId(), "Plug&ins")
+        # self.Bind(wx.EVT_MENU, self.pluginManager, item)
         menu.AppendSeparator()
         msg = _translate("Close PsychoPy Builder")
         item = menu.Append(wx.ID_ANY, msg)
@@ -684,10 +687,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
             self.fileSave(event=None, filename=newPath)
             self.filename = newPath
             returnVal = 1
-        try:  # this seems correct on PC, but not on mac
-            dlg.destroy()
-        except Exception:
-            pass
+        dlg.Destroy()
 
         self.updateWindowTitle()
         return returnVal
@@ -722,6 +722,10 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         """returns the filename without path or extension
         """
         return os.path.splitext(os.path.split(self.filename)[1])[0]
+
+    # def pluginManager(self, evt=None, value=True):
+    #     """Show the plugin manger frame."""
+    #     PluginManagerFrame(self).ShowModal()
 
     def updateReadme(self):
         """Check whether there is a readme file in this folder and try to show
@@ -1056,6 +1060,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
                 return  # save file before compiling script
 
         self.stdoutFrame.addTask(fileName=self.filename)
+        self.app.runner.Raise()
         if event:
             if event.Id in [self.bldrBtnRun.Id, self.bldrRun.Id]:
                 self.app.runner.panel.runLocal(event)
@@ -1290,14 +1295,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         """
         feedbackTime = 1500
         colour = {0: "red", -1: "red", 1: "green"}
-
-        if sys.platform == 'win32' or sys.platform.startswith('linux'):
-            if self.appPrefs['largeIcons']:
-                toolbarSize = 32
-            else:
-                toolbarSize = 16
-        else:
-            toolbarSize = 32  # mac: 16 either doesn't work, or looks ba
+        toolbarSize = 32
 
         # Store original
         origBtn = self.btnHandles['pavloviaSync'].NormalBitmap
@@ -2000,10 +1998,7 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel):
         self.frame = frame
         self.app = frame.app
         self.dpi = self.app.dpi
-        if self.app.prefs.app['largeIcons']:
-            panelWidth = 3 * 48 + 50
-        else:
-            panelWidth = 3 * 24 + 50
+        panelWidth = 3 * 48 + 50
         scrolledpanel.ScrolledPanel.__init__(self,
                                              frame,
                                              id,
@@ -2045,10 +2040,7 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel):
             # Set button background and link to onhover functions
             #sectionBtn.Bind(wx.EVT_ENTER_WINDOW, self.onHover)
             #sectionBtn.Bind(wx.EVT_LEAVE_WINDOW, self.offHover)
-            if self.app.prefs.app['largeIcons']:
-                self.panels[categ] = wx.FlexGridSizer(cols=1)
-            else:
-                self.panels[categ] = wx.FlexGridSizer(cols=2)
+            self.panels[categ] = wx.FlexGridSizer(cols=1)
             self.sizer.Add(sectionBtn, flag=wx.EXPAND)
             self.sizerList.append(sectionBtn)
             self.sizer.Add(self.panels[categ], flag=wx.ALIGN_CENTER)
@@ -2085,10 +2077,7 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel):
         self.Update()
 
     def on_resize(self, event):
-        if self.app.prefs.app['largeIcons']:
-            cols = self.GetClientSize()[0] // self._maxBtnWidth
-        else:
-            cols = self.GetClientSize()[0] // self._maxBtnWidth
+        cols = self.GetClientSize()[0] // self._maxBtnWidth
         for category in list(self.panels.values()):
             category.SetCols(max(1, cols))
 
@@ -2122,9 +2111,11 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel):
         for redundant in ['component', 'Component', "ButtonBox"]:
             shortName = shortName.replace(redundant, "")
         # Convert from CamelCase to Title Case for button label
-        label = shortName
-        for c in "".join(c if c.isupper() else "" for c in name[1:]):
-            label = label.replace(c, "\n"+c)
+        label = ""
+        for i, c in enumerate(shortName):
+            if c.isupper() and i > 0:
+                label += "\n"
+            label += c
         # set size
         size = 48
         # get tooltip
@@ -2527,7 +2518,6 @@ class ExportFileDialog(wx.Dialog):
         btn = wx.Button(self, wx.ID_CANCEL)
         btn.SetHelpText("The Cancel button cancels the dialog. (Crazy, huh?)")
         btnsizer.AddButton(btn)
-        btnsizer.Realize()
 
         sizer.Add(btnsizer, 0, wx.ALL, 5)
 

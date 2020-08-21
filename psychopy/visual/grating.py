@@ -82,7 +82,7 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
                  lms=None,
                  color=(1.0, 1.0, 1.0),
                  colorSpace='rgb',
-                 contrast=1.0,
+                 contrast=None,
                  opacity=1.0,
                  depth=0,
                  rgbPedestal=(0.0, 0.0, 0.0),
@@ -107,7 +107,6 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
         # They are set "superficially" here.
         # TO DO: postpone calls to _createTexture, setColor and
         # _calcCyclesPerStim whin initiating stimulus
-        self.__dict__['contrast'] = 1
         self.__dict__['size'] = 1
         self.__dict__['sf'] = 1
         self.__dict__['tex'] = tex
@@ -126,21 +125,25 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
         self.rgbPedestal = val2array(rgbPedestal, False, length=3)
         # No need to invoke decorator for color updating. It is done just
         # below.
-        self.__dict__['colorSpace'] = colorSpace
+        self.colorSpace = colorSpace
+        self.color = color
         if rgb != None:
             logging.warning("Use of rgb arguments to stimuli are deprecated."
                             " Please use color and colorSpace args instead")
-            self.setColor(rgb, colorSpace='rgb', log=False)
+            self.colorSpace = 'rgb'
+            self.color = rgb
         elif dkl != None:
             logging.warning("Use of dkl arguments to stimuli are deprecated."
                             " Please use color and colorSpace args instead")
-            self.setColor(dkl, colorSpace='dkl', log=False)
+            self.colorSpace = 'dkl'
+            self.color = dkl
         elif lms != None:
             logging.warning("Use of lms arguments to stimuli are deprecated."
                             " Please use color and colorSpace args instead")
-            self.setColor(lms, colorSpace='lms', log=False)
-        else:
-            self.setColor(color, colorSpace=colorSpace, log=False)
+            self.colorSpace = 'lms'
+            self.colorSpace = lms
+        if contrast:
+            self.color.contrast = contrast
 
         # set other parameters
         self.ori = float(ori)
@@ -154,8 +157,6 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
 
         self.tex = tex
         self.mask = mask
-        self.contrast = float(contrast)
-        self.opacity = float(opacity)
         self.autoLog = autoLog
         self.autoDraw = autoDraw
         self.blendmode=blendmode
@@ -303,11 +304,8 @@ class GratingStim(BaseVisualStim, TextureMixin, ColorMixin, ContainerMixin):
         GL.glPushMatrix()  # push before the list, pop after
         win.setScale('pix')
         # the list just does the texture mapping
-
-        desiredRGB = self._getDesiredRGB(self.rgb, self.colorSpace,
-                                         self.contrast)
-        GL.glColor4f(desiredRGB[0], desiredRGB[1], desiredRGB[2],
-                     self.opacity)
+        GL.glColor4f(self.color.rgb[0], self.color.rgb[1], self.color.rgb[2],
+                     self.color.alpha)
 
         if self._needTextureUpdate:
             self.setTex(value=self.tex, log=False)

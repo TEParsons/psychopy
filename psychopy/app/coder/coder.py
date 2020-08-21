@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function
 # from future import standard_library
 # standard_library.install_aliases()
 import json
+from past.builtins import unicode
 from builtins import chr
 from builtins import range
 import wx
@@ -43,6 +44,8 @@ from psychopy.app.coder.fileBrowser import FileBrowserPanel
 from psychopy.app.coder.sourceTree import SourceTreePanel
 from psychopy.app.themes import ThemeMixin
 from psychopy.app.coder.folding import CodeEditorFoldingMixin
+# from ..plugin_manager import PluginManagerFrame
+from psychopy.app.errorDlg import ErrorMsgDialog
 
 try:
     import jedi
@@ -240,6 +243,8 @@ class UnitTestFrame(wx.Frame):
         def write(self, inStr):
             self.MoveEnd()  # always 'append' text rather than 'writing' it
             for thisLine in inStr.splitlines(True):
+                if not isinstance(thisLine, unicode):
+                    thisLine = unicode(thisLine)
                 if thisLine.startswith('OK'):
                     self.BeginBold()
                     self.BeginTextColour(self.good)
@@ -339,10 +344,10 @@ class UnitTestFrame(wx.Frame):
             "&Close tests panel\t%s") % self.app.keys['close'])
         self.Bind(wx.EVT_MENU, self.onCloseTests, id=wx.ID_CLOSE)
         _switch = self.app.keys['switchToCoder']
-        self.menuTests.Append(self.IDs.openCoderView,
+        self.menuTests.Append(wx.ID_ANY,
                               _translate("Go to &Coder view\t%s") % _switch,
                               _translate("Go to the Coder view"))
-        self.Bind(wx.EVT_MENU, self.app.showCoder, id=self.IDs.openCoderView)
+        self.Bind(wx.EVT_MENU, self.app.showCoder)
         # -------------quit
         self.menuTests.AppendSeparator()
         _quit = self.app.keys['quit']
@@ -351,7 +356,7 @@ class UnitTestFrame(wx.Frame):
                               _translate("Terminate PsychoPy"))
         self.Bind(wx.EVT_MENU, self.app.quit, id=wx.ID_EXIT)
         item = self.menuTests.Append(
-            wx.ID_PREFERENCES, text=_translate("&Preferences"))
+            wx.ID_PREFERENCES, _translate("&Preferences"))
         self.Bind(wx.EVT_MENU, self.app.showPrefs, item)
         self.SetMenuBar(menuBar)
 
@@ -597,7 +602,9 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
                 self.caretLine + 1, self.caretColumn + 1), 1)
 
         # calltips
-        self.CallTipSetBackground('#fffdcc')
+        self.CallTipSetBackground(ThemeMixin.codeColors['base']['bg'])
+        self.CallTipSetForeground(ThemeMixin.codeColors['base']['fg'])
+        self.CallTipSetForegroundHighlight(ThemeMixin.codeColors['select']['fg'])
         self.AutoCompSetIgnoreCase(True)
         self.AutoCompSetAutoHide(True)
         self.AutoCompStops('. ')
@@ -832,7 +839,7 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
                         textwrap.wrap(calltipText, 76))  # 80 cols after indent
                     y, x = foundRefs[0].bracket_start
                     self.CallTipShow(
-                        self.XYToPosition(x + 1, y - 1), calltipText)
+                        self.XYToPosition(x + 1, y + 1), calltipText)
 
     def MacOpenFile(self, evt):
         logging.debug('PsychoPyCoder: got MacOpenFile event')
@@ -1382,6 +1389,8 @@ class CoderFrame(wx.Frame, ThemeMixin):
         item = menu.Append(wx.ID_PREFERENCES,
                            msg % keyCodes['preferences'])
         self.Bind(wx.EVT_MENU, self.app.showPrefs, id=item.GetId())
+        # item = menu.Append(wx.NewId(), "Plug&ins")
+        # self.Bind(wx.EVT_MENU, self.pluginManager, id=item.GetId())
         # -------------Close coder frame
         menu.AppendSeparator()
         msg = _translate("Close PsychoPy Coder")
@@ -1525,7 +1534,6 @@ class CoderFrame(wx.Frame, ThemeMixin):
                            _translate("Go to the Builder view"))
         self.Bind(wx.EVT_MENU, self.app.showBuilder, id=item.GetId())
 
-        key = self.app.keys['switchToRunner']
         item = menu.Append(wx.ID_ANY,
                            _translate("Open Runner view"),
                            _translate("Open the Runner view"))
@@ -1912,10 +1920,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
                                         checkSave=False)
                     self.showingReloadDialog = False
                     self.statusBar.SetStatusText('')
-                    try:
-                        dlg.destroy()
-                    except Exception:
-                        pass
+                    dlg.Destroy()
                 self.fileStatusLastChecked = time.time()
 
     def pageChanged(self, event):
@@ -1944,10 +1949,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
                                 checkSave=False)
                 self.setFileModified(False)
             self.statusBar.SetStatusText('')
-            try:
-                dlg.destroy()
-            except Exception:
-                pass
+            dlg.Destroy()
 
     def filesDropped(self, event):
         fileList = event.GetFiles()
@@ -1957,6 +1959,10 @@ class CoderFrame(wx.Frame, ThemeMixin):
                     self.app.newBuilderFrame(filename)
                 else:
                     self.setCurrentDoc(filename)
+
+    # def pluginManager(self, evt=None, value=True):
+    #     """Show the plugin manger frame."""
+    #     PluginManagerFrame(self).ShowModal()
 
     def OnFindOpen(self, event):
         # open the find dialog if not already open
@@ -2316,10 +2322,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
                                             type='Warning')
                 if dlg.ShowModal() != wx.ID_YES:
                     failToSave = True
-                try:
-                    dlg.destroy()
-                except Exception:
-                    pass
+                dlg.Destroy()
             if os.path.exists(filename) and not os.access(filename, os.W_OK):
                 msg = _translate("File '%s' lacks write-permission:\n"
                                  "Will try save-as instead.")
@@ -2328,10 +2331,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
                                             type='Info')
                 dlg.ShowModal()
                 failToSave = True
-                try:
-                    dlg.destroy()
-                except Exception:
-                    pass
+                dlg.Destroy()
             try:
                 if failToSave:
                     raise IOError
@@ -2398,10 +2398,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
             # JRG: 'doc.filename' should = newPath = dlg.getPath()
             doc.fileModTime = os.path.getmtime(doc.filename)
 
-        try:  # this seems correct on PC, but can raise errors on mac
-            dlg.destroy()
-        except Exception:
-            pass
+        dlg.Destroy()
 
     def fileClose(self, event, filename=None, checkSave=True):
         if self.currentDoc is None:
@@ -2481,9 +2478,11 @@ class CoderFrame(wx.Frame, ThemeMixin):
             elif resp == wx.ID_NO:
                 pass  # just run
         self.app.runner.addTask(fileName=fullPath)
+        self.app.runner.Raise()
         if event:
             if event.Id in [self.cdrBtnRun.Id, self.IDs.cdrRun]:
                 self.app.runner.panel.runLocal(event)
+                self.Raise()
             else:
                 self.app.showRunner()
 

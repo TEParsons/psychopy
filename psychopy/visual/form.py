@@ -27,7 +27,7 @@ _REQUIRED = -12349872349873  # an unlikely int
 _knownFields = {
     'index': None,  # optional field to index into the rows
     'itemText': _REQUIRED,  # (question used until 2020.2)
-    'itemColor': 'white',
+    'itemColor': 'fg',
     'itemWidth': 0.8,  # fraction of the form
     'type': _REQUIRED,  # type of response box (see below)
     'options': ('Yes', 'No'),  # for choice box
@@ -35,7 +35,7 @@ _knownFields = {
     'tickLabels': None,
     # for rating/slider
     'responseWidth': 0.8,  # fraction of the form
-    'responseColor': 'white',
+    'responseColor': 'fg',
     'layout': 'horiz',  # can be vert or horiz
 }
 _doNotSave = [
@@ -113,6 +113,7 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
         self.win = win
         self.autoLog = autoLog
         self.name = name
+        self.style = style
         self.randomize = randomize
         self.items = self.importItems(items)
         self.size = size
@@ -120,8 +121,7 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
         self.itemPadding = itemPadding
         self.scrollSpeed = self.setScrollSpeed(self.items, 4)
         self.units = units
-        # Set default colours
-        self.style = style
+
 
         self.textHeight = textHeight
         self._scrollBarSize = (0.016, size[1])
@@ -247,8 +247,11 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
                                 .format(oldHeader, header)
                             )
                             continue
-
-                        item[header] = defaultValues[header]
+                        # Default to colour scheme if specified
+                        if defaultValues[header] in ['fg', 'bg', 'em']:
+                            item[header] = self.colorScheme[defaultValues[header]]
+                        else:
+                            item[header] = defaultValues[header]
                         missingHeaders.append(header)
 
             msg = "Using default values for the following headers: {}".format(
@@ -564,7 +567,7 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
                 font='Arial',
                 editable=True,
                 borderColor=self.colorScheme['fg'],
-                borderWidth=1,
+                borderWidth=2,
                 fillColor=self.colorScheme['bg'],
                 onTextCallback=self._layoutY,
         )
@@ -589,12 +592,12 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
                                       style='slider',
                                       pos=(self.rightEdge - .008, self.pos[1]),
                                       autoLog=False)
-        scroll.line.lineColorSpace = self.colorScheme['space']
-        scroll.line.lineColor = self.colorScheme['bg']
-        scroll.line.fillColorSpace = self.colorScheme['space']
-        scroll.line.fillColor = self.colorScheme['bg']
-        scroll.marker.lineColorSpace = self.colorScheme['space']
-        scroll.marker.lineColor = self.colorScheme['em']
+        scroll.line.borderColorSpace = self.colorScheme['space']
+        scroll.line.borderColor = self.colorScheme['bg']
+        scroll.line.borderColorSpace = self.colorScheme['space']
+        scroll.line.borderColor = self.colorScheme['bg']
+        scroll.marker.borderColorSpace = self.colorScheme['space']
+        scroll.marker.borderColor = self.colorScheme['em']
         scroll.marker.fillColorSpace = self.colorScheme['space']
         scroll.marker.fillColor = self.colorScheme['em']
 
@@ -645,12 +648,11 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
         float
             Offset position of items proportionate to scroll bar
         """
-        sizeOffset = (1 - self.scrollbar.markerPos) * (
-                    self.size[1] + self.itemPadding)
-        maxItemPos = self._currentVirtualY
+        sizeOffset = (1-self.scrollbar.markerPos) * self.size[1]
+        maxItemPos = self._currentVirtualY - self.size[1]
         if maxItemPos > -self.size[1]:
             return 0
-        return (maxItemPos - (self.scrollbar.markerPos * maxItemPos) + sizeOffset)
+        return maxItemPos*(1- self.scrollbar.markerPos) + sizeOffset
 
     def _createItemCtrls(self):
         """Define layout of form"""
@@ -726,9 +728,6 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
             else:
                 # response on next line
                 self._currentVirtualY -= respHeight + self.itemPadding
-
-        # a hack because form didn't have enough space at bottom!
-        self._currentVirtualY -= respHeight*3
 
         self._setDecorations()  # choose whether show/hide scroolbar
 
@@ -891,19 +890,25 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
 
         """
         self._style = style
-        if style == 'light':
+        # Default colours
+        self.colorScheme = {
+            'space': 'rgb',  # Colour space
+            'em': (0.89, -0.35, -0.28),  # emphasis
+            'bg': (0,0,0),  # background
+            'fg': (1,1,1),  # foreground
+        }
+        if 'light' in style:
             self.colorScheme = {
-                'space': 'hex', # Colour space
-                'em': '#F2545B',  # emphasis
-                'bg': '#F2F2F2',  # background
-                'fg': '#000000',  # foreground
+                'space': 'rgb', # Colour space
+                'em': (0.89, -0.35, -0.28),  # emphasis
+                'bg': (0.89,0.89,0.89),  # background
+                'fg': (-1,-1,-1),  # foreground
             }
 
-        if style == 'dark':
+        if 'dark' in style:
             self.colorScheme = {
-                'space': 'hex',  # Colour space
-                'em': '#F2545B',  # emphasis
-                'bg': '#66666E',  # background
-                'fg': '#F2F2F2',  # foreground
+                'space': 'rgb',  # Colour space
+                'em': (0.89, -0.35, -0.28),  # emphasis
+                'bg': (-0.19,-0.19,-0.14),  # background
+                'fg': (0.89,0.89,0.89),  # foreground
             }
-

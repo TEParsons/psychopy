@@ -164,7 +164,7 @@ class NoiseStim(GratingStim):
                  lms=None,
                  color=(1.0, 1.0, 1.0),
                  colorSpace='rgb',
-                 contrast=0.5,  # see doc
+                 contrast=None,  # see doc
                  opacity=1.0,
                  depth=0,
                  rgbPedestal=(0.0, 0.0, 0.0),
@@ -471,10 +471,8 @@ class NoiseStim(GratingStim):
         win.setScale('pix')
         #the list just does the texture mapping
 
-        desiredRGB = self._getDesiredRGB(self.rgb, self.colorSpace,
-                                         self.contrast)
-        GL.glColor4f(desiredRGB[0], desiredRGB[1], desiredRGB[2],
-                     self.opacity)
+        GL.glColor4f(self.color.rgb1[0], self.color.rgb1[1], self.color.rgb1[2],
+                     self.color.alpha)
 
         # re-build the noise if not done so since last parameter update
         if self._needBuild:

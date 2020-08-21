@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function
 
 from builtins import object
 from past.builtins import basestring
+from pathlib import Path
 
 # Ensure setting pyglet.options['debug_gl'] to False is done prior to any
 # other calls to pyglet or pyglet submodules, otherwise it may not get picked
@@ -30,6 +31,8 @@ except ImportError:
 import copy
 import sys
 import os
+import re
+from math import floor, fsum
 
 from psychopy import logging
 
@@ -38,7 +41,6 @@ from psychopy import logging
 from psychopy.tools.arraytools import val2array
 from psychopy.tools.attributetools import (attributeSetter, logAttrib,
                                            setAttribute)
-from psychopy.tools.colorspacetools import dkl2rgb, lms2rgb
 from psychopy.tools.monitorunittools import (cm2pix, deg2pix, pix2cm,
                                              pix2deg, convertToPix)
 from psychopy.visual.helpers import (pointInPolygon, polygonsOverlap,
@@ -274,14 +276,857 @@ class LegacyVisualMixin(object):
         """
         self.__dict__['depth'] = value
 
+# Dict of examples of Psychopy Red at 12% opacity in different formats
+colorExamples = {
+    'invis': None,
+    'named': 'crimson',
+    'hex': '#F2545B',
+    'hexa': '#F2545B1E',
+    'rgb': (0.89, -0.35, -0.28),
+    'rgba': (0.89, -0.35, -0.28, -0.76),
+    'rgb1': (0.95, 0.32, 0.36),
+    'rgba1': (0.95, 0.32, 0.36, 0.12),
+    'rgb255': (242, 84, 91),
+    'rgba255': (242, 84, 91, 30),
+    'hsv': (357, 0.65, 0.95),
+    'hsva': (357, 0.65, 0.95, 0.12),
+}
+# Dict of named colours
+colorNames = {
+        "none": (0, 0, 0, -1),
+        "aliceblue": (0.882352941176471, 0.945098039215686, 1, 1.0),
+        "antiquewhite": (0.96078431372549, 0.843137254901961, 0.686274509803922, 1.0),
+        "aqua": (-1, 1, 1, 1.0),
+        "aquamarine": (-0.00392156862745097, 1, 0.662745098039216, 1.0),
+        "azure": (0.882352941176471, 1, 1, 1.0),
+        "beige": (0.92156862745098, 0.92156862745098, 0.725490196078431, 1.0),
+        "bisque": (1, 0.788235294117647, 0.537254901960784, 1.0),
+        "black": (-1, -1, -1, 1.0),
+        "blanchedalmond": (1, 0.843137254901961, 0.607843137254902, 1.0),
+        "blue": (-1, -1, 1, 1.0),
+        "blueviolet": (0.0823529411764705, -0.662745098039216, 0.772549019607843, 1.0),
+        "brown": (0.294117647058824, -0.670588235294118, -0.670588235294118, 1.0),
+        "burlywood": (0.741176470588235, 0.443137254901961, 0.0588235294117647, 1.0),
+        "cadetblue": (-0.254901960784314, 0.23921568627451, 0.254901960784314, 1.0),
+        "chartreuse": (-0.00392156862745097, 1, -1, 1.0),
+        "chocolate": (0.647058823529412, -0.176470588235294, -0.764705882352941, 1.0),
+        "coral": (1, -0.00392156862745097, -0.372549019607843, 1.0),
+        "cornflowerblue": (-0.215686274509804, 0.168627450980392, 0.858823529411765, 1.0),
+        "cornsilk": (1, 0.945098039215686, 0.725490196078431, 1.0),
+        "crimson": (0.725490196078431, -0.843137254901961, -0.529411764705882, 1.0),
+        "cyan": (-1, 1, 1, 1.0),
+        "darkblue": (-1, -1, 0.0901960784313725, 1.0),
+        "darkcyan": (-1, 0.0901960784313725, 0.0901960784313725, 1.0),
+        "darkgoldenrod": (0.443137254901961, 0.0509803921568628, -0.913725490196078, 1.0),
+        "darkgray": (0.325490196078431, 0.325490196078431, 0.325490196078431, 1.0),
+        "darkgreen": (-1, -0.215686274509804, -1, 1.0),
+        "darkgrey": (0.325490196078431, 0.325490196078431, 0.325490196078431, 1.0),
+        "darkkhaki": (0.482352941176471, 0.435294117647059, -0.16078431372549, 1.0),
+        "darkmagenta": (0.0901960784313725, -1, 0.0901960784313725, 1.0),
+        "darkolivegreen": (-0.333333333333333, -0.16078431372549, -0.631372549019608, 1.0),
+        "darkorange": (1, 0.0980392156862746, -1, 1.0),
+        "darkorchid": (0.2, -0.607843137254902, 0.6, 1.0),
+        "darkred": (0.0901960784313725, -1, -1, 1.0),
+        "darksalmon": (0.827450980392157, 0.176470588235294, -0.0431372549019607, 1.0),
+        "darkseagreen": (0.12156862745098, 0.474509803921569, 0.12156862745098, 1.0),
+        "darkslateblue": (-0.435294117647059, -0.52156862745098, 0.0901960784313725, 1.0),
+        "darkslategray": (-0.631372549019608, -0.380392156862745, -0.380392156862745, 1.0),
+        "darkslategrey": (-0.631372549019608, -0.380392156862745, -0.380392156862745, 1.0),
+        "darkturquoise": (-1, 0.615686274509804, 0.63921568627451, 1.0),
+        "darkviolet": (0.16078431372549, -1, 0.654901960784314, 1.0),
+        "deeppink": (1, -0.843137254901961, 0.152941176470588, 1.0),
+        "deepskyblue": (-1, 0.498039215686275, 1, 1.0),
+        "dimgray": (-0.176470588235294, -0.176470588235294, -0.176470588235294, 1.0),
+        "dimgrey": (-0.176470588235294, -0.176470588235294, -0.176470588235294, 1.0),
+        "dodgerblue": (-0.764705882352941, 0.129411764705882, 1, 1.0),
+        "firebrick": (0.396078431372549, -0.733333333333333, -0.733333333333333, 1.0),
+        "floralwhite": (1, 0.96078431372549, 0.882352941176471, 1.0),
+        "forestgreen": (-0.733333333333333, 0.0901960784313725, -0.733333333333333, 1.0),
+        "fuchsia": (1, -1, 1, 1.0),
+        "gainsboro": (0.725490196078431, 0.725490196078431, 0.725490196078431, 1.0),
+        "ghostwhite": (0.945098039215686, 0.945098039215686, 1, 1.0),
+        "gold": (1, 0.686274509803922, -1, 1.0),
+        "goldenrod": (0.709803921568627, 0.294117647058824, -0.749019607843137, 1.0),
+        "gray": (0.00392156862745097, 0.00392156862745097, 0.00392156862745097, 1.0),
+        "grey": (0.00392156862745097, 0.00392156862745097, 0.00392156862745097, 1.0),
+        "green": (-1, 0.00392156862745097, -1, 1.0),
+        "greenyellow": (0.356862745098039, 1, -0.631372549019608, 1.0),
+        "honeydew": (0.882352941176471, 1, 0.882352941176471, 1.0),
+        "hotpink": (1, -0.176470588235294, 0.411764705882353, 1.0),
+        "indianred": (0.607843137254902, -0.27843137254902, -0.27843137254902, 1.0),
+        "indigo": (-0.411764705882353, -1, 0.0196078431372548, 1.0),
+        "ivory": (1, 1, 0.882352941176471, 1.0),
+        "khaki": (0.882352941176471, 0.803921568627451, 0.0980392156862746, 1.0),
+        "lavender": (0.803921568627451, 0.803921568627451, 0.96078431372549, 1.0),
+        "lavenderblush": (1, 0.882352941176471, 0.92156862745098, 1.0),
+        "lawngreen": (-0.0274509803921569, 0.976470588235294, -1, 1.0),
+        "lemonchiffon": (1, 0.96078431372549, 0.607843137254902, 1.0),
+        "lightblue": (0.356862745098039, 0.694117647058824, 0.803921568627451, 1.0),
+        "lightcoral": (0.882352941176471, 0.00392156862745097, 0.00392156862745097, 1.0),
+        "lightcyan": (0.756862745098039, 1, 1, 1.0),
+        "lightgoldenrodyellow": (0.96078431372549, 0.96078431372549, 0.647058823529412, 1.0),
+        "lightgray": (0.654901960784314, 0.654901960784314, 0.654901960784314, 1.0),
+        "lightgreen": (0.129411764705882, 0.866666666666667, 0.129411764705882, 1.0),
+        "lightgrey": (0.654901960784314, 0.654901960784314, 0.654901960784314, 1.0),
+        "lightpink": (1, 0.427450980392157, 0.513725490196078, 1.0),
+        "lightsalmon": (1, 0.254901960784314, -0.0431372549019607, 1.0),
+        "lightseagreen": (-0.749019607843137, 0.396078431372549, 0.333333333333333, 1.0),
+        "lightskyblue": (0.0588235294117647, 0.615686274509804, 0.96078431372549, 1.0),
+        "lightslategray": (-0.0666666666666667, 0.0666666666666667, 0.2, 1.0),
+        "lightslategrey": (-0.0666666666666667, 0.0666666666666667, 0.2, 1.0),
+        "lightsteelblue": (0.380392156862745, 0.537254901960784, 0.741176470588235, 1.0),
+        "lightyellow": (1, 1, 0.756862745098039, 1.0),
+        "lime": (-1, 1, -1, 1.0),
+        "limegreen": (-0.607843137254902, 0.607843137254902, -0.607843137254902, 1.0),
+        "linen": (0.96078431372549, 0.882352941176471, 0.803921568627451, 1.0),
+        "magenta": (1, -1, 1, 1.0),
+        "maroon": (0.00392156862745097, -1, -1, 1.0),
+        "mediumaquamarine": (-0.2, 0.607843137254902, 0.333333333333333, 1.0),
+        "mediumblue": (-1, -1, 0.607843137254902, 1.0),
+        "mediumorchid": (0.458823529411765, -0.333333333333333, 0.654901960784314, 1.0),
+        "mediumpurple": (0.152941176470588, -0.12156862745098, 0.717647058823529, 1.0),
+        "mediumseagreen": (-0.529411764705882, 0.403921568627451, -0.113725490196078, 1.0),
+        "mediumslateblue": (-0.0352941176470588, -0.184313725490196, 0.866666666666667, 1.0),
+        "mediumspringgreen": (-1, 0.96078431372549, 0.207843137254902, 1.0),
+        "mediumturquoise": (-0.435294117647059, 0.63921568627451, 0.6, 1.0),
+        "mediumvioletred": (0.56078431372549, -0.835294117647059, 0.0431372549019609, 1.0),
+        "midnightblue": (-0.803921568627451, -0.803921568627451, -0.12156862745098, 1.0),
+        "mintcream": (0.92156862745098, 1, 0.96078431372549, 1.0),
+        "mistyrose": (1, 0.788235294117647, 0.764705882352941, 1.0),
+        "moccasin": (1, 0.788235294117647, 0.419607843137255, 1.0),
+        "navajowhite": (1, 0.741176470588235, 0.356862745098039, 1.0),
+        "navy": (-1, -1, 0.00392156862745097, 1.0),
+        "oldlace": (0.984313725490196, 0.92156862745098, 0.803921568627451, 1.0),
+        "olive": (0.00392156862745097, 0.00392156862745097, -1, 1.0),
+        "olivedrab": (-0.16078431372549, 0.113725490196078, -0.725490196078431, 1.0),
+        "orange": (1, 0.294117647058824, -1, 1.0),
+        "orangered": (1, -0.458823529411765, -1, 1.0),
+        "orchid": (0.709803921568627, -0.12156862745098, 0.67843137254902, 1.0),
+        "palegoldenrod": (0.866666666666667, 0.819607843137255, 0.333333333333333, 1.0),
+        "palegreen": (0.192156862745098, 0.968627450980392, 0.192156862745098, 1.0),
+        "paleturquoise": (0.372549019607843, 0.866666666666667, 0.866666666666667, 1.0),
+        "palevioletred": (0.717647058823529, -0.12156862745098, 0.152941176470588, 1.0),
+        "papayawhip": (1, 0.874509803921569, 0.670588235294118, 1.0),
+        "peachpuff": (1, 0.709803921568627, 0.450980392156863, 1.0),
+        "peru": (0.607843137254902, 0.0431372549019609, -0.505882352941176, 1.0),
+        "pink": (1, 0.505882352941176, 0.592156862745098, 1.0),
+        "plum": (0.733333333333333, 0.254901960784314, 0.733333333333333, 1.0),
+        "powderblue": (0.380392156862745, 0.756862745098039, 0.803921568627451, 1.0),
+        "purple": (0.00392156862745097, -1, 0.00392156862745097, 1.0),
+        "red": (1, -1, -1, 1.0),
+        "rosybrown": (0.474509803921569, 0.12156862745098, 0.12156862745098, 1.0),
+        "royalblue": (-0.490196078431373, -0.176470588235294, 0.764705882352941, 1.0),
+        "saddlebrown": (0.0901960784313725, -0.458823529411765, -0.850980392156863, 1.0),
+        "salmon": (0.96078431372549, 0.00392156862745097, -0.105882352941176, 1.0),
+        "sandybrown": (0.913725490196079, 0.286274509803922, -0.247058823529412, 1.0),
+        "seagreen": (-0.63921568627451, 0.0901960784313725, -0.317647058823529, 1.0),
+        "seashell": (1, 0.92156862745098, 0.866666666666667, 1.0),
+        "sienna": (0.254901960784314, -0.356862745098039, -0.647058823529412, 1.0),
+        "silver": (0.505882352941176, 0.505882352941176, 0.505882352941176, 1.0),
+        "skyblue": (0.0588235294117647, 0.615686274509804, 0.843137254901961, 1.0),
+        "slateblue": (-0.168627450980392, -0.294117647058823, 0.607843137254902, 1.0),
+        "slategray": (-0.12156862745098, 0.00392156862745097, 0.129411764705882, 1.0),
+        "slategrey": (-0.12156862745098, 0.00392156862745097, 0.129411764705882, 1.0),
+        "snow": (1, 0.96078431372549, 0.96078431372549, 1.0),
+        "springgreen": (-1, 1, -0.00392156862745097, 1.0),
+        "steelblue": (-0.450980392156863, 0.0196078431372548, 0.411764705882353, 1.0),
+        "tan": (0.647058823529412, 0.411764705882353, 0.0980392156862746, 1.0),
+        "teal": (-1, 0.00392156862745097, 0.00392156862745097, 1.0),
+        "thistle": (0.694117647058824, 0.498039215686275, 0.694117647058824, 1.0),
+        "tomato": (1, -0.223529411764706, -0.443137254901961, 1.0),
+        "turquoise": (-0.498039215686275, 0.756862745098039, 0.631372549019608, 1.0),
+        "violet": (0.866666666666667, 0.0196078431372548, 0.866666666666667, 1.0),
+        "wheat": (0.92156862745098, 0.741176470588235, 0.403921568627451, 1.0),
+        "white": (1, 1, 1, 1.0),
+        "whitesmoke": (0.92156862745098, 0.92156862745098, 0.92156862745098, 1.0),
+        "yellow": (1, 1, -1, 1.0),
+        "yellowgreen": (0.207843137254902, 0.607843137254902, -0.607843137254902, 1.0)
+    }
+# Shorthand for common regexpressions
+_255 = '(\d|\d\d|1\d\d|2[0-4]\d|25[0-5])'
+_360 = '(\d|\d\d|[12]\d\d|3[0-5]\d|360)'
+_100 = '(\d|\d\d|100)'
+_1 = '(0|1|1.0*|0\.\d*)'
+_lbr = '[\[\(]\s*'
+_rbr = '\s*[\]\)]'
+# Dict of regexpressions for different formats
+color_spaces = {
+    'named': re.compile("|".join(list(colorNames))), # A named colour space
+    'hex': re.compile('#[\dabcdefABCDEF]{6}'), # Hex
+    'hexa': re.compile('#[\dabcdefABCDEF]{8}'), # Hex + alpha
+    'rgb': re.compile(_lbr+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+_rbr), # RGB from -1 to 1
+    'rgba': re.compile(_lbr+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+_rbr),  # RGB + alpha from -1 to 1
+    'rgb1': re.compile(_lbr+_1+',\s*'+_1+',\s*'+_1+_rbr),  # RGB from 0 to 1
+    'rgba1': re.compile(_lbr+_1+',\s*'+_1+',\s*'+_1+',\s*'+_1+_rbr),  # RGB + alpha from 0 to 1
+    'rgb255': re.compile(_lbr+_255+',\s*'+_255+',\s*'+_255+_rbr), # RGB from 0 to 255
+    'rgba255': re.compile(_lbr+_255+',\s*'+_255+',\s*'+_255+',\s*'+_255+_rbr), # RGB + alpha from 0 to 255
+    'hsv': re.compile(_lbr+_360+'\°?'+',\s*'+_1+',\s*'+_1+_rbr), # HSV with hue from 0 to 360 and saturation/vibrancy from 0 to 1
+    'hsva': re.compile(_lbr+_360+'\°?'+',\s*'+_1+',\s*'+_1+',\s*'+_1+_rbr), # HSV with hue from 0 to 360 and saturation/vibrancy from 0 to 1 + alpha from 0 to 1
+    'lms': re.compile(_lbr+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+_rbr), # LMS from -1 to 1
+    'lmsa': re.compile(_lbr+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+_rbr), # LMS + alpha from -1 to 1
+}
+
+
+class Color(object):
+    """A class to store colour details, knows what colour space it's in and can supply colours in any space"""
+
+    def __init__(self, color=None, space=None, conematrix=None):
+        # If input is a Color object, duplicate all settings
+        if isinstance(color, Color):
+            self._requested = color._requested
+            self._requestedSpace = color._requestedSpace
+            self.conematrix = color.conematrix
+            self.rgba = color.rgba
+            return
+        # Store requested colour and space (or defaults, if none given)
+        self._requested = color if color else None
+        self._requestedSpace = space \
+            if space and space in self.getSpace(self._requested, debug=True) \
+            else self.getSpace(self._requested)
+
+        # Set matrix for cone conversion
+        if conematrix is not None:
+            self.conematrix = conematrix
+        else:
+            # Set _conematrix specifically as undefined, rather than just setting to default
+            self._conematrix = None
+
+        # Convert to lingua franca
+        if self._requestedSpace:
+            setattr(self, self._requestedSpace, self._requested)
+        else:
+            self.named = None
+
+    def __repr__(self):
+        """If colour is printed, it will display its class and value"""
+        if self.rgba:
+            if self.named:
+                return "<" + self.__class__.__module__ + "." + self.__class__.__name__ + ": " + self.named + ">"
+            else:
+                return "<" + self.__class__.__module__ + "." + self.__class__.__name__ + ": " + str(tuple(round(c,2) for c in self.rgba)) + ">"
+        else:
+            return "<" + self.__class__.__module__ + "." + self.__class__.__name__ + ": " + "Invalid" + ">"
+
+    # ---rich comparisons---
+    def __eq__(self, target):
+        """== will compare RGBA values, rounded to 2dp"""
+        if isinstance(target, Color):
+            return (round(c,2) for c in self.rgba) == (round(c,2) for c in target.rgba)
+        else:
+            return False
+    def __ne__(self, target):
+        """!= will return the opposite of =="""
+        return not self == target
+    def __lt__(self, target):
+        """< will compare brightness"""
+        if isinstance(target, Color):
+            return self.brightness < target.brightness
+        else:
+            return False
+    def __le__(self, target):
+        """<= will compare brightness"""
+        if isinstance(target, Color):
+            return self.brightness <= target.brightness
+        else:
+            return False
+    def __gt__(self, target):
+        """> will compare brightness"""
+        if isinstance(target, Color):
+            return self.brightness > target.brightness
+        else:
+            return False
+    def __ge__(self, target):
+        """>= will compare brightness"""
+        if isinstance(target, Color):
+            return self.brightness >= target.brightness
+        else:
+            return False
+
+    #--operators---
+    def __add__(self, other):
+        if not isinstance(other, Color):
+            if Color.getSpace(other):
+                # Convert to a color if valid
+                other = Color(other)
+            elif AdvancedColor.getSpace(other):
+                # Convert to an advanced color if valid
+                other = AdvancedColor(other)
+            elif isinstance(other, int) or isinstance(other, float):
+                out = self.copy()
+                out.brightness += other
+                return out
+            else:
+                raise ValueError ("unsupported operand type(s) for +: '"
+                                  + self.__class__.__name__ +"' and '"
+                                  + other.__class__.__name__ + "'")
+        if isinstance(other, Color):
+            # If both are colours, average the two and sum their alphas
+            alpha = min(self.alpha + other.alpha, 1)
+            rgb = [None, None, None]
+            selfWeight = self.alpha/(self.alpha+other.alpha)
+            otherWeight = other.alpha/(self.alpha+other.alpha)
+            for c in range(3):
+                rgb[c] = self.rgb1[c]*selfWeight + other.rgb1[c]*otherWeight
+            return Color(rgb+[alpha], 'rgba1')
+
+
+    def copy(self):
+        """Return a duplicate of this colour"""
+        return self.__class__(self._requested, self._requestedSpace, self.conematrix)
+
+    @staticmethod
+    def getSpace(color, debug=False):
+        """Find what colour space a colour is from"""
+        if isinstance(color, Color):
+            return color._requestedSpace
+        possible = [space for space in color_spaces
+                    if color_spaces[space].fullmatch(str(color).lower())]
+        if debug:
+            return possible
+        elif len(possible) == 1:
+            return possible[0]
+
+        # Preferred values in cases of conflict
+        priority = [
+            'rgba',
+            'rgb',
+            'rgba255',
+            'rgba255',
+            'hexa'
+        ]
+        for space in priority:
+            if space in possible:
+                return space
+        # If all else fails, return None
+        return None
+
+    @staticmethod
+    def hue2rgb255(hue):
+        # Work out what segment of the colour wheel we're in
+        seg = floor(hue / 60)
+        seg = seg if seg % 6 else 0
+        # Define values for when a value is decreasing / increasing in a segment
+        _up = (hue % 60) * (255 / 60)
+        _down = 255 - _up
+        _mov = _down if seg%2 else _up # Even segments are down, odd are up
+        # Calculate rgb according to segment
+        if seg == 0:
+            return (255, _mov, 0,)
+        if seg == 1:
+            return (_mov, 255, 0,)
+        if seg == 2:
+            return (0, 255, _mov,)
+        if seg == 3:
+            return (0, _mov, 255,)
+        if seg == 4:
+            return (_mov, 0, 255,)
+        if seg == 5:
+            return (255, 0, _mov,)
+
+    def set(self, color=None, space=None, conematrix=None):
+        """Set the colour of this object - essentially the same as what happens on creation, but without
+        having to initialise a new object"""
+        # If input is a Color object, duplicate all settings
+        if isinstance(color, Color):
+            self._requested = color._requested
+            self._requestedSpace = color._requestedSpace
+            self.conematrix = color.conematrix
+            self.rgba = color.rgba
+            return
+        # Store requested colour and space (or defaults, if none given)
+        self._requested = color if color else None
+        self._requestedSpace = space if space else self.getSpace(self._requested)
+
+        # Set matrix for cone conversion
+        if conematrix:
+            self.conematrix = conematrix
+        else:
+            # Set _conematrix specifically as undefined, rather than just setting to default
+            self._conematrix = None
+
+        # Convert to lingua franca
+        if self._requestedSpace:
+            setattr(self, self._requestedSpace, self._requested)
+        else:
+            self.named = None
+    # ---adjusters---
+    @property
+    def contrast(self):
+        '''Distance from mid grey in rgb (-1 to 1)'''
+        return abs(sum(self.rgb)/3)
+    @contrast.setter
+    def contrast(self, value):
+        if self.contrast:
+            norm = tuple(c/self.contrast for c in self.rgb)
+        else:
+            norm = self.rgb
+        self.rgba = tuple(max(min(c*value,1),-1) for c in norm) + (self.rgba[-1],)
+
+    @property
+    def saturation(self):
+        '''Saturation in hsv (0 to 1)'''
+        return self.hsv[1]
+    @saturation.setter
+    def saturation(self, value):
+        h,s,v,a = self.hsva
+        s += value
+        s = min(s, 1)
+        s = max(s, 0)
+        self.hsva = (h, s, v, a)
+
+    @property
+    def brightness(self):
+        return sum(self.rgb1)/3
+    @brightness.setter
+    def brightness(self, value):
+        adj = value-self.brightness
+        self.rgba1 = tuple(
+            max(min(c+adj, 1),0)
+            for c in self.rgb1
+        ) + (self.alpha,)
+
+    @property
+    def alpha(self):
+        return self.rgba1[-1]
+    @alpha.setter
+    def alpha(self, value):
+        value = min(value,1)
+        value = max(value,0)
+        self.rgba1 = self.rgb1 + (value,)
+
+    #---spaces---
+    # Lingua franca is rgba
+    @property
+    def rgba(self):
+        if hasattr(self, '_franca'):
+            return self._franca
+    @rgba.setter
+    def rgba(self, color):
+        # Validate
+        if not Color.getSpace(color) in ['rgba', 'rgb']:
+            self.named = None
+            return
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        if isinstance(color, list):
+            color = tuple(color)
+        # Append alpha, if not present
+        if len(color) == 4:
+            self._franca = color
+        elif len(color) == 3:
+            self._franca = color + (1,)
+        else:
+            self.named = None
+
+    @property
+    def rgb(self):
+        if self.rgba:
+            return self.rgba[:-1]
+    @rgb.setter
+    def rgb(self, color):
+        self.rgba = color
+
+    @property
+    def rgba255(self):
+        # Iterate through values and do conversion
+        if self.rgba:
+            return tuple(int(255*(val+1)/2) for val in self.rgba)
+    @rgba255.setter
+    def rgba255(self, color):
+        # Validate
+        if not Color.getSpace(color) in ['rgb255', 'rgba255']:
+            self.rgba = None
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        # Iterate through values and do conversion
+        self.rgba = tuple(2 * (val / 255 - 0.5) for val in color)
+
+    @property
+    def rgb255(self):
+        if self.rgba255:
+            return self.rgba255[:-1]
+    @rgb255.setter
+    def rgb255(self, color):
+        self.rgba255 = color
+
+    @property
+    def rgba1(self):
+        # Iterate through values and do conversion
+        if self.rgba:
+            return tuple((val + 1) / 2 for val in self.rgba)
+    @rgba1.setter
+    def rgba1(self, color):
+        # Validate
+        if not Color.getSpace(color) in ['rgb', 'rgba', 'rgb1', 'rgba1']:
+            return None
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        # Iterate through values and do conversion
+        self.rgba = tuple(2 * (val - 0.5) for val in color)
+
+    @property
+    def rgb1(self):
+        if self.rgba1:
+            return self.rgba1[:-1]
+    @rgb1.setter
+    def rgb1(self, color):
+        self.rgba1 = tuple(2 * (val - 0.5) for val in color)
+
+    @property
+    def hexa(self):
+        if not self.rgba255:
+            return None
+        # Map rgb255 values to corresponding letters in hex
+        hexmap = {10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f'}
+        # Iterate and do conversion
+        flatList = ['#']
+        for val in self.rgba255:
+            dig1 = int(floor(val / 16))
+            flatList.append(
+                str(dig1) if dig1 <= 9 else hexmap[dig1]
+            )
+            dig2 = int(val % 16)
+            flatList.append(
+                str(dig2) if dig2 <= 9 else hexmap[dig2]
+            )
+        return "".join(flatList)
+    @hexa.setter
+    def hexa(self, color):
+        # Convert strings to list
+        if Color.getSpace(color) in ['hexa']:
+            colorList = [color[i - 2:i] for i in [3, 5, 7, 9]]
+        elif Color.getSpace(color) in ['hex']:
+            colorList = [color[i-2:i] for i in [3,5,7]]
+        else:
+            # Validate
+            self.rgba = None
+            return
+        # Map hex letters to corresponding values in rgb255
+        hexmap = {'a':10, 'b':11, 'c':12, 'd':13, 'e':14, 'f':15}
+        # Create adjustment for different digits
+        adj = {0:16, 1:1}
+        flatList = []
+        for val in colorList:
+            # Iterate through individual values
+            flat = 0
+            for i, v in enumerate(val):
+                if re.match('\d', str(v)):
+                    flat += int(v)*adj[i]
+                elif re.match('[abcdef]', str(v).lower()):
+                    flat += hexmap[str(v).lower()]*adj[i]
+            flatList.append(flat)
+        self.rgba255 = flatList
+
+    @property
+    def hex(self):
+        if self.hexa:
+            return self.hexa[:-2]
+    @hex.setter
+    def hex(self, color):
+        self.hexa = color
+
+    @property
+    def named(self):
+        # Round all values to 2 decimal places to find approximate matches
+        approxNames = {col: [round(val, 2) for val in colorNames[col]]
+                       for col in colorNames}
+        approxColor = [round(val, 2) for val in self.rgba]
+        # Get matches
+        possible = [nm for nm in approxNames if approxNames[nm] == approxColor]
+        # Return the first match
+        if possible:
+            return possible[0]
+    @named.setter
+    def named(self, color):
+        # Validate
+        if str(color).lower() not in colorNames:
+            self.named = None
+        else:
+            # Retrieve named colour
+            self.rgba = colorNames[str(color).lower()]
+
+    @property
+    def hsva(self):
+        # Based on https://www.geeksforgeeks.org/program-change-rgb-color-model-hsv-color-model/
+        red, green, blue, alpha = self.rgba1
+        cmax = max(red, green, blue)
+        cmin = min(red, green, blue)
+        delta = cmax - cmin
+        # Calculate hue
+        if cmax == 0 and cmin == 0:
+            return (0, 0, 0, alpha)
+        elif delta == 0:
+            return (0, 0, sum(self.rgb1)/3, alpha)
+
+        if cmax == red:
+            hue = (60 * ((green - blue) / delta) + 360) % 360
+        elif cmax == green:
+            hue = (60 * ((blue - red) / delta) + 120) % 360
+        elif cmax == blue:
+            hue = (60 * ((red - green) / delta) + 240) % 360
+        # Calculate saturation
+        if cmax == 0:
+            saturation = 0
+        else:
+            saturation = (delta / cmax)
+        # Calculate vibrancy
+        vibrancy = cmax
+        return (hue, saturation, vibrancy, alpha)
+    @hsva.setter
+    def hsva(self, color):
+        # based on method in
+        # http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
+
+        # Validate
+        if 'hsv' not in Color.getSpace(color, debug=True) and 'hsva' not in Color.getSpace(color, debug=True):
+            return None
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        if isinstance(color, list):
+            color = tuple(color)
+        # Extract values
+        if len(color) == 3:
+            hue, saturation, vibrancy = color
+            alpha255 = None
+        if len(color) == 4:
+            hue, saturation, vibrancy, alpha = color
+            alpha255 = alpha*255
+        # Convert hue
+        hue255 = Color.hue2rgb255(hue)
+        # Get value to move towards as saturation decreases
+        vibrancy255 = vibrancy*255
+        # Adjust by vibrancy and saturation
+        all255 = tuple(h+(vibrancy255-h)*(saturation) for h in hue255)
+        # Apply via rgba255
+        self.rgba255 = all255 + (alpha255,) if alpha255 else all255 + (255,)
+    @property
+    def hsv(self):
+        if self.hsva:
+            return self.hsva[:-1]
+    @hsv.setter
+    def hsv(self, color):
+        self.hsva = color
+
+    @property
+    def conematrix(self):
+        if self._conematrix is None:
+            # If _conematrix has been directly set to None, set to default
+            self.conematrix = None
+        return self._conematrix
+    @conematrix.setter
+    def conematrix(self, value):
+        # Default matrix
+        def default():
+            # Set default cone matrix and print warning
+            logging.warning('This monitor has not been color-calibrated. '
+                            'Using default LMS conversion matrix.')
+            return numpy.asarray([
+                # L        M        S
+                [4.97068857, -4.14354132, 0.17285275],  # R
+                [-0.90913894, 2.15671326, -0.24757432],  # G
+                [-0.03976551, -0.14253782, 1.18230333]])  # B
+        if not isinstance(value, numpy.ndarray):
+            self._conematrix = default()
+        elif not value.size == 9:
+            self._conematrix = default()
+        else:
+            self._conematrix = value
+
+    @property
+    def lmsa(self):
+        """Convert from RGB to cone space (LMS).
+
+        Requires a conversion matrix, which will be generated from generic
+        Sony Trinitron phosphors if not supplied (note that you will not get
+        an accurate representation of the color space unless you supply a
+        conversion matrix)
+        """
+        if self._conematrix is None:
+            self.conematrix = None
+        # its easier to use in the other orientation!
+        rgb_3xN = numpy.transpose(self.rgb)
+        rgb_to_cones = numpy.linalg.inv(self.conematrix)
+        lms = numpy.dot(rgb_to_cones, rgb_3xN)
+        return tuple(numpy.transpose(lms))  # return in the shape we received it
+    @lmsa.setter
+    def lmsa(self, color):
+        """Convert from cone space (Long, Medium, Short) to RGB.
+
+        Requires a conversion matrix, which will be generated from generic
+        Sony Trinitron phosphors if not supplied (note that you will not get
+        an accurate representation of the color space unless you supply a
+        conversion matrix)
+        """
+        # Validate
+        if 'lms' not in Color.getSpace(color, debug=True) and 'lmsa' not in Color.getSpace(color, debug=True):
+            return None
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        if isinstance(color, list):
+            color = tuple(color)
+
+        # Get alpha
+        if len(color) == 4:
+            alpha = color[-1]
+            color = color[:-1]
+        elif len(color) == 3:
+            alpha = 1
+
+        # its easier to use in the other orientation!
+        lms_3xN = numpy.transpose(color)
+        rgb = numpy.dot(self.conematrix, lms_3xN)
+        self.rgba = tuple(numpy.transpose(rgb)) + (alpha,)  # return in the shape we received it
+
+    @property
+    def lms(self):
+        if self.lmsa:
+            return self.lmsa[:-1]
+    @lms.setter
+    def lms(self, color):
+        self.lmsa = color
+
+_rec = '(\-4\.5|\-4\.4\d*|\-4\.[0-4]\d*|\-[0-3]\.\d*|\-[0-3]|0|0\.\d*|1|1\.0)' # -4.5 to 1
+advancedSpaces = {
+    'rec709TF': re.compile(_lbr+_rec+',\s*'+_rec+',\s*'+_rec+_rbr), # rec709TF adjusted RGB from -4.5 to 1 + alpha from 0 to 1
+    'rec709TFa': re.compile(_lbr+_rec+',\s*'+_rec+',\s*'+_rec+',\s*'+_1+_rbr), # rec709TF adjusted RGB from -4.5 to 1 + alpha from 0 to 1
+    'srgbTF': re.compile(_lbr+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+_rbr), # srgbTF from -1 to 1 + alpha from 0 to 1
+    'srgbTFa': re.compile(_lbr+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+'\-?'+_1+',\s*'+_1+_rbr), # srgbTF from -1 to 1 + alpha from 0 to 1
+}
+
+
+class AdvancedColor(Color):
+    @staticmethod
+    def getSpace(color, debug=False):
+        """Overrides Color.getSpace, drawing from a much more comprehensive library of colour spaces"""
+        if isinstance(color, AdvancedColor):
+            return color._requestedSpace
+        # Check for advanced colours spaces
+        possible = [space for space in advancedSpaces
+                    if advancedSpaces[space].fullmatch(str(color))]
+        if len(possible) == 1:
+            return possible[0]
+        # Append basic colour spaces and check again
+        basic = Color.getSpace(color, debug=True)
+        if isinstance(basic, str):
+            basic = [basic]
+        possible += basic
+        if possible and len(possible) == 1:
+            return possible[0]
+        # Return full list if in debug mode
+        if debug:
+            return possible
+        # Preferred values in cases of conflict
+        priority = [
+            'rgba',
+            'rgb',
+            'rgba255',
+            'rgba255',
+            'hexa'
+        ]
+        for space in priority:
+            if space in possible:
+                return space
+
+    @property
+    def rec709TFa(self):
+        """Apply the Rec. 709 transfer function (or gamma) to linear RGB values.
+
+            This transfer function is defined in the ITU-R BT.709 (2015) recommendation
+            document (http://www.itu.int/rec/R-REC-BT.709-6-201506-I/en) and is
+            commonly used with HDTV televisions.
+            """
+        if self.rgb:
+            return tuple(1.099 * c ** 0.45 - 0.099
+                         if c >= 0.018
+                         else 4.5 * c
+                         for c in self.rgb) + (self.rgba1[-1],)
+    @rec709TFa.setter
+    def rec709TFa(self, color):
+        # Validate
+        if 'rec709TF' not in AdvancedColor.getSpace(color, debug=True) and 'rec709TFa' not in AdvancedColor.getSpace(color, debug=True):
+            self._franca = None
+            return
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        if isinstance(color, list):
+            color = tuple(color)
+        # Check for alpha
+        if len(color) == 4:
+            alpha = color[-1]
+            color = color[:-1]
+        elif len(color) == 3:
+            alpha = 1
+        # Do conversion
+        self.rgba = tuple(((c + 0.099)/1.099)**(1/0.45)
+                         if c >= 1.099 * 0.018 ** 0.45 - 0.099
+                         else c / 4.5
+                         for c in color) + (alpha,)
+
+    @property
+    def rec709TF(self):
+        if self.rec709TFa:
+            return self.rec709TFa[:-1]
+    @rec709TF.setter
+    def rec709TF(self, color):
+        self.rec709TFa = color
+
+    @property
+    def srgbTFa(self):
+        """Apply sRGB transfer function (or gamma) to linear RGB values."""
+        # applies the sRGB transfer function (linear RGB -> sRGB)
+        return tuple(c * 12.92
+                     if c <= 0.0031308
+                     else (1.0 + 0.055) * c ** (1.0 / 2.4) - 0.055
+                     for c in self.rgb) + (self.rgba1[-1],)
+    @srgbTFa.setter
+    def srgbTFa(self, color):
+        # Validate
+        if 'srgbTF' not in AdvancedColor.getSpace(color, debug=True) and 'srgbTFa' not in AdvancedColor.getSpace(color, debug=True):
+            self._franca = None
+            return
+        if isinstance(color, str):
+            color = [float(n) for n in color.strip('[]()').split(',')]
+        if isinstance(color, list):
+            color = tuple(color)
+        # Check for alpha
+        if len(color) == 4:
+            alpha = color[-1]
+            color = color[:-1]
+        elif len(color) == 3:
+            alpha = 1
+        # do the inverse (sRGB -> linear RGB)
+        self.rgba = tuple(c / 12.92
+                     if c <= 0.04045
+                     else ((c + 0.055) / 1.055) ** 2.4
+                     for c in color) + (alpha,)
+
+    @property
+    def srgbTF(self):
+        if self.srgbTFa:
+            return self.srgbTFa[:-1]
+    @srgbTF.setter
+    def srgbTF(self, color):
+        self.srgbTFa = color
+
 
 class ColorMixin(object):
     """Mixin class for visual stim that need color and or contrast.
     """
     # def __init__(self):
     #    super(ColorStim, self).__init__()
+    _color = None
+    _fillColor = None
+    _borderColor = None
+    _foreColor = None
 
-    @attributeSetter
+    @property
+    def color(self):
+        # Set color if not set yet
+        if not isinstance(self._color, Color):
+            self.color = self._color = Color(self._color)
+
+        return self._color
+    @color.setter
     def color(self, value):
         """Color of the stimulus
 
@@ -333,34 +1178,92 @@ class ColorMixin(object):
             stim.colorSpace = 'rgb255'
             stim.color = (0, 128, 255)
         """
-        self.setColor(
-            value, log=False)  # logging already done by attributeSettter
+        if isinstance(value, Color):
+            # Set to input if input is already a Color object
+            self._color = value
+        else:
+            if hasattr(self, 'colorSpace'):
+                space = self.colorSpace
+            else:
+                space = None
+            if Color.getSpace(value):
+                # If input is a valid color, create a Color object
+                self._color = Color(value, space)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._color = AdvancedColor(value, space)
 
-    @attributeSetter
-    def colorSpace(self, value):
-        """The name of the color space currently being used
+    @property
+    def fillColor(self):
+        # Set color if not set yet
+        if not isinstance(self._fillColor, Color):
+            self._fillColor = Color(self._fillColor)
 
-        Value should be: a string or None
+        return self._fillColor
+    @fillColor.setter
+    def fillColor(self, color):
+        if isinstance(color, Color):
+            # Set to input if input is already a Color object
+            self._fillColor = color
+        else:
+            if hasattr(self, 'fillColorSpace'):
+                space = self.fillColorSpace
+            else:
+                space = None
+            if Color.getSpace(color):
+                # If input is a valid color, create a Color object
+                self._fillColor = Color(color, space)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._fillColor = AdvancedColor(color, space)
 
-        For strings and hex values this is not needed.
-        If None the default colorSpace for the stimulus is
-        used (defined during initialisation).
+    @property
+    def borderColor(self):
+        # Set color if not set yet
+        if not isinstance(self._borderColor, Color):
+            self.color = self._borderColor = Color(self._borderColor)
 
-        Please note that changing colorSpace does not change stimulus
-        parameters. Thus you usually want to specify colorSpace before
-        setting the color. Example::
+        return self._borderColor
+    @borderColor.setter
+    def borderColor(self, color):
+        if isinstance(color, Color):
+            # Set to input if input is already a Color object
+            self._borderColor = color
+        else:
+            if hasattr(self, 'borderColorSpace'):
+                space = self.borderColorSpace
+            else:
+                space = None
+            if Color.getSpace(color):
+                # If input is a valid color, create a Color object
+                self._borderColor = Color(color, space)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._borderColor = AdvancedColor(color, space)
 
-            # A light green text
-            stim = visual.TextStim(win, 'Color me!',
-                                   color=(0, 1, 0), colorSpace='rgb')
+    @property
+    def foreColor(self):
+        # Set color if not set yet
+        if not isinstance(self._foreColor, Color):
+            self.color = self._foreColor = Color(self._foreColor)
 
-            # An almost-black text
-            stim.colorSpace = 'rgb255'
-
-            # Make it light green again
-            stim.color = (128, 255, 128)
-        """
-        self.__dict__['colorSpace'] = value
+        return self._foreColor
+    @foreColor.setter
+    def foreColor(self, color):
+        if isinstance(color, Color):
+            # Set to input if input is already a Color object
+            self._foreColor = color
+        else:
+            if hasattr(self, 'foreColorSpace'):
+                space = self.foreColorSpace
+            else:
+                space = None
+            if Color.getSpace(color):
+                # If input is a valid color, create a Color object
+                self._foreColor = Color(color, space)
+            else:
+                # If input is not a basic color, create an AdvancedColor object (will be None if invalid)
+                self._foreColor = AdvancedColor(color, space)
 
     @attributeSetter
     def contrast(self, value):
@@ -387,7 +1290,7 @@ class ColorMixin(object):
             stim.contrast =  1.2  # increases contrast
             stim.contrast = -1.2  # inverts with increased contrast
         """
-        self.__dict__['contrast'] = value
+        self.color.contrast = value
 
         # If we don't have shaders we need to rebuild the stimulus
         if hasattr(self, 'useShaders'):
@@ -416,10 +1319,8 @@ class ColorMixin(object):
         but use this method if you need to suppress the log message
         and/or set colorSpace simultaneously.
         """
-        # NB: the setColor helper function! Not this function itself :-)
-        setColor(self, color, colorSpace=colorSpace, operation=operation,
-                 rgbAttrib='rgb',  # or 'fillRGB' etc
-                 colorAttrib='color')
+        self.colorSpace = colorSpace
+        self.color = color
         if self.__class__.__name__ == 'TextStim' and not self.useShaders:
             self._needSetText = True
         logAttrib(self, log, 'color',
@@ -429,30 +1330,24 @@ class ColorMixin(object):
         """Usually you can use 'stim.attribute = value' syntax instead,
         but use this method if you need to suppress the log message
         """
-        setAttribute(self, 'contrast', newContrast, log, operation)
+        if operation == '+':
+            self.color.contrast += newContrast
+        elif operation == '-':
+            self.color.contrast -= newContrast
+        elif operation == '=':
+            self.color.contrast = newContrast
 
-    def _getDesiredRGB(self, rgb, colorSpace, contrast):
+    def _getDesiredRGB(self, rgb=None, colorSpace=None, contrast=None):
         """ Convert color to RGB while adding contrast.
         Requires self.rgb, self.colorSpace and self.contrast
         """
-        # Ensure that we work on 0-centered color (to make negative contrast
-        # values work)
-        if colorSpace not in ['rgb', 'dkl', 'lms', 'hsv']:
-            rgb = rgb / 127.5 - 1
+        self.colorSpace = colorSpace
+        self.color = rgb
+        if contrast:
+            self.color.contrast = contrast
+        logging.warning("_getDesiredRGB is deprecated, please set color attribute directly.")
 
-        # Convert to RGB in range 0:1 and scaled for contrast
-        # NB glColor will clamp it to be 0-1 (whether or not we use FBO)
-        desiredRGB = (rgb * contrast + 1) / 2.0
-        if not self.win.useFBO:
-            # Check that boundaries are not exceeded. If we have an FBO that
-            # can handle this
-            if numpy.any(desiredRGB > 1.0) or numpy.any(desiredRGB < 0):
-                msg = ('Desired color %s (in RGB 0->1 units) falls '
-                       'outside the monitor gamut. Drawing blue instead')
-                logging.warning(msg % desiredRGB)
-                desiredRGB = [0.0, 0.0, 1.0]
-
-        return desiredRGB
+        return self.color.rgb
 
 
 class ContainerMixin(object):
@@ -808,7 +1703,7 @@ class TextureMixin(object):
             intensity[artifactIdx] = 0
 
         else:
-            if isinstance(tex, basestring):
+            if isinstance(tex, (basestring, Path)):
                 # maybe tex is the name of a file:
                 filename = findImageFile(tex)
                 if not filename:

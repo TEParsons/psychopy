@@ -11,6 +11,7 @@ from builtins import str
 from os import path
 from psychopy.experiment.components import BaseVisualComponent, Param, getInitVals, _translate
 from psychopy import logging
+from psychopy.visual.basevisual import color_spaces
 
 # the absolute path to the folder containing this path
 thisFolder = path.abspath(path.dirname(__file__))
@@ -31,7 +32,7 @@ class BrushComponent(BaseVisualComponent):
     categories = ['Responses']
 
     def __init__(self, exp, parentName, name='brush',
-                 lineColor='$[1,1,1]', lineColorSpace='rgb',
+                 lineColor='$[1,1,1]', lineColorSpace='None',
                  lineWidth=1.5, opacity=1,
                  buttonRequired=True,
                  startType='time (s)', startVal=0.0,
@@ -78,7 +79,7 @@ class BrushComponent(BaseVisualComponent):
                          "(rgb, dkl, lms, hsv)")
         self.params['lineColorSpace'] = Param(
             lineColorSpace, valType='str',
-            allowedVals=['rgb', 'dkl', 'lms', 'hsv'],
+            allowedVals=list(color_spaces),
             updates='constant',
             hint=msg,
             label=_localized['lineColorSpace'], categ='Advanced')
