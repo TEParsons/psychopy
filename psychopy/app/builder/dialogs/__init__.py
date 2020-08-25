@@ -405,7 +405,7 @@ class ParamCtrls2:
         self.parent = parent
         self.dlg = parent.dlg
         self.dlg.paramCtrls.update({label: self})
-        self.boxHeight = 20
+        self.boxHeight = -1
         typeMap = {
             'num': self.ctrlNum,
             'int': self.ctrlNum,
@@ -418,17 +418,17 @@ class ParamCtrls2:
             'extendedCode': self.ctrlExtendedCode
         }
         # Create label
-        self.label = wx.StaticText(self.parent, label=label, size=(100, 30), style=wx.TEXT_ALIGNMENT_RIGHT)
-        sizer.Add(self.label, (row, col), border=15, flag=wx.LEFT | wx.TOP if row == 0 else wx.LEFT)
+        self.label = wx.StaticText(self.parent, label=label, size=(100, self.boxHeight), style=wx.TEXT_ALIGNMENT_RIGHT)
+        sizer.Add(self.label, (row, col), border=10, flag=wx.LEFT | wx.TOP)
         col += 1
         # Create value controls
         self.ctrl = typeMap[param.valType](self.parent, param)
-        sizer.Add(self.ctrl, (row, col), border=15, flag=wx.EXPAND | wx.RIGHT | wx.TOP if row == 0 else wx.EXPAND | wx.RIGHT )
+        sizer.Add(self.ctrl, (row, col), border=10, flag=wx.EXPAND | wx.RIGHT | wx.TOP)
         col += 1
         if param.allowedUpdates:
-            self.update = wx.Choice(self.parent, choices=param.allowedUpdates, size=(100, 30))
+            self.update = wx.Choice(self.parent, choices=param.allowedUpdates, size=(100, self.boxHeight))
             self.update.SetSelection(self.update.GetItems().index(param.updates))
-            sizer.Add(self.update, (row, col), border=15, flag=wx.RIGHT | wx.TOP if row == 0 else wx.RIGHT)
+            sizer.Add(self.update, (row, col), border=10, flag=wx.RIGHT | wx.TOP)
             col += 1
 
     def _applyAppTheme(self):
@@ -576,7 +576,7 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
 
         # Add start/stop controls
         self.makeBasicControls(startstop)
-        self.sizer.Add(self.basicCtrls, (0, 0), border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND)
+        self.sizer.Add(self.basicCtrls, (0, 0), border=20, flag=wx.ALL | wx.EXPAND)
         # Add notebook for other param controls
         self.ctrls = aui.AuiNotebook(self, size=(500,400))
         self.sizer.Add(self.ctrls, (1, 0), border=10, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
