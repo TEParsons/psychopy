@@ -19,6 +19,7 @@ import copy
 import numpy
 import re
 import wx
+from wx.lib.agw import aui
 
 import psychopy.experiment.utils
 
@@ -30,7 +31,7 @@ from .dlgsCode import DlgCodeComponentProperties, CodeBox
 from psychopy import data, logging
 from psychopy.localization import _translate
 from psychopy.tools import versionchooser as vc
-
+from ...themes import ThemeMixin
 
 white = wx.Colour(255, 255, 255, 255)
 codeSyntaxOkay = wx.Colour(220, 250, 220, 255)  # light green
@@ -396,7 +397,7 @@ class ParamCtrls(object):
             print("setChangesCallback doesn't know how to handle ctrl {}"
                   .format(type(self.valueCtrl)))
 
-class _BaseParamsDlg(wx.Dialog):
+class _BaseParamsDlg(wx.Dialog, ThemeMixin):
     _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.TAB_TRAVERSAL
 
     def __init__(self, frame, title, params, order,
@@ -476,7 +477,7 @@ class _BaseParamsDlg(wx.Dialog):
         # create main sizer
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.ctrls = wx.Notebook(self)
+        self.ctrls = aui.AuiNotebook(self)
 
         if self.__class__ != DlgExperimentProperties:
             self.mainSizer.Add(self.ctrls,  # ctrls is the notebook of params
@@ -519,9 +520,8 @@ class _BaseParamsDlg(wx.Dialog):
                       'Format':_translate('Format')}
         for categName in categNames:
             theseParams = categs[categName]
-            page = wx.Panel(self.ctrls, -1)
-            page.app = self.app
-            ctrls = self.addCategoryOfParams(theseParams, parent=page)
+            page = _BaseParamCategory(self, theseParams)
+            ctrls = page.sizer
             if categName in categLabel:
                 cat = categLabel[categName]
             else:
@@ -543,8 +543,8 @@ class _BaseParamsDlg(wx.Dialog):
                     if 'expName' in self.paramCtrls:
                         # ExperimentSettings has expName instead
                         self.paramCtrls['expName'].valueCtrl.SetFocus()
-            page.SetSizerAndFit(ctrls)
-            page.SetAutoLayout(True)
+            #page.SetSizerAndFit(ctrls)
+            #page.SetAutoLayout(True)
         self.SetSizerAndFit(self.mainSizer)
         #set up callbacks for any dependent params to update others
         for thisDepend in self.depends:
@@ -552,6 +552,8 @@ class _BaseParamsDlg(wx.Dialog):
             paramCtrl = self.paramCtrls[paramName]  # hint : ParamCtrl
             paramCtrl.setChangesCallback(self.checkDepends)
         self.checkDepends()
+        self._applyAppTheme()
+        ThemeMixin._applyAppTheme(self, self.ctrls)
 
     def checkDepends(self, event=None):
         """Checks the relationships between params that depend on each other
@@ -586,232 +588,6 @@ class _BaseParamsDlg(wx.Dialog):
             self.mainSizer.Layout()
             self.Fit()
             self.Refresh()
-
-    def addCategoryOfParams(self, paramNames, parent):
-        """Add all the params for a single category
-        (after its tab has been created)
-        """
-        # create the sizers to fit the params and set row to zero
-        sizer = wx.GridBagSizer(vgap=2, hgap=2)
-        currRow = 0
-        # does the dlg need an 'updates' row (do any params use it?)
-        self.useUpdates = False
-
-        # create a header row of titles
-        if not self.suppressTitles:
-            size = wx.Size(1.5 * self.dpi, -1)
-            sizer.Add(wx.StaticText(parent, -1, 'Parameter', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 0))
-            sizer.Add(wx.StaticText(parent, -1, 'Value', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 1))
-            # self.sizer.Add(wx.StaticText(self,-1,'Value Type',size=size,
-            #   style=wx.ALIGN_CENTER),(currRow,3))
-            sizer.Add(wx.StaticText(parent, -1, 'Updates', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 2))
-            currRow += 1
-            sizer.Add(wx.StaticLine(parent, size=wx.Size(100, 20)),
-                      (currRow, 0), (1, 2), wx.ALIGN_CENTER | wx.EXPAND)
-        currRow += 1
-
-        # get all params and sort
-        remaining = copy.copy(paramNames)
-
-        # start with the name (always)
-        if 'name' in remaining:
-            self.addParam('name', parent, sizer, currRow)
-            currRow += 1
-            remaining.remove('name')
-            if 'name' in self.order:
-                self.order.remove('name')
-            currRow += 1
-        # add start/stop info
-        if 'startType' in remaining:
-            remaining, currRow = self.addStartStopCtrls(remaining,
-                                                        parent, sizer,
-                                                        currRow)
-        currRow += 1
-        # loop through the prescribed order (the most important?)
-        for fieldName in self.order:
-            if fieldName not in paramNames:
-                continue  # skip advanced params
-            self.addParam(fieldName, parent, sizer, currRow,
-                          valType=self.params[fieldName].valType)
-            currRow += 1
-            remaining.remove(fieldName)
-        # add any params that weren't specified in the order
-        for fieldName in remaining:
-            self.addParam(fieldName, parent, sizer, currRow,
-                          valType=self.params[fieldName].valType)
-            currRow += 1
-        sizer.AddGrowableCol(1)
-        return sizer
-
-    def addStartStopCtrls(self, remaining, parent, sizer, currRow):
-        """Add controls for startType, startVal, stopType, stopVal
-        remaining refers to
-        """
-        # Start point
-        startTypeParam = self.params['startType']
-        startValParam = self.params['startVal']
-        # create label
-        label = wx.StaticText(parent, -1, _translate('Start'),
-                              style=wx.ALIGN_CENTER)
-        labelEstim = wx.StaticText(parent, -1,
-                                   _translate('Expected start (s)'),
-                                   style=wx.ALIGN_CENTER)
-        labelEstim.SetForegroundColour('gray')
-        # the method to be used to interpret this start/stop
-        _choices = list(map(_translate, startTypeParam.allowedVals))
-        self.startTypeCtrl = wx.Choice(parent, choices=_choices)
-        self.startTypeCtrl.SetStringSelection(_translate(startTypeParam.val))
-        msg = self.params['startType'].hint
-        self.startTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to be used as the start/stop
-        _start = str(startValParam.val)
-        self.startValCtrl = wx.TextCtrl(parent, -1, _start)
-        msg = self.params['startVal'].hint
-        self.startValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to estimate start/stop if not numeric
-        _est = str(self.params['startEstim'].val)
-        self.startEstimCtrl = wx.TextCtrl(parent, -1, _est)
-        msg = self.params['startEstim'].hint
-        self.startEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # add the controls to a new line
-        startSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        startSizer.Add(self.startTypeCtrl)
-        startSizer.Add(self.startValCtrl, 1, flag=wx.EXPAND)
-        startEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        startEstimSizer.Add(labelEstim,
-                            flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT)
-        startEstimSizer.Add(self.startEstimCtrl, flag=wx.ALIGN_BOTTOM)
-        startAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
-        startAllCrtlSizer.Add(startSizer, flag=wx.EXPAND)
-        startAllCrtlSizer.Add(startEstimSizer)
-        sizer.Add(label, (currRow, 0), (1, 1))
-        # add our new row
-        sizer.Add(startAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
-        currRow += 1
-        remaining.remove('startType')
-        remaining.remove('startVal')
-        remaining.remove('startEstim')
-
-        # Stop point
-        stopTypeParam = self.params['stopType']
-        stopValParam = self.params['stopVal']
-        # create label
-        label = wx.StaticText(parent, -1, _translate('Stop'),
-                              style=wx.ALIGN_CENTER)
-        labelEstim = wx.StaticText(parent, -1,
-                                   _translate('Expected duration (s)'),
-                                   style=wx.ALIGN_CENTER)
-        labelEstim.SetForegroundColour('gray')
-        # the method to be used to interpret this start/stop
-        _choices = list(map(_translate, stopTypeParam.allowedVals))
-        self.stopTypeCtrl = wx.Choice(parent, choices=_choices)
-        self.stopTypeCtrl.SetStringSelection(_translate(stopTypeParam.val))
-        msg = self.params['stopType'].hint
-        self.stopTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to be used as the start/stop
-        self.stopValCtrl = wx.TextCtrl(parent, -1, str(stopValParam.val))
-        msg = self.params['stopVal'].hint
-        self.stopValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to estimate start/stop if not numeric
-        _est = str(self.params['durationEstim'].val)
-        self.durationEstimCtrl = wx.TextCtrl(parent, -1, _est)
-        msg = self.params['durationEstim'].hint
-        self.durationEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # add the controls to a new line
-        stopSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        stopSizer.Add(self.stopTypeCtrl)
-        stopSizer.Add(self.stopValCtrl, 1, flag=wx.EXPAND)
-        stopEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        stopEstimSizer.Add(labelEstim, flag=wx.ALIGN_CENTRE_VERTICAL)
-        stopEstimSizer.Add(self.durationEstimCtrl,
-                           flag=wx.ALIGN_CENTRE_VERTICAL)
-        stopAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
-        stopAllCrtlSizer.Add(stopSizer, flag=wx.EXPAND)
-        stopAllCrtlSizer.Add(stopEstimSizer)
-        sizer.Add(label, (currRow, 0), (1, 1))
-        # add our new row
-        sizer.Add(stopAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
-        currRow += 1
-        remaining.remove('stopType')
-        remaining.remove('stopVal')
-        remaining.remove('durationEstim')
-
-        # use monospace font to signal code:
-        self.checkCodeWanted(self.startValCtrl)
-        self.startValCtrl.Bind(wx.EVT_KEY_UP, self.checkCodeWanted)
-        self.startValCtrl.SetValidator(CodeSnippetValidator('startVal'))
-        self.startValCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
-        self.checkCodeWanted(self.stopValCtrl)
-        self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.checkCodeWanted)
-        self.stopValCtrl.SetValidator(CodeSnippetValidator('stopVal'))
-        self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
-
-        return remaining, currRow
-
-    def addParam(self, fieldName, parent, sizer, currRow, advanced=False,
-                 valType=None):
-        """Add a parameter to the basic sizer
-        """
-        param = self.params[fieldName]
-        if param.label not in [None, '']:
-            label = param.label
-        else:
-            label = fieldName
-        ctrls = ParamCtrls(dlg=self, parent=parent, label=label,
-                           fieldName=fieldName, param=param,
-                           advanced=advanced, appPrefs=self.app.prefs)
-        self.paramCtrls[fieldName] = ctrls
-        if fieldName == 'name':
-            ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
-            ctrls.valueCtrl.SetFocus()
-        elif isinstance(ctrls.valueCtrl, (wx.TextCtrl, CodeBox)):
-            ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
-
-        # add the controls to the sizer
-        _flag = wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-        sizer.Add(ctrls.nameCtrl, (currRow, 0), border=5, flag=_flag)
-        if ctrls.updateCtrl:
-            sizer.Add(ctrls.updateCtrl, (currRow, 2), flag=_flag)
-        if ctrls.typeCtrl:
-            sizer.Add(ctrls.typeCtrl, (currRow, 3), flag=_flag)
-        # different flag for the value control (expand)
-        _flag = wx.EXPAND | wx.ALL
-        if hasattr(ctrls.valueCtrl, '_szr'):
-            sizer.Add(ctrls.valueCtrl._szr, (currRow, 1), border=5, flag=_flag)
-        else:
-            sizer.Add(ctrls.valueCtrl, (currRow, 1), border=5, flag=_flag)
-
-        # use monospace font to signal code:
-        if fieldName != 'name' and hasattr(ctrls.valueCtrl, 'GetFont'):
-            if self.params[fieldName].valType == 'code':
-                try:
-                    ctrls.valueCtrl.SetFont(self.app._codeFont)
-                except:
-                    logging.error("Failed to set font {}"
-                                  .format(self.app._codeFont))
-            elif self.params[fieldName].valType == 'str':
-                ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.checkCodeWanted)
-                try:
-                    self.checkCodeWanted(ctrls.valueCtrl)
-                except Exception:
-                    pass
-
-        if fieldName in ['text']:
-            sizer.AddGrowableRow(currRow)  # doesn't seem to work though
-            # self.Bind(EVT_ETC_LAYOUT_NEEDED, self.onNewTextSize,
-            #    ctrls.valueCtrl)
-            ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
-        elif fieldName in ('color', 'fillColor', 'lineColor'):
-            ctrls.valueCtrl.Bind(wx.EVT_RIGHT_DOWN, self.launchColorPicker)
-        elif valType == 'extendedCode':
-            sizer.AddGrowableRow(currRow)  # doesn't seem to work though
-            ctrls.valueCtrl.Bind(wx.EVT_KEY_DOWN, self.onTextEventCode)
-        elif fieldName == 'Monitor':
-            ctrls.valueCtrl.Bind(wx.EVT_RIGHT_DOWN, self.openMonitorCenter)
-
 
     def openMonitorCenter(self, event):
         self.app.openMonitorCenter(event)
@@ -1153,6 +929,243 @@ class _BaseParamsDlg(wx.Dialog):
         """
         self.app.followLink(url=self.helpUrl)
 
+
+class _BaseParamCategory(wx.Panel):
+    def __init__(self, dlg, params):
+        """Add all the params for a single category
+        (after its tab has been created)
+        """
+        wx.Panel.__init__(self, dlg.ctrls, -1)
+        self.dlg = dlg
+        self.app = dlg.app
+        self.parent = dlg.ctrls
+        self.order = dlg.order
+        self.params = params
+
+
+        # create the sizers to fit the params and set row to zero
+        self.sizer = wx.GridBagSizer(vgap=2, hgap=2)
+        self.SetSizer(self.sizer)
+        currRow = 0
+        # does the dlg need an 'updates' row (do any params use it?)
+        self.useUpdates = False
+
+        # create a header row of titles
+        if not self.dlg.suppressTitles:
+            size = wx.Size(1.5 * self.dpi, -1)
+            self.sizer.Add(wx.StaticText(self.parent, -1, 'Parameter', size=size,
+                                    style=wx.ALIGN_CENTER), (currRow, 0))
+            self.sizer.Add(wx.StaticText(self.parent, -1, 'Value', size=size,
+                                    style=wx.ALIGN_CENTER), (currRow, 1))
+            # self.sizer.Add(wx.StaticText(self,-1,'Value Type',size=size,
+            #   style=wx.ALIGN_CENTER),(currRow,3))
+            self.sizer.Add(wx.StaticText(self.parent, -1, 'Updates', size=size,
+                                    style=wx.ALIGN_CENTER), (currRow, 2))
+            currRow += 1
+            self.sizer.Add(wx.StaticLine(self.parent, size=wx.Size(100, 20)),
+                      (currRow, 0), (1, 2), wx.ALIGN_CENTER | wx.EXPAND)
+        currRow += 1
+
+        # get all params and sort
+        remaining = copy.copy(params)
+
+        # start with the name (always)
+        if 'name' in remaining:
+            self.addParam('name', self.parent, self.sizer, currRow)
+            currRow += 1
+            remaining.remove('name')
+            if 'name' in self.order:
+                self.order.remove('name')
+            currRow += 1
+        # add start/stop info
+        if 'startType' in remaining:
+            remaining, currRow = self.addStartStopCtrls(remaining,
+                                                        self.parent, self.sizer,
+                                                        currRow)
+        currRow += 1
+        # loop through the prescribed order (the most important?)
+        for fieldName in self.order:
+            if fieldName not in params:
+                continue  # skip advanced params
+            self.addParam(fieldName, self.parent, self.sizer, currRow,
+                          valType=self.params[fieldName].valType)
+            currRow += 1
+            remaining.remove(fieldName)
+        # add any params that weren't specified in the order
+        for fieldName in remaining:
+            self.addParam(fieldName, self.parent, self.sizer, currRow,
+                          valType=self.dlg.params[fieldName].valType)
+            currRow += 1
+        self.sizer.AddGrowableCol(1)
+
+    def addParam(self, fieldName, parent, sizer, currRow, advanced=False,
+                 valType=None):
+        """Add a parameter to the basic sizer
+        """
+        param = self.dlg.params[fieldName]
+        if param.label not in [None, '']:
+            label = param.label
+        else:
+            label = fieldName
+        ctrls = ParamCtrls(dlg=self.dlg, parent=parent, label=label,
+                           fieldName=fieldName, param=param,
+                           advanced=advanced, appPrefs=self.app.prefs)
+        self.dlg.paramCtrls[fieldName] = ctrls
+        if fieldName == 'name':
+            ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
+            ctrls.valueCtrl.SetFocus()
+        elif isinstance(ctrls.valueCtrl, (wx.TextCtrl, CodeBox)):
+            ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
+
+        # add the controls to the sizer
+        _flag = wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
+        sizer.Add(ctrls.nameCtrl, (currRow, 0), border=5, flag=_flag)
+        if ctrls.updateCtrl:
+            sizer.Add(ctrls.updateCtrl, (currRow, 2), flag=_flag)
+        if ctrls.typeCtrl:
+            sizer.Add(ctrls.typeCtrl, (currRow, 3), flag=_flag)
+        # different flag for the value control (expand)
+        _flag = wx.EXPAND | wx.ALL
+        if hasattr(ctrls.valueCtrl, '_szr'):
+            sizer.Add(ctrls.valueCtrl._szr, (currRow, 1), border=5, flag=_flag)
+        else:
+            sizer.Add(ctrls.valueCtrl, (currRow, 1), border=5, flag=_flag)
+
+        # use monospace font to signal code:
+        if fieldName != 'name' and hasattr(ctrls.valueCtrl, 'GetFont'):
+            if self.dlg.params[fieldName].valType == 'code':
+                try:
+                    ctrls.valueCtrl.SetFont(self.app._codeFont)
+                except:
+                    logging.error("Failed to set font {}"
+                                  .format(self.app._codeFont))
+            elif self.dlg.params[fieldName].valType == 'str':
+                ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.dlg.checkCodeWanted)
+                try:
+                    self.checkCodeWanted(ctrls.valueCtrl)
+                except Exception:
+                    pass
+
+        if fieldName in ['text']:
+            sizer.AddGrowableRow(currRow)  # doesn't seem to work though
+            # self.Bind(EVT_ETC_LAYOUT_NEEDED, self.onNewTextSize,
+            #    ctrls.valueCtrl)
+            ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
+        elif fieldName in ('color', 'fillColor', 'lineColor'):
+            ctrls.valueCtrl.Bind(wx.EVT_RIGHT_DOWN, self.dlg.launchColorPicker)
+        elif valType == 'extendedCode':
+            sizer.AddGrowableRow(currRow)  # doesn't seem to work though
+            ctrls.valueCtrl.Bind(wx.EVT_KEY_DOWN, self.dlg.onTextEventCode)
+        elif fieldName == 'Monitor':
+            ctrls.valueCtrl.Bind(wx.EVT_RIGHT_DOWN, self.dlg.openMonitorCenter)
+
+    def addStartStopCtrls(self, remaining, parent, sizer, currRow):
+        """Add controls for startType, startVal, stopType, stopVal
+        remaining refers to
+        """
+        # Start point
+        startTypeParam = self.dlg.params['startType']
+        startValParam = self.dlg.params['startVal']
+        # create label
+        label = wx.StaticText(parent, -1, _translate('Start'),
+                              style=wx.ALIGN_CENTER)
+        labelEstim = wx.StaticText(parent, -1,
+                                   _translate('Expected start (s)'),
+                                   style=wx.ALIGN_CENTER)
+        labelEstim.SetForegroundColour('gray')
+        # the method to be used to interpret this start/stop
+        _choices = list(map(_translate, startTypeParam.allowedVals))
+        self.startTypeCtrl = wx.Choice(parent, choices=_choices)
+        self.startTypeCtrl.SetStringSelection(_translate(startTypeParam.val))
+        msg = self.dlg.params['startType'].hint
+        self.startTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # the value to be used as the start/stop
+        _start = str(startValParam.val)
+        self.startValCtrl = wx.TextCtrl(parent, -1, _start)
+        msg = self.dlg.params['startVal'].hint
+        self.startValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # the value to estimate start/stop if not numeric
+        _est = str(self.dlg.params['startEstim'].val)
+        self.startEstimCtrl = wx.TextCtrl(parent, -1, _est)
+        msg = self.dlg.params['startEstim'].hint
+        self.startEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # add the controls to a new line
+        startSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        startSizer.Add(self.startTypeCtrl)
+        startSizer.Add(self.startValCtrl, 1, flag=wx.EXPAND)
+        startEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        startEstimSizer.Add(labelEstim,
+                            flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT)
+        startEstimSizer.Add(self.startEstimCtrl, flag=wx.ALIGN_BOTTOM)
+        startAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
+        startAllCrtlSizer.Add(startSizer, flag=wx.EXPAND)
+        startAllCrtlSizer.Add(startEstimSizer)
+        sizer.Add(label, (currRow, 0), (1, 1))
+        # add our new row
+        sizer.Add(startAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
+        currRow += 1
+        remaining.remove('startType')
+        remaining.remove('startVal')
+        remaining.remove('startEstim')
+
+        # Stop point
+        stopTypeParam = self.dlg.params['stopType']
+        stopValParam = self.dlg.params['stopVal']
+        # create label
+        label = wx.StaticText(parent, -1, _translate('Stop'),
+                              style=wx.ALIGN_CENTER)
+        labelEstim = wx.StaticText(parent, -1,
+                                   _translate('Expected duration (s)'),
+                                   style=wx.ALIGN_CENTER)
+        labelEstim.SetForegroundColour('gray')
+        # the method to be used to interpret this start/stop
+        _choices = list(map(_translate, stopTypeParam.allowedVals))
+        self.stopTypeCtrl = wx.Choice(parent, choices=_choices)
+        self.stopTypeCtrl.SetStringSelection(_translate(stopTypeParam.val))
+        msg = self.dlg.params['stopType'].hint
+        self.stopTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # the value to be used as the start/stop
+        self.stopValCtrl = wx.TextCtrl(parent, -1, str(stopValParam.val))
+        msg = self.dlg.params['stopVal'].hint
+        self.stopValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # the value to estimate start/stop if not numeric
+        _est = str(self.dlg.params['durationEstim'].val)
+        self.durationEstimCtrl = wx.TextCtrl(parent, -1, _est)
+        msg = self.dlg.params['durationEstim'].hint
+        self.durationEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # add the controls to a new line
+        stopSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        stopSizer.Add(self.stopTypeCtrl)
+        stopSizer.Add(self.stopValCtrl, 1, flag=wx.EXPAND)
+        stopEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        stopEstimSizer.Add(labelEstim, flag=wx.ALIGN_CENTRE_VERTICAL)
+        stopEstimSizer.Add(self.durationEstimCtrl,
+                           flag=wx.ALIGN_CENTRE_VERTICAL)
+        stopAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
+        stopAllCrtlSizer.Add(stopSizer, flag=wx.EXPAND)
+        stopAllCrtlSizer.Add(stopEstimSizer)
+        sizer.Add(label, (currRow, 0), (1, 1))
+        # add our new row
+        sizer.Add(stopAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
+        currRow += 1
+        remaining.remove('stopType')
+        remaining.remove('stopVal')
+        remaining.remove('durationEstim')
+
+        # use monospace font to signal code:
+        self.dlg.checkCodeWanted(self.startValCtrl)
+        self.startValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.checkCodeWanted)
+        self.startValCtrl.SetValidator(CodeSnippetValidator('startVal'))
+        self.startValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
+        self.dlg.checkCodeWanted(self.stopValCtrl)
+        self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.checkCodeWanted)
+        self.stopValCtrl.SetValidator(CodeSnippetValidator('stopVal'))
+        self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
+
+        return remaining, currRow
+
+    def _applyAppTheme(self):
+        self.SetBackgroundColour(ThemeMixin.appColors['tab_bg'])
 
 class DlgLoopProperties(_BaseParamsDlg):
     _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.RESIZE_BORDER
