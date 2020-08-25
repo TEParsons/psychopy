@@ -22,6 +22,7 @@ import wx
 from wx.lib.agw import aui
 
 import psychopy.experiment.utils
+from psychopy.experiment.params import Param
 
 from ... import dialogs
 from .. import experiment
@@ -397,16 +398,211 @@ class ParamCtrls(object):
             print("setChangesCallback doesn't know how to handle ctrl {}"
                   .format(type(self.valueCtrl)))
 
-class StartStopControls(wx.Panel):
-    def __init__(self, dlg):
+
+class ParamCtrls2:
+    def __init__(self, parent, sizer, row, label, spec=()):
+        col = 0
+        self.parent = parent
+        self.dlg = parent.dlg
+        self.dlg.paramCtrls.update({label: self})
+        # Create label
+        self.label = wx.StaticText(self.parent, label=label, size=(100, 30), style=wx.TEXT_ALIGNMENT_RIGHT)
+        sizer.Add(self.label, (row, col))
+        col += 1
+        # Create value controls
+        for val in spec:
+            if isinstance(val, Param):
+                self.ctrl = wx.StaticText(self.parent, label=val.label, size=(-1, 30))
+                sizer.Add(self.ctrl, (row, col))
+                col += 1
+            if isinstance(val, list):
+                self.update = wx.Choice(self.parent, choices=val, size=(-1, 30))
+                sizer.Add(self.update, (row, col))
+                col += 1
+
+
+class _BaseParamsDlg(wx.Dialog, ThemeMixin):
+    _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.TAB_TRAVERSAL
+
+    def __init__(self, frame, title, params, order,
+                 helpUrl=None, suppressTitles=True,
+                 showAdvanced=False,
+                 size=wx.DefaultSize,
+                 style=_style, editing=False,
+                 depends=[],
+                 timeout=None):
+
+        # translate title
+        if ' Properties' in title:  # Components and Loops
+            localizedTitle = title.replace(' Properties',
+                                           _translate(' Properties'))
+        else:
+            localizedTitle = _translate(title)
+
+        # use translated title for display
+        wx.Dialog.__init__(self, parent=None, id=-1, title=localizedTitle,
+                           size=size, style=style)
+        self.frame = frame
+        self.app = frame.app
+        self.dpi = self.app.dpi
+        self.helpUrl = helpUrl
+        self.params = params  # dict
+        self.title = title
+        self.timeout = timeout
+        self.warningsDict = {}  # to store warnings for all fields
+        if (not editing and
+                title != 'Experiment Settings' and
+                'name' in self.params):
+            # then we're adding a new component, so provide known-valid name:
+            makeValid = self.frame.exp.namespace.makeValid
+            self.params['name'].val = makeValid(params['name'].val)
+        self.paramCtrls = {}
+        CodeSnippetValidator.clsWarnings = {}
+        self.suppressTitles = suppressTitles
+        self.showAdvanced = showAdvanced
+        self.order = order
+        self.depends = depends
+        self.data = []
+        self.nameOKlabel = None
+        # max( len(str(self.params[x])) for x in keys )
+        self.maxFieldLength = 10
+        self.timeParams = ['startType', 'startVal', 'stopType', 'stopVal']
+        self.codeFieldNameFromID = {}
+        self.codeIDFromFieldName = {}
+        # a list of all panels in the ctrl to be traversed by validator
+        self.panels = []
+
+        # for switching font to signal code:
+        self.codeFaceName = 'Courier New'  # other monospace if not available
+        # need font size for STCs:
+        if wx.Platform == '__WXMSW__':
+            self.faceSize = 10
+        elif wx.Platform == '__WXMAC__':
+            self.faceSize = 14
+        else:
+            self.faceSize = 12
+
+        # organise the param names by category
+        categs = {'Basic': []}
+        for thisName in sorted(self.params):
+            thisParam = self.params[thisName]
+            if type(thisParam) == list:
+                # not really a param as such
+                continue
+            thisCateg = thisParam.categ
+            if thisCateg not in categs:
+                categs[thisCateg] = [thisName]
+            else:
+                categs[thisCateg].append(thisName)
+        if not categs['Basic']:
+            # there were no entries of this categ so delete it
+            del categs['Basic']
+
+        # create main sizer
+        self.mainSizer = wx.GridBagSizer(5,5)
+
+        # Add start/stop controls
+        self.makeBasicControls(self)
+        self.mainSizer.Add(self.basicCtrls, (0,0))
+        # Add notebook for other param controls
+        self.ctrls = aui.AuiNotebook(self, size=(500,600))
+        self.mainSizer.Add(self.ctrls, (1,0))
+        # Add category pages
+        basic = ['Basic'] if 'Basic' in categs else []
+        for cname in basic + sorted(categs):
+            page = _BaseParamCategory(self, categs[cname])
+            self.ctrls.AddPage(page, cname)
+        self.mainSizer.AddGrowableRow(1)
+        # Add buttons
+        self.mainSizer.Add(self.makeButtons(), (2,0))
+
+        # Fit
+        self.mainSizer.Layout()
+        self.SetSizerAndFit(self.mainSizer)
+        #
+        # # get categories in order
+        # categNamesRemaining = sorted(categs.keys())
+        # if 'Basic' in categNamesRemaining:
+        #     categNamesRemaining.remove('Basic')
+        # categNames = ['Basic']
+        # # add categ names in the params order list
+        # for thisParamName in self.order:
+        #     thisParam = self.params[thisParamName]
+        #     if thisParam.categ and thisParam.categ not in categNames:
+        #         categNames.append(thisParam.categ)
+        # for thisCategName in categNamesRemaining:
+        #     if thisCategName not in categNames:
+        #         categNames.append(thisCategName)
+        #
+        # categLabel = {'Basic': _translate('Basic'),
+        #               'Color': _translate('Color'),
+        #               'Layout': _translate('Layout'),
+        #               'Data': _translate('Data'),
+        #               'Screen': _translate('Screen'),
+        #               'Dots': _translate('Dots'),
+        #               'Grating': _translate('Grating'),
+        #               'Advanced': _translate('Advanced'),
+        #               'Custom': _translate('Custom'),
+        #               'Carrier': _translate('Carrier'),
+        #               'Envelope': _translate('Envelope'),
+        #               'Appearance': _translate('Appearance'),
+        #               'Save': _translate('Save'),
+        #               'Online':_translate('Online'),
+        #               'Testing':_translate('Testing'),
+        #               'Audio':_translate('Audio'),
+        #               'Format':_translate('Format')}
+        # for categName in categNames:
+        #     theseParams = categs[categName]
+        #     page = _BaseParamCategory(self, theseParams)
+        #     ctrls = page.sizer
+        #     if categName in categLabel:
+        #         cat = categLabel[categName]
+        #     else:
+        #         cat = categName
+        #     self.ctrls.AddPage(page, cat)
+        #     # so the validator finds this set of controls
+        #     self.panels.append(page)
+        #     if 'customize_everything' in self.params:
+        #         if self.params['customize_everything'].val.strip():
+        #             # set focus to the custom panel
+        #             page.SetFocus()
+        #             self.ctrls.SetSelection(self.ctrls.GetPageCount() - 1)
+        #     else:
+        #         self.ctrls.GetPage(0).SetFocus()
+        #         self.ctrls.SetSelection(0)
+        #         if hasattr(self, 'paramCtrls'):
+        #             if 'name' in self.paramCtrls:
+        #                 self.paramCtrls['name'].valueCtrl.SetFocus()
+        #             if 'expName' in self.paramCtrls:
+        #                 # ExperimentSettings has expName instead
+        #                 self.paramCtrls['expName'].valueCtrl.SetFocus()
+        #     #page.SetSizerAndFit(ctrls)
+        #     #page.SetAutoLayout(True)
+        # self.SetSizerAndFit(self.mainSizer)
+        # #set up callbacks for any dependent params to update others
+        # for thisDepend in self.depends:
+        #     paramName = thisDepend['dependsOn']
+        #     paramCtrl = self.paramCtrls[paramName]  # hint : ParamCtrl
+        #     paramCtrl.setChangesCallback(self.checkDepends)
+        # self.checkDepends()
+        self._applyAppTheme()
+        ThemeMixin._applyAppTheme(self, self.ctrls)
+
+    def makeBasicControls(self, timing=True):
         """Add controls for startType, startVal, stopType, stopVal
         remaining refers to
         """
-        wx.Panel.__init__(self, dlg, size=(600, 200))
-        self.sizer = wx.GridBagSizer()
-
-        self.sizer.Add(wx.StaticText(self, label="Start/Stop Controls"), (1,0))
-        #
+        self.basicCtrls = wx.Panel(self, size=(500, -1))
+        self.basicCtrls.dlg = self
+        self.basicCtrls.sizer = wx.GridBagSizer(5,5)
+        self.basicCtrls.SetSizer(self.basicCtrls.sizer)
+        # Add name control
+        self.nameCtrl = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 0, "Name:", (Param("COMPONENT NAME", float), ["Each Frame", "Each Routine"]))
+        # If not muted, show start/stop controls
+        if timing:
+            self.startCtrls = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 1, "Start:", (Param("START TIME", float), ["Each Frame", "Each Routine"]))
+            self.startCtrls = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 2, "Stop:", (Param("STOP TIME", float), ["Each Frame", "Each Routine"]))
+        self.basicCtrls.sizer.AddGrowableCol(1)
         # # Start point
         # startTypeParam = self.params['startType']
         # startValParam = self.params['startVal']
@@ -500,166 +696,44 @@ class StartStopControls(wx.Panel):
         # self.stopValCtrl.SetValidator(CodeSnippetValidator('stopVal'))
         # self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
 
+    def makeButtons(self):
+        # add buttons for OK and Cancel
+        buttons = wx.BoxSizer(wx.HORIZONTAL)
+        # help button if we know the url
+        if self.helpUrl != None:
+            helpBtn = wx.Button(self, wx.ID_HELP, _translate(" Help "))
+            _tip = _translate("Go to online help about this component")
+            helpBtn.SetToolTip(wx.ToolTip(_tip))
+            helpBtn.Bind(wx.EVT_BUTTON, self.onHelp)
+            buttons.Add(helpBtn, 0,
+                        flag=wx.LEFT | wx.ALL | wx.ALIGN_CENTER_VERTICAL,
+                        border=3)
+        self.OKbtn = wx.Button(self, wx.ID_OK, _translate(" OK "))
+        # intercept OK button if a loop dialog, in case file name was edited:
+        if type(self) == DlgLoopProperties:
+            self.OKbtn.Bind(wx.EVT_BUTTON, self.onOK)
+        self.OKbtn.SetDefault()
 
-class _BaseParamsDlg(wx.Dialog, ThemeMixin):
-    _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.TAB_TRAVERSAL
+        self.doValidate()  # disables OKbtn if bad name, syntax error, etc
+        CANCEL = wx.Button(self, wx.ID_CANCEL, _translate(" Cancel "))
 
-    def __init__(self, frame, title, params, order,
-                 helpUrl=None, suppressTitles=True,
-                 showAdvanced=False,
-                 size=wx.DefaultSize,
-                 style=_style, editing=False,
-                 depends=[],
-                 timeout=None):
-
-        # translate title
-        if ' Properties' in title:  # Components and Loops
-            localizedTitle = title.replace(' Properties',
-                                           _translate(' Properties'))
+        buttons.AddStretchSpacer()
+        if sys.platform == 'darwin':
+            buttons.Add(CANCEL, 0,
+                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
+                        border=3)
+            buttons.Add(self.OKbtn, 0,
+                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
+                        border=3)
         else:
-            localizedTitle = _translate(title)
+            buttons.Add(self.OKbtn, 0,
+                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
+                        border=3)
+            buttons.Add(CANCEL, 0,
+                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
+                        border=3)
+        return buttons
 
-        # use translated title for display
-        wx.Dialog.__init__(self, parent=None, id=-1, title=localizedTitle,
-                           size=size, style=style)
-        self.frame = frame
-        self.app = frame.app
-        self.dpi = self.app.dpi
-        self.helpUrl = helpUrl
-        self.params = params  # dict
-        self.title = title
-        self.timeout = timeout
-        self.warningsDict = {}  # to store warnings for all fields
-        if (not editing and
-                title != 'Experiment Settings' and
-                'name' in self.params):
-            # then we're adding a new component, so provide known-valid name:
-            makeValid = self.frame.exp.namespace.makeValid
-            self.params['name'].val = makeValid(params['name'].val)
-        self.paramCtrls = {}
-        CodeSnippetValidator.clsWarnings = {}
-        self.suppressTitles = suppressTitles
-        self.showAdvanced = showAdvanced
-        self.order = order
-        self.depends = depends
-        self.data = []
-        self.nameOKlabel = None
-        # max( len(str(self.params[x])) for x in keys )
-        self.maxFieldLength = 10
-        self.timeParams = ['startType', 'startVal', 'stopType', 'stopVal']
-        self.codeFieldNameFromID = {}
-        self.codeIDFromFieldName = {}
-        # a list of all panels in the ctrl to be traversed by validator
-        self.panels = []
-
-        # for switching font to signal code:
-        self.codeFaceName = 'Courier New'  # other monospace if not available
-        # need font size for STCs:
-        if wx.Platform == '__WXMSW__':
-            self.faceSize = 10
-        elif wx.Platform == '__WXMAC__':
-            self.faceSize = 14
-        else:
-            self.faceSize = 12
-
-        # organise the param names by category
-        categs = {'Basic': []}
-        for thisName in sorted(self.params):
-            thisParam = self.params[thisName]
-            if type(thisParam) == list:
-                # not really a param as such
-                continue
-            thisCateg = thisParam.categ
-            if thisCateg not in categs:
-                categs[thisCateg] = [thisName]
-            else:
-                categs[thisCateg].append(thisName)
-        if not categs['Basic']:
-            # there were no entries of this categ so delete it
-            del categs['Basic']
-
-        # create main sizer
-        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-        # Add start/stop controls
-        self.mainSizer.Add(StartStopControls(self))
-        # Add other param controls
-        self.ctrls = aui.AuiNotebook(self)
-
-        if self.__class__ != DlgExperimentProperties:
-            self.mainSizer.Add(self.ctrls,  # ctrls is the notebook of params
-                               proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-        categNames = sorted(categs)
-        if 'Basic' in categNames:
-            # move it to be the first category we see
-            categNames.insert(0, categNames.pop(categNames.index('Basic')))
-
-        # get categories in order
-        categNamesRemaining = sorted(categs.keys())
-        if 'Basic' in categNamesRemaining:
-            categNamesRemaining.remove('Basic')
-        categNames = ['Basic']
-        # add categ names in the params order list
-        for thisParamName in self.order:
-            thisParam = self.params[thisParamName]
-            if thisParam.categ and thisParam.categ not in categNames:
-                categNames.append(thisParam.categ)
-        for thisCategName in categNamesRemaining:
-            if thisCategName not in categNames:
-                categNames.append(thisCategName)
-
-        categLabel = {'Basic': _translate('Basic'),
-                      'Color': _translate('Color'),
-                      'Layout': _translate('Layout'),
-                      'Data': _translate('Data'),
-                      'Screen': _translate('Screen'),
-                      'Dots': _translate('Dots'),
-                      'Grating': _translate('Grating'),
-                      'Advanced': _translate('Advanced'),
-                      'Custom': _translate('Custom'),
-                      'Carrier': _translate('Carrier'),
-                      'Envelope': _translate('Envelope'),
-                      'Appearance': _translate('Appearance'),
-                      'Save': _translate('Save'),
-                      'Online':_translate('Online'),
-                      'Testing':_translate('Testing'),
-                      'Audio':_translate('Audio'),
-                      'Format':_translate('Format')}
-        for categName in categNames:
-            theseParams = categs[categName]
-            page = _BaseParamCategory(self, theseParams)
-            ctrls = page.sizer
-            if categName in categLabel:
-                cat = categLabel[categName]
-            else:
-                cat = categName
-            self.ctrls.AddPage(page, cat)
-            # so the validator finds this set of controls
-            self.panels.append(page)
-            if 'customize_everything' in self.params:
-                if self.params['customize_everything'].val.strip():
-                    # set focus to the custom panel
-                    page.SetFocus()
-                    self.ctrls.SetSelection(self.ctrls.GetPageCount() - 1)
-            else:
-                self.ctrls.GetPage(0).SetFocus()
-                self.ctrls.SetSelection(0)
-                if hasattr(self, 'paramCtrls'):
-                    if 'name' in self.paramCtrls:
-                        self.paramCtrls['name'].valueCtrl.SetFocus()
-                    if 'expName' in self.paramCtrls:
-                        # ExperimentSettings has expName instead
-                        self.paramCtrls['expName'].valueCtrl.SetFocus()
-            #page.SetSizerAndFit(ctrls)
-            #page.SetAutoLayout(True)
-        self.SetSizerAndFit(self.mainSizer)
-        #set up callbacks for any dependent params to update others
-        for thisDepend in self.depends:
-            paramName = thisDepend['dependsOn']
-            paramCtrl = self.paramCtrls[paramName]  # hint : ParamCtrl
-            paramCtrl.setChangesCallback(self.checkDepends)
-        self.checkDepends()
-        self._applyAppTheme()
-        ThemeMixin._applyAppTheme(self, self.ctrls)
 
     def checkDepends(self, event=None):
         """Checks the relationships between params that depend on each other
@@ -727,58 +801,18 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         This method returns wx.ID_OK (as from ShowModal), but also
         sets self.OK to be True or False
         """
-        # add a label to check name
-        if 'name' in self.params:
-            # if len(self.params['name'].val):
-            #    nameInfo=''
-            # else:
-            #    nameInfo='Need a name'
-            nameInfo = ''
-            self.nameOKlabel = wx.StaticText(self, -1, nameInfo,
-                                             style=wx.ALIGN_CENTRE)
-            self.nameOKlabel.SetForegroundColour(wx.RED)
-            self.mainSizer.Add(self.nameOKlabel, 0, flag=wx.ALIGN_CENTRE|wx.ALL, border=3)
-        # add buttons for OK and Cancel
-        buttons = wx.BoxSizer(wx.HORIZONTAL)
-        # help button if we know the url
-        if self.helpUrl != None:
-            helpBtn = wx.Button(self, wx.ID_HELP, _translate(" Help "))
-            _tip = _translate("Go to online help about this component")
-            helpBtn.SetToolTip(wx.ToolTip(_tip))
-            helpBtn.Bind(wx.EVT_BUTTON, self.onHelp)
-            buttons.Add(helpBtn, 0,
-                        flag=wx.LEFT | wx.ALL | wx.ALIGN_CENTER_VERTICAL,
-                        border=3)
-        self.OKbtn = wx.Button(self, wx.ID_OK, _translate(" OK "))
-        # intercept OK button if a loop dialog, in case file name was edited:
-        if type(self) == DlgLoopProperties:
-            self.OKbtn.Bind(wx.EVT_BUTTON, self.onOK)
-        self.OKbtn.SetDefault()
+        # # add a label to check name
+        # if 'name' in self.params:
+        #     # if len(self.params['name'].val):
+        #     #    nameInfo=''
+        #     # else:
+        #     #    nameInfo='Need a name'
+        #     nameInfo = ''
+        #     self.nameOKlabel = wx.StaticText(self, -1, nameInfo,
+        #                                      style=wx.ALIGN_CENTRE)
+        #     self.nameOKlabel.SetForegroundColour(wx.RED)
+        #     self.mainSizer.Add(self.nameOKlabel, (2,0))
 
-        self.doValidate()  # disables OKbtn if bad name, syntax error, etc
-        CANCEL = wx.Button(self, wx.ID_CANCEL, _translate(" Cancel "))
-
-        buttons.AddStretchSpacer()
-        if sys.platform == 'darwin':
-            buttons.Add(CANCEL, 0,
-                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                        border=3)
-            buttons.Add(self.OKbtn, 0,
-                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                        border=3)
-        else:
-            buttons.Add(self.OKbtn, 0,
-                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                        border=3)
-            buttons.Add(CANCEL, 0,
-                        wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                        border=3)
-
-        # buttons.Realize()
-        # add to sizer
-        self.mainSizer.Add(buttons, flag=wx.ALL | wx.EXPAND, border=3)
-        self.SetSizerAndFit(self.mainSizer)
-        self.mainSizer.Layout()
         # move the position to be v near the top of screen and
         # to the right of the left-most edge of builder
         builderPos = self.frame.GetPosition()
@@ -1041,63 +1075,72 @@ class _BaseParamCategory(wx.Panel):
         """Add all the params for a single category
         (after its tab has been created)
         """
-        wx.Panel.__init__(self, dlg.ctrls, -1)
+        wx.Panel.__init__(self, dlg.ctrls, -1, size=(500, -1))
         self.dlg = dlg
         self.app = dlg.app
         self.parent = dlg.ctrls
         self.order = dlg.order
         self.params = params
 
+        # Crate sizer
+        self.sizer = wx.GridBagSizer(2,2)
 
-        # create the sizers to fit the params and set row to zero
-        self.sizer = wx.GridBagSizer(vgap=2, hgap=2)
-        self.SetSizer(self.sizer)
-        currRow = 0
-        # does the dlg need an 'updates' row (do any params use it?)
-        self.useUpdates = False
-
-        # create a header row of titles
-        if not self.dlg.suppressTitles:
-            size = wx.Size(1.5 * self.dpi, -1)
-            self.sizer.Add(wx.StaticText(self.parent, -1, 'Parameter', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 0))
-            self.sizer.Add(wx.StaticText(self.parent, -1, 'Value', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 1))
-            # self.sizer.Add(wx.StaticText(self,-1,'Value Type',size=size,
-            #   style=wx.ALIGN_CENTER),(currRow,3))
-            self.sizer.Add(wx.StaticText(self.parent, -1, 'Updates', size=size,
-                                    style=wx.ALIGN_CENTER), (currRow, 2))
-            currRow += 1
-            self.sizer.Add(wx.StaticLine(self.parent, size=wx.Size(100, 20)),
-                      (currRow, 0), (1, 2), wx.ALIGN_CENTER | wx.EXPAND)
-        currRow += 1
-
-        # get all params and sort
-        remaining = copy.copy(params)
-
-        # start with the name (always)
-        if 'name' in remaining:
-            self.addParam('name', self.parent, self.sizer, currRow)
-            currRow += 1
-            remaining.remove('name')
-            if 'name' in self.order:
-                self.order.remove('name')
-            currRow += 1
-        currRow += 1
-        # loop through the prescribed order (the most important?)
-        for fieldName in self.order:
-            if fieldName not in params:
-                continue  # skip advanced params
-            self.addParam(fieldName, self.parent, self.sizer, currRow,
-                          valType=self.params[fieldName].valType)
-            currRow += 1
-            remaining.remove(fieldName)
-        # add any params that weren't specified in the order
-        for fieldName in remaining:
-            self.addParam(fieldName, self.parent, self.sizer, currRow,
-                          valType=self.dlg.params[fieldName].valType)
-            currRow += 1
+        # Create param controls
+        for row, pname in enumerate(params):
+            param = self.dlg.params[pname]
+            ctrl = ParamCtrls2(self, self.sizer, row, param.label, spec=(param, param.allowedUpdates))
         self.sizer.AddGrowableCol(1)
+        self.SetSizerAndFit(self.sizer)
+
+        # # create the sizers to fit the params and set row to zero
+        # self.sizer = wx.GridBagSizer(vgap=2, hgap=2)
+        # self.SetSizer(self.sizer)
+        # currRow = 0
+        # # does the dlg need an 'updates' row (do any params use it?)
+        # self.useUpdates = False
+        #
+        # # create a header row of titles
+        # if not self.dlg.suppressTitles:
+        #     size = wx.Size(1.5 * self.dpi, -1)
+        #     self.sizer.Add(wx.StaticText(self.parent, -1, 'Parameter', size=size,
+        #                             style=wx.ALIGN_CENTER), (currRow, 0))
+        #     self.sizer.Add(wx.StaticText(self.parent, -1, 'Value', size=size,
+        #                             style=wx.ALIGN_CENTER), (currRow, 1))
+        #     # self.sizer.Add(wx.StaticText(self,-1,'Value Type',size=size,
+        #     #   style=wx.ALIGN_CENTER),(currRow,3))
+        #     self.sizer.Add(wx.StaticText(self.parent, -1, 'Updates', size=size,
+        #                             style=wx.ALIGN_CENTER), (currRow, 2))
+        #     currRow += 1
+        #     self.sizer.Add(wx.StaticLine(self.parent, size=wx.Size(100, 20)),
+        #               (currRow, 0), (1, 2), wx.ALIGN_CENTER | wx.EXPAND)
+        # currRow += 1
+        #
+        # # get all params and sort
+        # remaining = copy.copy(params)
+        #
+        # # start with the name (always)
+        # if 'name' in remaining:
+        #     self.addParam('name', self.parent, self.sizer, currRow)
+        #     currRow += 1
+        #     remaining.remove('name')
+        #     if 'name' in self.order:
+        #         self.order.remove('name')
+        #     currRow += 1
+        # currRow += 1
+        # # loop through the prescribed order (the most important?)
+        # for fieldName in self.order:
+        #     if fieldName not in params:
+        #         continue  # skip advanced params
+        #     self.addParam(fieldName, self.parent, self.sizer, currRow,
+        #                   valType=self.params[fieldName].valType)
+        #     currRow += 1
+        #     remaining.remove(fieldName)
+        # # add any params that weren't specified in the order
+        # for fieldName in remaining:
+        #     self.addParam(fieldName, self.parent, self.sizer, currRow,
+        #                   valType=self.dlg.params[fieldName].valType)
+        #     currRow += 1
+        # self.sizer.AddGrowableCol(1)
 
     def addParam(self, fieldName, parent, sizer, currRow, advanced=False,
                  valType=None):
