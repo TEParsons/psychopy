@@ -397,6 +397,110 @@ class ParamCtrls(object):
             print("setChangesCallback doesn't know how to handle ctrl {}"
                   .format(type(self.valueCtrl)))
 
+class StartStopControls(wx.Panel):
+    def __init__(self, dlg):
+        """Add controls for startType, startVal, stopType, stopVal
+        remaining refers to
+        """
+        wx.Panel.__init__(self, dlg, size=(600, 200))
+        self.sizer = wx.GridBagSizer()
+
+        self.sizer.Add(wx.StaticText(self, label="Start/Stop Controls"), (1,0))
+        #
+        # # Start point
+        # startTypeParam = self.params['startType']
+        # startValParam = self.params['startVal']
+        # # create label
+        # label = wx.StaticText(parent, -1, _translate('Start'),
+        #                       style=wx.ALIGN_CENTER)
+        # labelEstim = wx.StaticText(parent, -1,
+        #                            _translate('Expected start (s)'),
+        #                            style=wx.ALIGN_CENTER)
+        # labelEstim.SetForegroundColour('gray')
+        # # the method to be used to interpret this start/stop
+        # _choices = list(map(_translate, startTypeParam.allowedVals))
+        # self.startTypeCtrl = wx.Choice(parent, choices=_choices)
+        # self.startTypeCtrl.SetStringSelection(_translate(startTypeParam.val))
+        # msg = self.params['startType'].hint
+        # self.startTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # # the value to be used as the start/stop
+        # _start = str(startValParam.val)
+        # self.startValCtrl = wx.TextCtrl(parent, -1, _start)
+        # msg = self.params['startVal'].hint
+        # self.startValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # # the value to estimate start/stop if not numeric
+        # _est = str(self.params['startEstim'].val)
+        # self.startEstimCtrl = wx.TextCtrl(parent, -1, _est)
+        # msg = self.params['startEstim'].hint
+        # self.startEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # # add the controls to a new line
+        # startSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        # startSizer.Add(self.startTypeCtrl)
+        # startSizer.Add(self.startValCtrl, 1, flag=wx.EXPAND)
+        # startEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        # startEstimSizer.Add(labelEstim,
+        #                     flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT)
+        # startEstimSizer.Add(self.startEstimCtrl, flag=wx.ALIGN_BOTTOM)
+        # startAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
+        # startAllCrtlSizer.Add(startSizer, flag=wx.EXPAND)
+        # startAllCrtlSizer.Add(startEstimSizer)
+        # sizer.Add(label, (currRow, 0), (1, 1))
+        # # add our new row
+        # sizer.Add(startAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
+        # currRow += 1
+        #
+        # # Stop point
+        # stopTypeParam = self.params['stopType']
+        # stopValParam = self.params['stopVal']
+        # # create label
+        # label = wx.StaticText(parent, -1, _translate('Stop'),
+        #                       style=wx.ALIGN_CENTER)
+        # labelEstim = wx.StaticText(parent, -1,
+        #                            _translate('Expected duration (s)'),
+        #                            style=wx.ALIGN_CENTER)
+        # labelEstim.SetForegroundColour('gray')
+        # # the method to be used to interpret this start/stop
+        # _choices = list(map(_translate, stopTypeParam.allowedVals))
+        # self.stopTypeCtrl = wx.Choice(parent, choices=_choices)
+        # self.stopTypeCtrl.SetStringSelection(_translate(stopTypeParam.val))
+        # msg = self.params['stopType'].hint
+        # self.stopTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # # the value to be used as the start/stop
+        # self.stopValCtrl = wx.TextCtrl(parent, -1, str(stopValParam.val))
+        # msg = self.params['stopVal'].hint
+        # self.stopValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # # the value to estimate start/stop if not numeric
+        # _est = str(self.params['durationEstim'].val)
+        # self.durationEstimCtrl = wx.TextCtrl(parent, -1, _est)
+        # msg = self.params['durationEstim'].hint
+        # self.durationEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
+        # # add the controls to a new line
+        # stopSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        # stopSizer.Add(self.stopTypeCtrl)
+        # stopSizer.Add(self.stopValCtrl, 1, flag=wx.EXPAND)
+        # stopEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        # stopEstimSizer.Add(labelEstim, flag=wx.ALIGN_CENTRE_VERTICAL)
+        # stopEstimSizer.Add(self.durationEstimCtrl,
+        #                    flag=wx.ALIGN_CENTRE_VERTICAL)
+        # stopAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
+        # stopAllCrtlSizer.Add(stopSizer, flag=wx.EXPAND)
+        # stopAllCrtlSizer.Add(stopEstimSizer)
+        # sizer.Add(label, (currRow, 0), (1, 1))
+        # # add our new row
+        # sizer.Add(stopAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
+        # currRow += 1
+        #
+        # # use monospace font to signal code:
+        # self.checkCodeWanted(self.startValCtrl)
+        # self.startValCtrl.Bind(wx.EVT_KEY_UP, self.checkCodeWanted)
+        # self.startValCtrl.SetValidator(CodeSnippetValidator('startVal'))
+        # self.startValCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
+        # self.checkCodeWanted(self.stopValCtrl)
+        # self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.checkCodeWanted)
+        # self.stopValCtrl.SetValidator(CodeSnippetValidator('stopVal'))
+        # self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
+
+
 class _BaseParamsDlg(wx.Dialog, ThemeMixin):
     _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.TAB_TRAVERSAL
 
@@ -476,7 +580,9 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
 
         # create main sizer
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-
+        # Add start/stop controls
+        self.mainSizer.Add(StartStopControls(self))
+        # Add other param controls
         self.ctrls = aui.AuiNotebook(self)
 
         if self.__class__ != DlgExperimentProperties:
@@ -977,11 +1083,6 @@ class _BaseParamCategory(wx.Panel):
             if 'name' in self.order:
                 self.order.remove('name')
             currRow += 1
-        # add start/stop info
-        if 'startType' in remaining:
-            remaining, currRow = self.addStartStopCtrls(remaining,
-                                                        self.parent, self.sizer,
-                                                        currRow)
         currRow += 1
         # loop through the prescribed order (the most important?)
         for fieldName in self.order:
@@ -1058,111 +1159,6 @@ class _BaseParamCategory(wx.Panel):
             ctrls.valueCtrl.Bind(wx.EVT_KEY_DOWN, self.dlg.onTextEventCode)
         elif fieldName == 'Monitor':
             ctrls.valueCtrl.Bind(wx.EVT_RIGHT_DOWN, self.dlg.openMonitorCenter)
-
-    def addStartStopCtrls(self, remaining, parent, sizer, currRow):
-        """Add controls for startType, startVal, stopType, stopVal
-        remaining refers to
-        """
-        # Start point
-        startTypeParam = self.dlg.params['startType']
-        startValParam = self.dlg.params['startVal']
-        # create label
-        label = wx.StaticText(parent, -1, _translate('Start'),
-                              style=wx.ALIGN_CENTER)
-        labelEstim = wx.StaticText(parent, -1,
-                                   _translate('Expected start (s)'),
-                                   style=wx.ALIGN_CENTER)
-        labelEstim.SetForegroundColour('gray')
-        # the method to be used to interpret this start/stop
-        _choices = list(map(_translate, startTypeParam.allowedVals))
-        self.startTypeCtrl = wx.Choice(parent, choices=_choices)
-        self.startTypeCtrl.SetStringSelection(_translate(startTypeParam.val))
-        msg = self.dlg.params['startType'].hint
-        self.startTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to be used as the start/stop
-        _start = str(startValParam.val)
-        self.startValCtrl = wx.TextCtrl(parent, -1, _start)
-        msg = self.dlg.params['startVal'].hint
-        self.startValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to estimate start/stop if not numeric
-        _est = str(self.dlg.params['startEstim'].val)
-        self.startEstimCtrl = wx.TextCtrl(parent, -1, _est)
-        msg = self.dlg.params['startEstim'].hint
-        self.startEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # add the controls to a new line
-        startSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        startSizer.Add(self.startTypeCtrl)
-        startSizer.Add(self.startValCtrl, 1, flag=wx.EXPAND)
-        startEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        startEstimSizer.Add(labelEstim,
-                            flag=wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT)
-        startEstimSizer.Add(self.startEstimCtrl, flag=wx.ALIGN_BOTTOM)
-        startAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
-        startAllCrtlSizer.Add(startSizer, flag=wx.EXPAND)
-        startAllCrtlSizer.Add(startEstimSizer)
-        sizer.Add(label, (currRow, 0), (1, 1))
-        # add our new row
-        sizer.Add(startAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
-        currRow += 1
-        remaining.remove('startType')
-        remaining.remove('startVal')
-        remaining.remove('startEstim')
-
-        # Stop point
-        stopTypeParam = self.dlg.params['stopType']
-        stopValParam = self.dlg.params['stopVal']
-        # create label
-        label = wx.StaticText(parent, -1, _translate('Stop'),
-                              style=wx.ALIGN_CENTER)
-        labelEstim = wx.StaticText(parent, -1,
-                                   _translate('Expected duration (s)'),
-                                   style=wx.ALIGN_CENTER)
-        labelEstim.SetForegroundColour('gray')
-        # the method to be used to interpret this start/stop
-        _choices = list(map(_translate, stopTypeParam.allowedVals))
-        self.stopTypeCtrl = wx.Choice(parent, choices=_choices)
-        self.stopTypeCtrl.SetStringSelection(_translate(stopTypeParam.val))
-        msg = self.dlg.params['stopType'].hint
-        self.stopTypeCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to be used as the start/stop
-        self.stopValCtrl = wx.TextCtrl(parent, -1, str(stopValParam.val))
-        msg = self.dlg.params['stopVal'].hint
-        self.stopValCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # the value to estimate start/stop if not numeric
-        _est = str(self.dlg.params['durationEstim'].val)
-        self.durationEstimCtrl = wx.TextCtrl(parent, -1, _est)
-        msg = self.dlg.params['durationEstim'].hint
-        self.durationEstimCtrl.SetToolTip(wx.ToolTip(_translate(msg)))
-        # add the controls to a new line
-        stopSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        stopSizer.Add(self.stopTypeCtrl)
-        stopSizer.Add(self.stopValCtrl, 1, flag=wx.EXPAND)
-        stopEstimSizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        stopEstimSizer.Add(labelEstim, flag=wx.ALIGN_CENTRE_VERTICAL)
-        stopEstimSizer.Add(self.durationEstimCtrl,
-                           flag=wx.ALIGN_CENTRE_VERTICAL)
-        stopAllCrtlSizer = wx.BoxSizer(orient=wx.VERTICAL)
-        stopAllCrtlSizer.Add(stopSizer, flag=wx.EXPAND)
-        stopAllCrtlSizer.Add(stopEstimSizer)
-        sizer.Add(label, (currRow, 0), (1, 1))
-        # add our new row
-        sizer.Add(stopAllCrtlSizer, (currRow, 1), (1, 1), flag=wx.EXPAND)
-        currRow += 1
-        remaining.remove('stopType')
-        remaining.remove('stopVal')
-        remaining.remove('durationEstim')
-
-        # use monospace font to signal code:
-        self.dlg.checkCodeWanted(self.startValCtrl)
-        self.startValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.checkCodeWanted)
-        self.startValCtrl.SetValidator(CodeSnippetValidator('startVal'))
-        self.startValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
-        self.dlg.checkCodeWanted(self.stopValCtrl)
-        self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.checkCodeWanted)
-        self.stopValCtrl.SetValidator(CodeSnippetValidator('stopVal'))
-        self.stopValCtrl.Bind(wx.EVT_KEY_UP, self.dlg.doValidate)
-
-        return remaining, currRow
 
     def _applyAppTheme(self):
         self.SetBackgroundColour(ThemeMixin.appColors['tab_bg'])
