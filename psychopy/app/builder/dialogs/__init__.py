@@ -400,7 +400,7 @@ class ParamCtrls(object):
 
 
 class ParamCtrls2:
-    def __init__(self, parent, sizer, row, label, spec=()):
+    def __init__(self, parent, sizer, row, label, param):
         col = 0
         self.parent = parent
         self.dlg = parent.dlg
@@ -409,7 +409,6 @@ class ParamCtrls2:
         typeMap = {
             'num': self.ctrlNum,
             'int': self.ctrlNum,
-            float: self.ctrlNum,
             'fixedList': self.ctrlFixedList,
             'fileList': self.ctrlFileList,
             'bool': self.ctrlBool,
@@ -423,15 +422,14 @@ class ParamCtrls2:
         sizer.Add(self.label, (row, col), border=15, flag=wx.LEFT | wx.TOP if row == 0 else wx.LEFT)
         col += 1
         # Create value controls
-        for val in spec:
-            if isinstance(val, Param):
-                self.ctrl = typeMap[val.valType](self.parent, val)
-                sizer.Add(self.ctrl, (row, col), border=15, flag=wx.EXPAND | wx.RIGHT | wx.TOP if row == 0 else wx.EXPAND | wx.RIGHT )
-                col += 1
-            if isinstance(val, list):
-                self.update = wx.Choice(self.parent, choices=val, size=(100, 30))
-                sizer.Add(self.update, (row, col), border=15, flag=wx.RIGHT | wx.TOP if row == 0 else wx.RIGHT)
-                col += 1
+        self.ctrl = typeMap[param.valType](self.parent, param)
+        sizer.Add(self.ctrl, (row, col), border=15, flag=wx.EXPAND | wx.RIGHT | wx.TOP if row == 0 else wx.EXPAND | wx.RIGHT )
+        col += 1
+        if param.allowedUpdates:
+            self.update = wx.Choice(self.parent, choices=param.allowedUpdates, size=(100, 30))
+            self.update.SetSelection(self.update.GetItems().index(param.updates))
+            sizer.Add(self.update, (row, col), border=15, flag=wx.RIGHT | wx.TOP if row == 0 else wx.RIGHT)
+            col += 1
 
     def _applyAppTheme(self):
         self.label.SetForegroundColour(ThemeMixin.appColors['text'])
@@ -448,6 +446,7 @@ class ParamCtrls2:
         ctrl = wx.Choice(parent, choices=param.allowedVals,
                   name=param.label,
                   size=(-1, self.boxHeight))
+        ctrl.SetSelection(ctrl.GetItems().index(param.updates))
         return ctrl
 
     def ctrlFixedList(self, parent, param):
@@ -552,12 +551,13 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
 
         # Determine whether start/stop controls are needed and remove basic params
         startstop = False
+        self.basicParams = {}
         for key in ['startType', 'startVal', 'startEstim',  'stopType', 'stopVal', 'durationEstim']:
             if key in self.params:
-                self.params.pop(key)
+                self.basicParams.update({key: self.params.pop(key)})
                 startstop = True
         if 'name' in self.params:
-            self.params.pop('name')
+            self.basicParams.update({'name': self.params.pop('name')})
         # Sort parameters into categories
         categs = {}
         for key in self.params:
@@ -671,11 +671,11 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         self.basicCtrls.sizer = wx.GridBagSizer(5,5)
         self.basicCtrls.SetSizer(self.basicCtrls.sizer)
         # Add name control
-        self.nameCtrl = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 0, "Name:", (Param("COMPONENT NAME", float), ["Each Frame", "Each Routine"]))
+        self.nameCtrl = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 0, "Name:", self.basicParams['name'])
         # If not muted, show start/stop controls
         if timing:
-            self.startCtrls = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 1, "Start:", (Param("START TIME", float), ["Each Frame", "Each Routine"]))
-            self.startCtrls = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 2, "Stop:", (Param("STOP TIME", float), ["Each Frame", "Each Routine"]))
+            self.startCtrls = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 1, "Start:", self.basicParams['startVal'])
+            self.startCtrls = ParamCtrls2(self.basicCtrls, self.basicCtrls.sizer, 2, "Stop:", self.basicParams['stopVal'])
         self.basicCtrls.sizer.AddGrowableCol(1)
         # # Start point
         # startTypeParam = self.params['startType']
@@ -1162,7 +1162,7 @@ class _BaseParamCategory(wx.Panel):
 
         # Create param controls
         for row, param in enumerate(params):
-            ctrl = ParamCtrls2(self, self.sizer, row, param.label, spec=(param, param.allowedUpdates))
+            ctrl = ParamCtrls2(self, self.sizer, row, param.label, param)
         self.sizer.AddGrowableCol(1)
         self.SetSizerAndFit(self.sizer)
 
