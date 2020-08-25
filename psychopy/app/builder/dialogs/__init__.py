@@ -407,17 +407,17 @@ class ParamCtrls2:
         self.dlg.paramCtrls.update({label: self})
         # Create label
         self.label = wx.StaticText(self.parent, label=label, size=(100, 30), style=wx.TEXT_ALIGNMENT_RIGHT)
-        sizer.Add(self.label, (row, col))
+        sizer.Add(self.label, (row, col), border=15, flag=wx.LEFT | wx.TOP if row == 0 else wx.LEFT)
         col += 1
         # Create value controls
         for val in spec:
             if isinstance(val, Param):
                 self.ctrl = wx.StaticText(self.parent, label=val.label, size=(-1, 30))
-                sizer.Add(self.ctrl, (row, col))
+                sizer.Add(self.ctrl, (row, col), border=15, flag=wx.TOP if row == 0 else 0)
                 col += 1
             if isinstance(val, list):
-                self.update = wx.Choice(self.parent, choices=val, size=(-1, 30))
-                sizer.Add(self.update, (row, col))
+                self.update = wx.Choice(self.parent, choices=val, size=(100, 30))
+                sizer.Add(self.update, (row, col), border=15, flag=wx.RIGHT | wx.TOP if row == 0 else wx.RIGHT)
                 col += 1
 
 
@@ -466,7 +466,6 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         self.nameOKlabel = None
         # max( len(str(self.params[x])) for x in keys )
         self.maxFieldLength = 10
-        self.timeParams = ['startType', 'startVal', 'stopType', 'stopVal']
         self.codeFieldNameFromID = {}
         self.codeIDFromFieldName = {}
         # a list of all panels in the ctrl to be traversed by validator
@@ -482,43 +481,49 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         else:
             self.faceSize = 12
 
-        # organise the param names by category
-        categs = {'Basic': []}
-        for thisName in sorted(self.params):
-            thisParam = self.params[thisName]
-            if type(thisParam) == list:
-                # not really a param as such
+        # Determine whether start/stop controls are needed and remove basic params
+        startstop = False
+        for key in ['startType', 'startVal', 'startEstim',  'stopType', 'stopVal', 'durationEstim']:
+            if key in self.params:
+                self.params.pop(key)
+                startstop = True
+        if 'name' in self.params:
+            self.params.pop('name')
+        # Sort parameters into categories
+        categs = {}
+        for key in self.params:
+            # Get param and validate
+            param = self.params[key]
+            if type(param) == list:
                 continue
-            thisCateg = thisParam.categ
-            if thisCateg not in categs:
-                categs[thisCateg] = [thisName]
-            else:
-                categs[thisCateg].append(thisName)
-        if not categs['Basic']:
-            # there were no entries of this categ so delete it
-            del categs['Basic']
+            # Make new category key if needed
+            if param.categ not in categs:
+                categs.update({param.categ: []})
+            # Add param to dict
+            categs[param.categ].append(param)
 
-        # create main sizer
-        self.mainSizer = wx.GridBagSizer(5,5)
+        # Create main sizer
+        self.sizer = wx.GridBagSizer(5, 5)
 
         # Add start/stop controls
-        self.makeBasicControls(self)
-        self.mainSizer.Add(self.basicCtrls, (0,0))
+        self.makeBasicControls(startstop)
+        self.sizer.Add(self.basicCtrls, (0, 0), border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND)
         # Add notebook for other param controls
-        self.ctrls = aui.AuiNotebook(self, size=(500,600))
-        self.mainSizer.Add(self.ctrls, (1,0))
+        self.ctrls = aui.AuiNotebook(self, size=(500,400))
+        self.sizer.Add(self.ctrls, (1, 0), border=10, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
         # Add category pages
-        basic = ['Basic'] if 'Basic' in categs else []
-        for cname in basic + sorted(categs):
-            page = _BaseParamCategory(self, categs[cname])
-            self.ctrls.AddPage(page, cname)
-        self.mainSizer.AddGrowableRow(1)
+        cNames = sorted(categs)
+        cNames.insert(0, cNames.pop(cNames.index('Basic')))
+        for key in cNames:
+            page = _BaseParamCategory(self, categs[key])
+            self.ctrls.AddPage(page, key)
+        self.sizer.AddGrowableRow(1)
         # Add buttons
-        self.mainSizer.Add(self.makeButtons(), (2,0))
+        self.sizer.Add(self.makeButtons(), (2, 0), border=10, flag=wx.EXPAND | wx.ALL)
 
         # Fit
-        self.mainSizer.Layout()
-        self.SetSizerAndFit(self.mainSizer)
+        self.sizer.Layout()
+        self.SetSizerAndFit(self.sizer)
         #
         # # get categories in order
         # categNamesRemaining = sorted(categs.keys())
@@ -588,11 +593,11 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         self._applyAppTheme()
         ThemeMixin._applyAppTheme(self, self.ctrls)
 
-    def makeBasicControls(self, timing=True):
+    def makeBasicControls(self, timing=False):
         """Add controls for startType, startVal, stopType, stopVal
         remaining refers to
         """
-        self.basicCtrls = wx.Panel(self, size=(500, -1))
+        self.basicCtrls = wx.Panel(self)
         self.basicCtrls.dlg = self
         self.basicCtrls.sizer = wx.GridBagSizer(5,5)
         self.basicCtrls.SetSizer(self.basicCtrls.sizer)
@@ -708,6 +713,7 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
             buttons.Add(helpBtn, 0,
                         flag=wx.LEFT | wx.ALL | wx.ALIGN_CENTER_VERTICAL,
                         border=3)
+        buttons.AddStretchSpacer(1)
         self.OKbtn = wx.Button(self, wx.ID_OK, _translate(" OK "))
         # intercept OK button if a loop dialog, in case file name was edited:
         if type(self) == DlgLoopProperties:
@@ -765,7 +771,7 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
                         evalStr = ("dependentCtrls.{}.{}()"
                                    .format(ctrlName, action.title()))
                         eval(evalStr)
-            self.mainSizer.Layout()
+            self.sizer.Layout()
             self.Fit()
             self.Refresh()
 
@@ -1075,7 +1081,7 @@ class _BaseParamCategory(wx.Panel):
         """Add all the params for a single category
         (after its tab has been created)
         """
-        wx.Panel.__init__(self, dlg.ctrls, -1, size=(500, -1))
+        wx.Panel.__init__(self, dlg.ctrls, -1)
         self.dlg = dlg
         self.app = dlg.app
         self.parent = dlg.ctrls
@@ -1086,8 +1092,7 @@ class _BaseParamCategory(wx.Panel):
         self.sizer = wx.GridBagSizer(2,2)
 
         # Create param controls
-        for row, pname in enumerate(params):
-            param = self.dlg.params[pname]
+        for row, param in enumerate(params):
             ctrl = ParamCtrls2(self, self.sizer, row, param.label, spec=(param, param.allowedUpdates))
         self.sizer.AddGrowableCol(1)
         self.SetSizerAndFit(self.sizer)
@@ -1875,7 +1880,7 @@ class DlgComponentProperties(_BaseParamsDlg):
             self.paramCtrls['correctAns'].nameCtrl.Hide()
             # self.paramCtrls['correctAns'].typeCtrl.Hide()
             # self.paramCtrls['correctAns'].updateCtrl.Hide()
-        self.mainSizer.Layout()
+        self.sizer.Layout()
         self.Fit()
         self.Refresh()
 
