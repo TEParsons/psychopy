@@ -433,6 +433,12 @@ class ParamCtrls2:
                 sizer.Add(self.update, (row, col), border=15, flag=wx.RIGHT | wx.TOP if row == 0 else wx.RIGHT)
                 col += 1
 
+    def _applyAppTheme(self):
+        self.label.SetForegroundColour(ThemeMixin.appColors['text'])
+        self.ctrl.SetForegroundColour(ThemeMixin.codeColors['base']['fg'])
+        if not isinstance(self.ctrl, wx.CheckBox):
+            self.ctrl.SetBackgroundColour(ThemeMixin.codeColors['base']['bg'])
+
     def ctrlNum(self, parent, param):
         ctrl = wx.TextCtrl(parent, -1, param.val, name=param.label,
                            size=wx.Size(-1, self.boxHeight))
@@ -519,7 +525,6 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
             # then we're adding a new component, so provide known-valid name:
             makeValid = self.frame.exp.namespace.makeValid
             self.params['name'].val = makeValid(params['name'].val)
-        self.paramCtrls = {}
         CodeSnippetValidator.clsWarnings = {}
         self.suppressTitles = suppressTitles
         self.showAdvanced = showAdvanced
@@ -533,6 +538,7 @@ class _BaseParamsDlg(wx.Dialog, ThemeMixin):
         self.codeIDFromFieldName = {}
         # a list of all panels in the ctrl to be traversed by validator
         self.panels = []
+        self.paramCtrls = {}
 
         # for switching font to signal code:
         self.codeFaceName = 'Courier New'  # other monospace if not available
@@ -1273,6 +1279,8 @@ class _BaseParamCategory(wx.Panel):
 
     def _applyAppTheme(self):
         self.SetBackgroundColour(ThemeMixin.appColors['tab_bg'])
+        for ctrl in self.dlg.paramCtrls:
+            self.dlg.paramCtrls[ctrl]._applyAppTheme()
 
 class DlgLoopProperties(_BaseParamsDlg):
     _style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.RESIZE_BORDER
