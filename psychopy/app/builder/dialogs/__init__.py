@@ -405,6 +405,19 @@ class ParamCtrls2:
         self.parent = parent
         self.dlg = parent.dlg
         self.dlg.paramCtrls.update({label: self})
+        self.boxHeight = 20
+        typeMap = {
+            'num': self.ctrlNum,
+            'int': self.ctrlNum,
+            float: self.ctrlNum,
+            'fixedList': self.ctrlFixedList,
+            'fileList': self.ctrlFileList,
+            'bool': self.ctrlBool,
+            'str': self.ctrlStr,
+            'extendedStr': self.ctrlExtendedStr,
+            'code': self.ctrlCode,
+            'extendedCode': self.ctrlExtendedCode
+        }
         # Create label
         self.label = wx.StaticText(self.parent, label=label, size=(100, 30), style=wx.TEXT_ALIGNMENT_RIGHT)
         sizer.Add(self.label, (row, col), border=15, flag=wx.LEFT | wx.TOP if row == 0 else wx.LEFT)
@@ -412,13 +425,63 @@ class ParamCtrls2:
         # Create value controls
         for val in spec:
             if isinstance(val, Param):
-                self.ctrl = wx.StaticText(self.parent, label=val.label, size=(-1, 30))
-                sizer.Add(self.ctrl, (row, col), border=15, flag=wx.TOP if row == 0 else 0)
+                self.ctrl = typeMap[val.valType](self.parent, val)
+                sizer.Add(self.ctrl, (row, col), border=15, flag=wx.EXPAND | wx.RIGHT | wx.TOP if row == 0 else wx.EXPAND | wx.RIGHT )
                 col += 1
             if isinstance(val, list):
                 self.update = wx.Choice(self.parent, choices=val, size=(100, 30))
                 sizer.Add(self.update, (row, col), border=15, flag=wx.RIGHT | wx.TOP if row == 0 else wx.RIGHT)
                 col += 1
+
+    def ctrlNum(self, parent, param):
+        ctrl = wx.TextCtrl(parent, -1, param.val, name=param.label,
+                           size=wx.Size(-1, self.boxHeight))
+        return ctrl
+
+    def ctrlChoice(self, parent, param):
+        ctrl = wx.Choice(parent, choices=param.allowedVals,
+                  name=param.label,
+                  size=(-1, self.boxHeight))
+        return ctrl
+
+    def ctrlFixedList(self, parent, param):
+        ctrl = wx.CheckListBox(parent, size=wx.Size(-1, 200),
+                                         choices=param.allowedVals)
+        ctrl.SetCheckedStrings(param.val)
+        return ctrl
+
+    def ctrlFileList(self, parent, param):
+        ctrl = FileListCtrl(parent, choices=param.allowedVals,
+                            size=wx.Size(-1, 100))
+        ctrl.SetSelection(param.val)
+        return ctrl
+
+    def ctrlBool(self, parent, param):
+        ctrl = wx.CheckBox(parent,
+                                     name=param.label,
+                                     size=wx.Size(-1, self.boxHeight))
+        ctrl.SetValue(param.val)
+        return ctrl
+
+    def ctrlStr(self, parent, param):
+        ctrl = wx.TextCtrl(parent, -1, param.val, name=param.label,
+                           size=wx.Size(-1, self.boxHeight))
+        return ctrl
+
+    def ctrlExtendedStr(self, parent, param):
+        ctrl = wx.TextCtrl(parent, -1, value=str(param.val), pos=wx.DefaultPosition,
+                           size=wx.Size(-1, 100), style=wx.TE_MULTILINE)
+        return ctrl
+
+    def ctrlCode(self, parent, param):
+        ctrl = wx.TextCtrl(parent, -1, str(param.val), name=param.label,
+                           size=wx.Size(-1, self.boxHeight))
+        return ctrl
+
+    def ctrlExtendedCode(self, parent, param):
+        ctrl = CodeBox(parent, -1, pos=wx.DefaultPosition,
+                       size=wx.Size(-1, 100), style=0, value=str(param.val))
+        return ctrl
 
 
 class _BaseParamsDlg(wx.Dialog, ThemeMixin):
