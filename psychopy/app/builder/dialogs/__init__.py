@@ -440,13 +440,14 @@ class ParamCtrls2:
     def ctrlNum(self, parent, param):
         ctrl = wx.TextCtrl(parent, -1, param.val, name=param.label,
                            size=wx.Size(-1, self.boxHeight))
+        ctrl.SetValue(str(param.val))
         return ctrl
 
     def ctrlChoice(self, parent, param):
         ctrl = wx.Choice(parent, choices=param.allowedVals,
                   name=param.label,
                   size=(-1, self.boxHeight))
-        ctrl.SetSelection(ctrl.GetItems().index(param.updates))
+        ctrl.SetSelection(ctrl.GetItems().index(param.val))
         return ctrl
 
     def ctrlFixedList(self, parent, param):
@@ -462,30 +463,33 @@ class ParamCtrls2:
         return ctrl
 
     def ctrlBool(self, parent, param):
-        ctrl = wx.CheckBox(parent,
-                                     name=param.label,
-                                     size=wx.Size(-1, self.boxHeight))
-        ctrl.SetValue(param.val)
+        ctrl = wx.CheckBox(parent, name=param.label,
+                           size=wx.Size(-1, self.boxHeight))
+        ctrl.SetValue(bool(param.val))
         return ctrl
 
     def ctrlStr(self, parent, param):
         ctrl = wx.TextCtrl(parent, -1, param.val, name=param.label,
                            size=wx.Size(-1, self.boxHeight))
+        ctrl.SetValue(str(param.val))
         return ctrl
 
     def ctrlExtendedStr(self, parent, param):
         ctrl = wx.TextCtrl(parent, -1, value=str(param.val), pos=wx.DefaultPosition,
                            size=wx.Size(-1, 100), style=wx.TE_MULTILINE)
+        ctrl.SetValue(str(param.val))
         return ctrl
 
     def ctrlCode(self, parent, param):
         ctrl = wx.TextCtrl(parent, -1, str(param.val), name=param.label,
                            size=wx.Size(-1, self.boxHeight))
+        ctrl.SetValue(str(param.val))
         return ctrl
 
     def ctrlExtendedCode(self, parent, param):
         ctrl = CodeBox(parent, -1, pos=wx.DefaultPosition,
                        size=wx.Size(-1, 100), style=0, value=str(param.val))
+        ctrl.SetValue(str(param.val))
         return ctrl
 
 
