@@ -93,12 +93,10 @@ def convertToPix(vertices, pos, units, win):
     self.pos is that some stimuli use other terms (e.g. ElementArrayStim
     uses fieldPos).
     """
-    unit2pixFunc = _unit2PixMappings.get(units)
-    if unit2pixFunc:
-        return unit2pixFunc(vertices, pos, win)
-    else:
-        msg = "The unit type [{0}] is not registered with PsychoPy"
-        raise ValueError(msg.format(units))
+    if isinstance(vertices, Vector):
+        return vertices.pix[1]
+    val = Vector((0, vertices), units, win=win, monitor=win.monitor)
+    return val.pix[1]
 
 
 def addUnitTypeConversion(unitLabel, mappingFunc):
