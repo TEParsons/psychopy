@@ -41,7 +41,7 @@ from psychopy.tools.attributetools import (attributeSetter, logAttrib,
                                            setAttribute)
 from psychopy.tools.colorspacetools import dkl2rgb, lms2rgb
 from psychopy.tools.monitorunittools import (cm2pix, deg2pix, pix2cm,
-                                             pix2deg, convertToPix)
+                                             pix2deg, convertToPix, Vector)
 from psychopy.visual.helpers import (pointInPolygon, polygonsOverlap,
                                      setColor, findImageFile)
 from psychopy.tools.typetools import float_uint8
@@ -456,7 +456,62 @@ class ColorMixin(object):
         return desiredRGB
 
 
-class ContainerMixin(object):
+class VectorMixin(object):
+    @property
+    def size(self):
+        try:
+            return getattr(self._size, self.units)
+        except (NameError, ValueError, TypeError) as msg:
+            logging.warning("Could not retrieve size, error: "+msg)
+            return None
+    @size.setter
+    def size(self, value):
+        # If they give an already made Vector, just use that
+        if isinstance(value, Vector):
+            self._size = value
+            return
+        # Get params needed
+        units = self.units if hasattr(self, 'units') else 'pix'
+        win = self.win if hasattr(self, 'win') else None
+        mon = self.monitor if hasattr(self, 'monitor') \
+            else win.monitor if hasattr(win, 'monitor') \
+            else None
+        # Create vector
+        try:
+            self._size = Vector(value, self.units, win=self.win, monitor=mon)
+        except NameError as msg:
+            logging.warning(msg)
+            logging.warning("Setting value of size to (0,0)")
+            self._size = Vector((0,0), 'pix', win=self.win, monitor=mon)
+    @property
+    def position(self):
+        try:
+            return getattr(self._size, self.units)
+        except (NameError, ValueError, TypeError) as msg:
+            logging.warning("Could not retrieve size, error: "+msg)
+            return None
+    @position.setter
+    def position(self, value):
+        # If they give an already made Vector, just use that
+        if isinstance(value, Vector):
+            self._position = value
+            return
+        # Get params needed
+        units = self.units if hasattr(self, 'units') else 'pix'
+        win = self.win if hasattr(self, 'win') else None
+        mon = self.monitor if hasattr(self, 'monitor') \
+            else win.monitor if hasattr(win, 'monitor') \
+            else None
+        # Create vector
+        try:
+            self._position = Vector(value, self.units, win=self.win, monitor=mon)
+        except NameError as msg:
+            logging.warning(msg)
+            logging.warning("Setting value of position to (0,0)")
+            self._position = Vector((0,0), 'pix', win=self.win, monitor=mon)
+
+
+class ContainerMixin(VectorMixin):
     """Mixin class for visual stim that have verticesPix attrib
     and .contains() methods.
     """
