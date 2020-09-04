@@ -510,6 +510,36 @@ class VectorMixin(object):
             logging.warning("Setting value of position to (0,0)")
             self._position = Vector((0,0), 'pix', win=self.win, monitor=mon)
 
+    @property
+    def vertices(self):
+        return self._vertices
+    @vertices.setter
+    def vertices(self, value):
+
+        # Get params needed
+        units = self.units if hasattr(self, 'units') else 'pix'
+        win = self.win if hasattr(self, 'win') else None
+        mon = self.monitor if hasattr(self, 'monitor') \
+            else win.monitor if hasattr(win, 'monitor') \
+            else None
+        # Enforce list
+        if not isinstance(value, (list, tuple)):
+            value = [value]
+        # Process each vertex
+        self._vertices = []
+        for val in value:
+            if isinstance(val, Vector):
+                self._vertices.append(val)
+                continue
+            # Create vector
+            try:
+                self._vertices.append(
+                    Vector(val, self.units, win=self.win, monitor=mon)
+                )
+            except NameError as msg:
+                logging.warning("Could not convert value "+str(val)+" to Vector object, reason: "+msg)
+                continue
+
 
 class ContainerMixin(VectorMixin):
     """Mixin class for visual stim that have verticesPix attrib
