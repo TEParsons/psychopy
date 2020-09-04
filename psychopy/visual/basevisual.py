@@ -563,7 +563,7 @@ class ContainerMixin(VectorMixin):
         # needs updating :-)
         if self._needVertexUpdate:
             self._updateVertices()
-        return self.__dict__['verticesPix']
+        return [vert.pix for vert in self.vertices]
 
     @property
     def _borderPix(self):
@@ -592,7 +592,7 @@ class ContainerMixin(VectorMixin):
         if hasattr(self, '_tesselVertices'):  # Shapes need to render from this
             verts = self._tesselVertices
         elif hasattr(self, 'vertices'):
-            verts = self.vertices
+            verts = self.verticesPix
         else:
             verts = self._verticesBase
 
@@ -604,7 +604,6 @@ class ContainerMixin(VectorMixin):
             verts = numpy.dot(self.size * verts * flip, self._rotationMatrix)
         verts = convertToPix(vertices=verts, pos=self.pos,
                              win=self.win, units=self.units)
-        self.__dict__['verticesPix'] = verts
 
         if hasattr(self, 'border'):
             #border = self.border
