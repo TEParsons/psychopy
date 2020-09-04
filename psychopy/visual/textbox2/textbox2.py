@@ -656,10 +656,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
             raise ValueError('Unexpected value for _anchorX')
         self.vertices = self._rawVerts + (self._anchorOffsetX, self._anchorOffsetY)
 
-        vertsPix = convertToPix(vertices=self.vertices,
-                                pos=self.pos,
-                                win=self.win, units=self.units)
-        self.__dict__['verticesPix'] = vertsPix
+        vertsPix = self.verticesPix
 
         # tight bounding box
         if self.vertices.shape[0] < 1:  # editable box with no letters?
