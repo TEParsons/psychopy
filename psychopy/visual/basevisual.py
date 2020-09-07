@@ -41,9 +41,10 @@ from psychopy.tools.attributetools import (attributeSetter, logAttrib,
                                            setAttribute)
 from psychopy.tools.colorspacetools import dkl2rgb, lms2rgb
 from psychopy.tools.monitorunittools import (cm2pix, deg2pix, pix2cm,
-                                             pix2deg, convertToPix, Vector)
+                                             pix2deg, convertToPix, Vector, vectorSpaces)
 from psychopy.visual.helpers import (pointInPolygon, polygonsOverlap,
                                      setColor, findImageFile)
+import psychopy
 from psychopy.tools.typetools import float_uint8
 from psychopy.tools.arraytools import makeRadialMatrix
 from . import globalVars
@@ -456,92 +457,7 @@ class ColorMixin(object):
         return desiredRGB
 
 
-class VectorMixin(object):
-    @property
-    def size(self):
-        try:
-            return getattr(self._size, self.units)
-        except (NameError, ValueError, TypeError) as msg:
-            logging.warning("Could not retrieve size, error: "+msg)
-            return None
-    @size.setter
-    def size(self, value):
-        # If they give an already made Vector, just use that
-        if isinstance(value, Vector):
-            self._size = value
-            return
-        # Get params needed
-        units = self.units if hasattr(self, 'units') else 'pix'
-        win = self.win if hasattr(self, 'win') else None
-        mon = self.monitor if hasattr(self, 'monitor') \
-            else win.monitor if hasattr(win, 'monitor') \
-            else None
-        # Create vector
-        try:
-            self._size = Vector(value, self.units, win=self.win, monitor=mon)
-        except NameError as msg:
-            logging.warning(msg)
-            logging.warning("Setting value of size to (0,0)")
-            self._size = Vector((0,0), 'pix', win=self.win, monitor=mon)
-    @property
-    def position(self):
-        try:
-            return getattr(self._size, self.units)
-        except (NameError, ValueError, TypeError) as msg:
-            logging.warning("Could not retrieve size, error: "+msg)
-            return None
-    @position.setter
-    def position(self, value):
-        # If they give an already made Vector, just use that
-        if isinstance(value, Vector):
-            self._position = value
-            return
-        # Get params needed
-        units = self.units if hasattr(self, 'units') else 'pix'
-        win = self.win if hasattr(self, 'win') else None
-        mon = self.monitor if hasattr(self, 'monitor') \
-            else win.monitor if hasattr(win, 'monitor') \
-            else None
-        # Create vector
-        try:
-            self._position = Vector(value, self.units, win=self.win, monitor=mon)
-        except NameError as msg:
-            logging.warning(msg)
-            logging.warning("Setting value of position to (0,0)")
-            self._position = Vector((0,0), 'pix', win=self.win, monitor=mon)
-
-    @property
-    def vertices(self):
-        return self._vertices
-    @vertices.setter
-    def vertices(self, value):
-
-        # Get params needed
-        units = self.units if hasattr(self, 'units') else 'pix'
-        win = self.win if hasattr(self, 'win') else None
-        mon = self.monitor if hasattr(self, 'monitor') \
-            else win.monitor if hasattr(win, 'monitor') \
-            else None
-        # Enforce list
-        if not isinstance(value, (list, tuple)):
-            value = [value]
-        # Process each vertex
-        self._vertices = []
-        for val in value:
-            if isinstance(val, Vector):
-                self._vertices.append(val)
-                continue
-            # Create vector
-            try:
-                self._vertices.append(
-                    Vector(val, self.units, win=self.win, monitor=mon)
-                )
-            except NameError as msg:
-                logging.warning("Could not convert value "+str(val)+" to Vector object, reason: "+msg)
-                continue
-
-
-class ContainerMixin(VectorMixin):
+class ContainerMixin(object):
     """Mixin class for visual stim that have verticesPix attrib
     and .contains() methods.
     """
@@ -1173,14 +1089,14 @@ class WindowMixin(object):
     """Window-related attributes and methods.
     Used by BaseVisualStim, SimpleImageStim and ElementArrayStim."""
 
-    @attributeSetter
-    def win(self, value):
+    @property
+    def win(self):
         """The :class:`~psychopy.visual.Window` object in which the
         stimulus will be rendered by default. (required)
 
-       Example, drawing same stimulus in two different windows and display
-       simultaneously. Assuming that you have two windows and a stimulus
-       (win1, win2 and stim)::
+        Example, drawing same stimulus in two different windows and display
+        simultaneously. Assuming that you have two windows and a stimulus
+        (win1, win2 and stim)::
 
            stim.win = win1  # stimulus will be drawn in win1
            stim.draw()  # stimulus is now drawn to win1
@@ -1196,10 +1112,19 @@ class WindowMixin(object):
            stim.draw(win1)
            stim.draw(win2)
         """
-        self.__dict__['win'] = value
+        if hasattr(self, '_win'):
+            return self._win
+        else:
+            return None
+    @win.setter
+    def win(self, value):
+        if isinstance(value, psychopy.visual.window.Window):
+            self._win = value
+        else:
+            raise ValueError("Value of self.win must be an instance of " + psychopy.visual.window.Window.__name__)
 
-    @attributeSetter
-    def units(self, value):
+    @property
+    def units(self):
         """
         None, 'norm', 'cm', 'deg', 'degFlat', 'degFlatPos', or 'pix'
 
@@ -1216,22 +1141,39 @@ class WindowMixin(object):
             # This stimulus is 0.2 degrees wide and 0.5 degrees tall.
             stim.units = 'deg'
         """
-        if value != None and len(value):
-            self.__dict__['units'] = value
+        if hasattr(self, '_units'):
+            return self._units
+        elif hasattr(self.win, 'units'):
+            return self.win.units
         else:
-            self.__dict__['units'] = self.win.units
+            return 'pix'
+    @units.setter
+    def units(self, value):
+        if value == None or value == '':
+            if hasattr(self.win, 'units'):
+                self.units = self.win.units
+            else:
+                self._units = 'pix'
+        elif value in vectorSpaces:
+            self._units = value
+        else:
+            raise ValueError("Invalid vector space, must be one of the following: "+ ", ".join(list(vectorSpaces)) + ". Was supplied with " + value)
 
-        # Update size and position if they are defined (tested as numeric).
-        # If not, this is probably
-        # during some init and they will be defined later, given the new unit.
-        try:
-            # quick and dirty way to check that both are numeric. This avoids
-            # the heavier attributeSetter calls.
-            self.size * self.pos
-            self.size = self.size
-            self.pos = self.pos
-        except Exception:
-            pass
+    @property
+    def monitor(self):
+        if hasattr(self, '_monitor'):
+            return self._monitor
+        elif hasattr(self.win, 'monitor'):
+            return self.win.monitor
+        else:
+            return None
+    @monitor.setter
+    def monitor(self, value):
+        if isinstance(value, psychopy.monitors.Monitor):
+            self._monitor = value
+        else:
+            raise ValueError("Value of self.monitor must be an instance of " + psychopy.monitors.Monitor.__name__)
+
 
     @attributeSetter
     def useShaders(self, value):
@@ -1307,6 +1249,134 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
                    ". Set autoLog to True only at the end of __init__())")
             logging.warning(msg % (self.__class__.__name__))
 
+    @property
+    def size(self):
+        """The size (width, height) of the stimulus in the stimulus
+        :ref:`units <units>`
+
+        Value should be :ref:`x,y-pair <attrib-xy>`,
+        :ref:`scalar <attrib-scalar>` (applies to both dimensions)
+        or None (resets to default). :ref:`Operations <attrib-operations>`
+        are supported.
+
+        Sizes can be negative (causing a mirror-image reversal) and can
+        extend beyond the window.
+
+        Example::
+
+            stim.size = 0.8  # Set size to (xsize, ysize) = (0.8, 0.8)
+            print(stim.size)  # Outputs array([0.8, 0.8])
+            stim.size += (0.5, -0.5)  # make wider and flatter: (1.3, 0.3)
+
+        Tip: if you can see the actual pixel range this corresponds to by
+        looking at `stim._sizeRendered`
+        """
+        try:
+            return getattr(self._size, self.units)
+        except (NameError, ValueError, TypeError) as msg:
+            logging.warning("Could not retrieve size, error: " + msg)
+            return None
+    @size.setter
+    def size(self, value):
+        # If they give an already made Vector, just use that
+        if isinstance(value, Vector):
+            self._size = value
+            return
+        # Create vector
+        try:
+            self._size = Vector(value, self.units, win=self.win, monitor=self.monitor)
+        except NameError as msg:
+            logging.warning(msg)
+            logging.warning("Setting value of size to (0,0)")
+            self._size = Vector((0, 0), 'pix', win=self.win, monitor=self.monitor)
+        # Mark as needing an update
+        self._needVertexUpdate = True
+        self._needUpdate = True
+        # Calculate cycles per stim if applicable
+        if hasattr(self, '_calcCyclesPerStim'):
+            self._calcCyclesPerStim()
+
+    @property
+    def position(self):
+        """The position of the center of the stimulus in the stimulus
+        :ref:`units <units>`
+
+        `value` should be an :ref:`x,y-pair <attrib-xy>`.
+        :ref:`Operations <attrib-operations>` are also supported.
+
+        Example::
+
+            stim.pos = (0.5, 0)  # Set slightly to the right of center
+            stim.pos += (0.5, -1)  # Increment pos rightwards and upwards.
+                Is now (1.0, -1.0)
+            stim.pos *= 0.2  # Move stim towards the center.
+                Is now (0.2, -0.2)
+
+        Tip: If you need the position of stim in pixels, you can obtain
+        it like this:
+
+            from psychopy.tools.monitorunittools import posToPix
+            posPix = posToPix(stim)
+        """
+        try:
+            return getattr(self._size, self.units)
+        except (NameError, ValueError, TypeError) as msg:
+            logging.warning("Could not retrieve size, error: " + msg)
+            return None
+    @position.setter
+    def position(self, value):
+        # If they give an already made Vector, just use that
+        if isinstance(value, Vector):
+            self._position = value
+            return
+        # Create vector
+        try:
+            self._position = Vector(value, self.units, win=self.win, monitor=self.monitor)
+        except NameError as msg:
+            logging.warning(msg)
+            logging.warning("Setting value of position to (0,0)")
+            self._position = Vector((0, 0), 'pix', win=self.win, monitor=self.monitor)
+        # Mark as needing update
+        self._needVertexUpdate = True
+        self._needUpdate = True
+
+    @property
+    def vertices(self):
+        if hasattr(self, '_vertices'):
+            # If vertices already set, return existing vertices
+            return self._vertices
+        else:
+            # If not, construct square based on position and size
+            tl = Vector((self.pos[0] - self.size[0] / 2, self.pos[1] + self.size[1] / 2), self.units, win=self.win,
+                        monitor=self.monitor)  # top left
+            tr = Vector((self.pos[0] + self.size[0] / 2, self.pos[1] + self.size[1] / 2), self.units, win=self.win,
+                        monitor=self.monitor)  # top right
+            bl = Vector((self.pos[0] - self.size[0] / 2, self.pos[1] - self.size[1] / 2), self.units, win=self.win,
+                        monitor=self.monitor)  # bottom left
+            br = Vector((self.pos[0] + self.size[0] / 2, self.pos[1] - self.size[1] / 2), self.units, win=self.win,
+                        monitor=self.monitor)  # bottom right
+
+            return [tl, tr, bl, br]
+    @vertices.setter
+    def vertices(self, value):
+        # Enforce list
+        if not isinstance(value, (list, tuple)):
+            value = [value]
+        # Process each vertex
+        self._vertices = []
+        for val in value:
+            if isinstance(val, Vector):
+                self._vertices.append(val)
+                continue
+            # Create vector
+            try:
+                self._vertices.append(
+                    Vector(val, self.units, win=self.win, monitor=self.monitor)
+                )
+            except NameError as msg:
+                logging.warning("Could not convert value " + str(val) + " to Vector object, reason: " + msg)
+                continue
+
     @attributeSetter
     def opacity(self, value):
         """Determines how visible the stimulus is relative to background
@@ -1344,98 +1414,6 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         self._rotationMatrix = numpy.array([[cos(radians), -sin(radians)],
                                             [sin(radians), cos(radians)]])
         self._needVertexUpdate = True  # need to update update vertices
-        self._needUpdate = True
-
-    @attributeSetter
-    def size(self, value):
-        """The size (width, height) of the stimulus in the stimulus
-        :ref:`units <units>`
-
-        Value should be :ref:`x,y-pair <attrib-xy>`,
-        :ref:`scalar <attrib-scalar>` (applies to both dimensions)
-        or None (resets to default). :ref:`Operations <attrib-operations>`
-        are supported.
-
-        Sizes can be negative (causing a mirror-image reversal) and can
-        extend beyond the window.
-
-        Example::
-
-            stim.size = 0.8  # Set size to (xsize, ysize) = (0.8, 0.8)
-            print(stim.size)  # Outputs array([0.8, 0.8])
-            stim.size += (0.5, -0.5)  # make wider and flatter: (1.3, 0.3)
-
-        Tip: if you can see the actual pixel range this corresponds to by
-        looking at `stim._sizeRendered`
-        """
-        array = numpy.array
-        value = val2array(value)  # Check correct user input
-        self._requestedSize = copy.copy(value)  # to track whether we're using a default
-        # None --> set to default
-        if value is None:
-            # Set the size to default (e.g. to the size of the loaded image
-            # calculate new size
-            if self._origSize is None:  # not an image from a file
-                # this was PsychoPy's original default
-                value = numpy.array([0.5, 0.5])
-            else:
-                # we have an image; calculate the size in `units` that matches
-                # original pixel size
-                # also scale for retina display (virtual pixels are bigger)
-                if self.win.useRetina:
-                    winSize = self.win.size / 2
-                else:
-                    winSize = self.win.size
-                # then handle main scale
-                if self.units == 'pix':
-                    value = numpy.array(self._origSize)
-                elif self.units in ('deg', 'degFlatPos', 'degFlat'):
-                    # NB when no size has been set (assume to use orig size
-                    # in pix) this should not be corrected for flat anyway,
-                    # so degFlat == degFlatPos
-                    value = pix2deg(array(self._origSize, float),
-                                    self.win.monitor)
-                elif self.units == 'norm':
-                    value = 2 * array(self._origSize, float) / winSize
-                elif self.units == 'height':
-                    value = array(self._origSize, float) / winSize[1]
-                elif self.units == 'cm':
-                    value = pix2cm(array(self._origSize, float),
-                                   self.win.monitor)
-                else:
-                    msg = ("Failed to create default size for ImageStim. "
-                           "Unsupported unit, %s")
-                    raise AttributeError(msg % repr(self.units))
-        self.__dict__['size'] = value
-        self._needVertexUpdate = True
-        self._needUpdate = True
-        if hasattr(self, '_calcCyclesPerStim'):
-            self._calcCyclesPerStim()
-
-    @attributeSetter
-    def pos(self, value):
-        """The position of the center of the stimulus in the stimulus
-        :ref:`units <units>`
-
-        `value` should be an :ref:`x,y-pair <attrib-xy>`.
-        :ref:`Operations <attrib-operations>` are also supported.
-
-        Example::
-
-            stim.pos = (0.5, 0)  # Set slightly to the right of center
-            stim.pos += (0.5, -1)  # Increment pos rightwards and upwards.
-                Is now (1.0, -1.0)
-            stim.pos *= 0.2  # Move stim towards the center.
-                Is now (0.2, -0.2)
-
-        Tip: If you need the position of stim in pixels, you can obtain
-        it like this:
-
-            from psychopy.tools.monitorunittools import posToPix
-            posPix = posToPix(stim)
-        """
-        self.__dict__['pos'] = val2array(value, False, False)
-        self._needVertexUpdate = True
         self._needUpdate = True
 
     def setPos(self, newPos, operation='', log=None):

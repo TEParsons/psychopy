@@ -95,8 +95,15 @@ def convertToPix(vertices, pos, units, win):
     """
     if isinstance(vertices, Vector):
         return vertices.pix[1]
-    val = Vector((0, vertices), units, win=win, monitor=win.monitor)
-    return val.pix[1]
+    if isinstance(vertices, np.ndarray):
+        vertices = tuple(vertices)
+    if isinstance(vertices, (float, int)):
+        val = Vector((0, vertices), units, win=win, monitor=win.monitor)
+        return val.pix[1]
+    else:
+        val = Vector(vertices, units, win=win, monitor=win.monitor)
+        return val.pix
+
 
 
 def addUnitTypeConversion(unitLabel, mappingFunc):
