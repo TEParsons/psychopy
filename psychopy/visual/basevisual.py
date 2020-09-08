@@ -1298,6 +1298,13 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         # Calculate cycles per stim if applicable
         if hasattr(self, '_calcCyclesPerStim'):
             self._calcCyclesPerStim()
+    @property
+    def _requestedSize(self):
+        if hasattr(self, '_size'):
+            return self._size._requested
+    @_requestedSize.setter
+    def _requestedSize(self, value):
+        self.size = value
 
     @property
     def position(self):
