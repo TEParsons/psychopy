@@ -1161,6 +1161,9 @@ class WindowMixin(object):
 
     @property
     def monitor(self):
+        """
+        The monitor stimulus is being displayed on, should be of type psychopy.monitors.Monitor.
+        """
         if hasattr(self, '_monitor'):
             return self._monitor
         elif hasattr(self.win, 'monitor'):
