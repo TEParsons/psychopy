@@ -1380,6 +1380,22 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
                 logging.warning("Could not convert value " + str(val) + " to Vector object, reason: " + msg)
                 continue
 
+    @property
+    def anchor(self):
+        """Where on the stimulus should position be set relative to?
+        """
+        if hasattr(self, '_anchor'):
+            return self._anchor
+        else:
+            return 'center'
+    @anchor.setter
+    def anchor(self, value):
+        if value in ['center','top-center','bottom-center','center-left','center-right','top-left','top-right','bottom-left','bottom-right']:
+            self._anchor = value
+        else:
+            logging.error("Invalid anchor value")
+            raise ValueError("Invalid anchor value")
+
     @attributeSetter
     def opacity(self, value):
         """Determines how visible the stimulus is relative to background
