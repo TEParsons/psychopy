@@ -1412,7 +1412,7 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
 
         """
         self.__dict__['ori'] = value
-        radians = value * 0.017453292519943295
+        radians = numpy.radians(value)
         sin, cos = numpy.sin, numpy.cos
         self._rotationMatrix = numpy.array([[cos(radians), -sin(radians)],
                                             [sin(radians), cos(radians)]])
