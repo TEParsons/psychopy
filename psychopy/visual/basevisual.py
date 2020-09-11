@@ -1276,7 +1276,7 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         """
         try:
             return getattr(self._size, self.units)
-        except (NameError, ValueError, TypeError) as msg:
+        except (NameError, ValueError, TypeError, AttributeError) as msg:
             logging.warning("Could not retrieve size, error: " + msg)
             return None
     @size.setter
@@ -1285,6 +1285,9 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         if isinstance(value, Vector):
             self._size = value
             return
+        # If supplied with a single value, duplicate it
+        if isinstance(value, (int, float)):
+            value = (value, value)
         # Create vector
         try:
             self._size = Vector(value, self.units, win=self.win, monitor=self.monitor)
