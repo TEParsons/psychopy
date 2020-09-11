@@ -1329,9 +1329,9 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
             posPix = posToPix(stim)
         """
         try:
-            return getattr(self._size, self.units)
-        except (NameError, ValueError, TypeError) as msg:
-            logging.warning("Could not retrieve size, error: " + msg)
+            return getattr(self._position, self.units)
+        except (NameError, ValueError, TypeError, AttributeError) as msg:
+            logging.warning("Could not retrieve position, error: " + msg)
             return None
     @position.setter
     def position(self, value):
@@ -1349,6 +1349,13 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         # Mark as needing update
         self._needVertexUpdate = True
         self._needUpdate = True
+    @property
+    def pos(self):
+        """Synonymous with position"""
+        return self.position
+    @pos.setter
+    def pos(self, value):
+        self.position = value
 
     @property
     def vertices(self):
