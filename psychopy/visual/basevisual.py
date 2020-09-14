@@ -1380,7 +1380,9 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
     @vertices.setter
     def vertices(self, value):
         # Enforce list
-        if not isinstance(value, (list, tuple)):
+        if isinstance(value, numpy.ndarray):
+            value = [list(val) for val in value]
+        elif not isinstance(value, (list, tuple)):
             value = [value]
         # Process each vertex
         self._vertices = []
