@@ -22,7 +22,7 @@ import OpenGL.GL as gl
 from ..basevisual import BaseVisualStim, ColorMixin, ContainerMixin
 from psychopy.tools.attributetools import attributeSetter, setAttribute
 from psychopy.tools.arraytools import val2array
-from psychopy.tools.monitorunittools import convertToPix
+from psychopy.tools.monitorunittools import convertToPix, Vector
 from .fontmanager import FontManager, GLFont
 from .. import shaders
 from ..rect import Rect
@@ -128,28 +128,8 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self.contrast = contrast
         self.opacity = opacity
         self.onTextCallback = onTextCallback
-
-        if units=='norm':
-            raise NotImplemented("TextBox2 doesn't support 'norm' units at the "
-                                 "moment. Use 'height' units instead")
         # first set params needed to create font (letter sizes etc)
-        if letterHeight is None:
-            self.letterHeight = defaultLetterHeight[self.units]
-        else:
-            self.letterHeight = letterHeight
-        # self._pixLetterHeight helps get font size right but not final layout
-        if 'deg' in self.units:  # treat deg, degFlat or degFlatPos the same
-            scaleUnits = 'deg'  # scale units are just for font resolution
-        else:
-            scaleUnits = self.units
-        self._pixLetterHeight = convertToPix(
-                self.letterHeight, pos=0, units=scaleUnits, win=self.win)
-        if isinstance(self._pixLetterHeight, np.ndarray):
-            # If pixLetterHeight is an array, take the Height value
-            self._pixLetterHeight = self._pixLetterHeight[1]
-        self._pixelScaling = self._pixLetterHeight / self.letterHeight
-        if size is None:
-            size = [defaultBoxWidth[self.units], None]
+        self.letterHeight = letterHeight
         self.size = size  # but this will be updated later to actual size
         self.bold = bold
         self.italic = italic
@@ -185,7 +165,6 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self.alignment = alignment
 
         # box border and fill
-        w, h = self.size
         self.borderWidth = borderWidth
         self.borderColor = borderColor
         self.fillColor = fillColor
@@ -343,11 +322,10 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self._lineWidths = []  # width in stim units of each line
 
         self._lineHeight = font.height * self.lineSpacing
-
-        if np.isnan(self._requestedSize[0]):
-            lineMax = float('inf')
-        else:
+        if self._requestedSize:
             lineMax = (self._requestedSize[0] - self.padding) * self._pixelScaling
+        else:
+            lineMax = float('inf')
 
         current = [0, 0]
         fakeItalic = 0.0
@@ -478,11 +456,12 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
         # thisW = current[0] - glyph.advance[0] + glyph.size[0] * alphaCorrection
         # calculate final self.size and tightBox
-        if np.isnan(self._requestedSize[0]):
-            self.size[0] = max(self._lineWidths) + self.padding*2
-        if np.isnan(self._requestedSize[1]):
-            self.size[1] = ((lineN + 1) * self._lineHeight / self._pixelScaling
-                            + self.padding * 2)
+        if self._requestedSize:
+            if self._requestedSize[0] == None:
+                self.size[0] = max(self._lineWidths) + self.padding*2
+            if self._requestedSize[1] == None:
+                self.size[1] = ((lineN + 1) * self._lineHeight / self._pixelScaling
+                                + self.padding * 2)
 
         # if we had to add more glyphs to make possible then 
         if self.glFont._dirty:
@@ -772,6 +751,26 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
             pass  # may not be created yet, which is fine
         self._needVertexUpdate = True
         self._needUpdate = True
+
+    @property
+    def letterHeight(self):
+        if hasattr(self, '_letterHeight'):
+            return self._letterHeight
+    @letterHeight.setter
+    def letterHeight(self, value):
+        # If value is a numpy array, convert to tuple
+        if isinstance(value, np.ndarray):
+            value = list(value)
+        # Set letterHeight
+        if isinstance(value, Vector):
+            self._letterHeight = value
+        elif isinstance(value, (int, float)):
+            self._letterHeight = Vector((0, value), self.units)
+        elif isinstance(value, (list, tuple)):
+            if len(value) == 2:
+                self._letterHeight = Vector(value, self.units)
+            else:
+                raise ValueError("letterHeight must be either a number of a list/tuple/ndarray of two numbers (only the second will be used)")
 
     def setText(self, text=None, log=None):
         """Usually you can use 'stim.attribute = value' syntax instead,
