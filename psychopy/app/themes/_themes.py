@@ -973,6 +973,27 @@ class ThemeSwitcher(wx.Menu):
     """Class to make a submenu for switching theme, meaning that the menu will
     always be the same across frames."""
     def __init__(self, frame):
+        themeList = self.getThemeList()
+        self.frame = frame
+        # Make menu
+        wx.Menu.__init__(self)
+        # Make priority theme buttons
+        priority = ["PsychopyDark", "PsychopyLight", "ClassicDark", "Classic"]
+        for theme in priority:
+            tooltip = themeList.pop(theme)
+            item = self.AppendRadioItem(wx.ID_ANY, _translate(theme), tooltip)
+            # Bind to theme change method
+            self.frame.Bind(wx.EVT_MENU, self.frame.app.onThemeChange, item)
+        # Make other theme buttons
+        for theme in themeList:
+            item = self.AppendRadioItem(wx.ID_ANY, _translate(theme), help=themeList[theme])
+            self.frame.Bind(wx.EVT_MENU, self.frame.app.onThemeChange, item)
+        self.AppendSeparator()
+        # Add Theme Folder button
+        self.folderBtn = self.Append(wx.ID_ANY, _translate("Open theme folder"))
+        self.frame.Bind(wx.EVT_MENU, self.openThemeFolder, self.folderBtn)
+
+    def getThemeList(self):
         # Get list of themes
         themePath = Path(prefs.paths['themes'])
         themeList = {}
@@ -987,23 +1008,7 @@ class ThemeSwitcher(wx.Menu):
 
             except (FileNotFoundError, IsADirectoryError):
                 pass
-        # Make menu
-        wx.Menu.__init__(self)
-        # Make priority theme buttons
-        priority = ["PsychopyDark", "PsychopyLight", "ClassicDark", "Classic"]
-        for theme in priority:
-            tooltip = themeList.pop(theme)
-            item = self.AppendRadioItem(wx.ID_ANY, _translate(theme), tooltip)
-            # Bind to theme change method
-            frame.Bind(wx.EVT_MENU, frame.app.onThemeChange, item)
-        # Make other theme buttons
-        for theme in themeList:
-            item = self.AppendRadioItem(wx.ID_ANY, _translate(theme), help=themeList[theme])
-            frame.Bind(wx.EVT_MENU, frame.app.onThemeChange, item)
-        self.AppendSeparator()
-        # Add Theme Folder button
-        item = self.Append(wx.ID_ANY, _translate("Open theme folder"))
-        frame.Bind(wx.EVT_MENU, self.openThemeFolder, item)
+        return themeList
 
     def openThemeFolder(self, event):
         subprocess.call("explorer %(themes)s" % prefs.paths, shell=True)
@@ -1012,3 +1017,17 @@ class ThemeSwitcher(wx.Menu):
         for item in self.GetMenuItems():
             if item.IsRadio():  # This means it will not attempt to check the separator
                 item.Check(item.ItemLabel.lower() == ThemeMixin.codetheme.lower())
+
+    def Update(self):
+        themeList = self.getThemeList()
+        # Make new buttons as needed
+        for theme in themeList:
+            if theme not in [item.ItemLabel for item in self.GetMenuItems()]:
+                item = self.PrependRadioItem(wx.ID_ANY, _translate(theme), helpString=themeList[theme])
+                self.frame.Bind(wx.EVT_MENU, self.frame.app.onThemeChange, item)
+        # Disable unused buttons
+        for item in self.GetMenuItems():
+            # skip folder button
+            if item == self.folderBtn:
+                continue
+            item.Enabled = item.ItemLabel in themeList
