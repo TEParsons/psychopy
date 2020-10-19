@@ -129,11 +129,9 @@ class PsychopyShell(wx.py.shell.Shell, ThemeMixin):
         wx.py.shell.Shell.__init__(
             self, coder.shelf, -1,
             introText=f'{langs[lang]["name"]} in PsychoPy - type some commands!\n\n',
+            InterpClass=langs[lang]["interp"],
             style=wx.BORDER_NONE)
-        # Set interpreter and lexer according to language
-        if langs[lang]["interp"]:
-            self.interp = langs[lang]["interp"]()
-            self.SetLexer(langs[lang]["lexer"])
+        self.SetLexer(langs[lang]["lexer"])
         # Redirect output to self
         #self.redirectStdout(True)
         #self.redirectStderr(True)
@@ -187,7 +185,36 @@ class PsychopyShell(wx.py.shell.Shell, ThemeMixin):
         menu.Append(self.ID_SELECTALL, _translate("Select All"))
         return menu
 
-class PsychopyJSInterp(dukpy.JSInterpreter):
+class PsychopyJSInterp(dukpy.JSInterpreter, wx.py.interpreter.Interpreter):
+    def __init__(self, locals=None, rawin=None,
+                 stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr,
+                 showInterpIntro=True):
+        dukpy.JSInterpreter.__init__(self)
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
+        if rawin:
+            from six.moves import builtins
+            builtins.raw_input = rawin
+            del builtins
+        if showInterpIntro:
+            copyright = 'Type "help", "copyright", "credits" or "license"'
+            copyright += ' for more information.'
+            self.introText = 'Python %s on %s%s%s' % \
+                             (sys.version, sys.platform, os.linesep, copyright)
+        try:
+            sys.ps1
+        except AttributeError:
+            sys.ps1 = '>>> '
+        try:
+            sys.ps2
+        except AttributeError:
+            sys.ps2 = '... '
+        self.more = 0
+        # List of lists to support recursive push().
+        self.commandBuffer = []
+        self.startupScript = None
+
     def push(self, command, **kwargs):
         """Create push behaviour to simulate PyShell interpreter"""
         self.evaljs(command, **kwargs)
