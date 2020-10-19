@@ -200,8 +200,8 @@ class PsychopyJSInterp(dukpy.JSInterpreter, wx.py.interpreter.Interpreter):
         if showInterpIntro:
             copyright = 'Type "help", "copyright", "credits" or "license"'
             copyright += ' for more information.'
-            self.introText = 'Python %s on %s%s%s' % \
-                             (sys.version, sys.platform, os.linesep, copyright)
+            self.introText = 'JavaScript %s on %s%s%s' % \
+                             ("(Dukpy)", sys.platform, os.linesep, copyright)
         try:
             sys.ps1
         except AttributeError:
