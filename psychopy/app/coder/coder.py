@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function
 
 # from future import standard_library
 # standard_library.install_aliases()
+import dukpy
 from pathlib import Path
 
 from past.builtins import unicode
@@ -105,17 +106,40 @@ def fromPickle(filename):
 
     return contents
 
-
-class PsychopyPyShell(wx.py.shell.Shell, ThemeMixin):
-    """Simple class wrapper for Pyshell which uses the Psychopy ThemeMixin."""
-    def __init__(self, coder):
-        msg = _translate('PyShell in PsychoPy - type some commands!')
-        wx.py.shell.Shell.__init__(
-            self, coder.shelf, -1, introText=msg + '\n\n', style=wx.BORDER_NONE)
+class PsychopyShell(wx.py.shell.Shell, ThemeMixin):
+    """Simple class wrapper for Pyshell/Duktape which uses the Psychopy ThemeMixin."""
+    def __init__(self, coder, lang="py"):
         self.prefs = coder.prefs
         self.paths = coder.paths
         self.app = coder.app
-
+        # Define names, interpreters and lexers for different languages (Python is None as it is default)
+        langs = {
+            "py": {
+                "name": "PyShell",
+                "interp": None,
+                "lexer": wx.stc.STC_LEX_PYTHON},
+            "js": {
+                "name": "Duktape (JS)",
+                "interp": PsychopyJSInterp,
+                "lexer": wx.stc.STC_LEX_CPP}
+        }
+        if lang not in langs:
+            lang = "py"
+        # Create shell
+        wx.py.shell.Shell.__init__(
+            self, coder.shelf, -1,
+            introText=f'{langs[lang]["name"]} in PsychoPy - type some commands!\n\n',
+            style=wx.BORDER_NONE)
+        # Set interpreter and lexer according to language
+        if langs[lang]["interp"]:
+            self.interp = langs[lang]["interp"]()
+            self.SetLexer(langs[lang]["lexer"])
+        # Redirect output to self
+        #self.redirectStdout(True)
+        #self.redirectStderr(True)
+        #self.stdout = self
+        #self.stderr = self
+        # Bind focus functions
         self.Bind(wx.EVT_SET_FOCUS, self.OnSetFocus)
         self.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocus)
 
@@ -163,6 +187,17 @@ class PsychopyPyShell(wx.py.shell.Shell, ThemeMixin):
         menu.Append(self.ID_SELECTALL, _translate("Select All"))
         return menu
 
+class PsychopyJSInterp(dukpy.JSInterpreter):
+    def push(self, command, **kwargs):
+        """Create push behaviour to simulate PyShell interpreter"""
+        return self.evaljs(command, **kwargs)
+
+    def getCallTip(self, command, pos=None, **kwargs):
+        """Create blank calltip to simulate PyShell interpreter"""
+        name = ""
+        argspec = ""
+        tip = ""
+        return (name, argspec, tip)
 
 class Printer(HtmlEasyPrinting):
     """bare-bones printing, no control over anything
@@ -1323,11 +1358,15 @@ class CoderFrame(wx.Frame, ThemeMixin):
                     logging.warn(msg)
             if useDefaultShell:
                 # Default to Pyshell if iPython fails
-                self.shell = PsychopyPyShell(self)
+                self.shell = PsychopyShell(self, "py")
                 self._useShell = 'pyshell'
-            # Add shell to output pane
+            # Add JS shell
+            self.jsShell = PsychopyShell(self, "js")
+            # Add shells to output pane
             self.shell.SetName("PythonShell")
-            self.shelf.AddPage(self.shell, _translate('Shell'))
+            self.shelf.AddPage(self.shell, _translate('Python Shell'))
+            self.jsShell.SetName("JSShell")
+            self.shelf.AddPage(self.jsShell, _translate('JS Shell'))
             # Hide close button
             for i in range(self.shelf.GetPageCount()):
                 self.shelf.SetCloseButton(i, False)
