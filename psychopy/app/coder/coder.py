@@ -185,7 +185,7 @@ class PsychopyShell(wx.py.shell.Shell, ThemeMixin):
 class PsychopyJSInterp(dukpy.JSInterpreter):
     def push(self, command, **kwargs):
         """Create push behaviour to simulate PyShell interpreter"""
-        return self.evaljs(command, **kwargs)
+        self.evaljs(command, **kwargs)
 
     def getCallTip(self, command, pos=None, **kwargs):
         """Create blank calltip to simulate PyShell interpreter"""
