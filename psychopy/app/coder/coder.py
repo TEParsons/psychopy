@@ -186,13 +186,14 @@ class PsychopyShell(wx.py.shell.Shell, ThemeMixin):
         return menu
 
 class PsychopyJSInterp(dukpy.JSInterpreter, wx.py.interpreter.Interpreter):
-    def __init__(self, locals=None, rawin=None,
+    def __init__(self, locals={}, rawin=None,
                  stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr,
                  showInterpIntro=True):
         dukpy.JSInterpreter.__init__(self)
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
+        self.locals = locals
         if rawin:
             from six.moves import builtins
             builtins.raw_input = rawin
@@ -214,6 +215,7 @@ class PsychopyJSInterp(dukpy.JSInterpreter, wx.py.interpreter.Interpreter):
         # List of lists to support recursive push().
         self.commandBuffer = []
         self.startupScript = None
+        self.evaljs()
 
     def push(self, command, **kwargs):
         """Create push behaviour to simulate PyShell interpreter"""
