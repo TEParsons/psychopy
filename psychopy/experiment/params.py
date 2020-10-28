@@ -158,24 +158,18 @@ class Param(object):
             # return repr if str wanted; this neatly handles "it's" and 'He
             # says "hello"'
             if isinstance(self.val, basestring):
-                codeWanted = utils.unescapedDollarSign_re.search(self.val)
-                if codeWanted:
-                    if utils.scriptTarget == 'PsychoJS':
-                        valJS = py2js.expression2js(self.val.strip('$'))
-                        if self.val != valJS:
-                            logging.debug("Rewriting with py2js: {} -> {}".format(self.val, valJS))
-                        return valJS
-                    else:
-                        return "%s" % getCodeFromParamStr(self.val)
-                else:  # str wanted
-                    # remove \ from all \$
-                    s = repr(re.sub(r"[\\]\$", '$', self.val))
-                    # if target is python2.x then unicode will be u'something'
-                    # but for other targets that will raise an annoying error
-                    if utils.scriptTarget != 'PsychoPy':
-                        if s.startswith("u'") or s.startswith('u"'):
-                            s = s[1:]
-                    return s
+                codeWanted = max([len(p) for p in utils.codeBraceParse(self.val)]+[-1]) == len(self.val)
+                legacyCodeWanted = utils.unescapedDollarSign_re.search(self.val)
+                if codeWanted or legacyCodeWanted:
+                    # If value is entirely encased in {}, interpret as code
+                    return getCodeFromParamStr(self.val, utils.scriptTarget, not codeWanted)
+                if re.findall("\{|\}", self.val):
+                    # If any {} are used at all, interpret as a formatted string
+                    return f"f\"{getStringFromParamStr(self.val)}\""
+                else:
+                    # Otherwise, interpret as a string
+                    return f"\"{getStringFromParamStr(self.val)}\""
+
             return repr(self.val)
         elif self.valType in ['code', 'extendedCode']:
             isStr = isinstance(self.val, basestring)
@@ -234,17 +228,26 @@ class Param(object):
     __nonzero__ = __bool__  # for python2 compatibility
 
 
-def getCodeFromParamStr(val):
+def getCodeFromParamStr(val, target="PsychoPy", legacy=False):
     """Convert a Param.val string to its intended python code
     (as triggered by special char $)
     """
-    tmp = re.sub(r"^(\$)+", '', val)  # remove leading $, if any
-    # remove all nonescaped $, squash $$$$$
-    tmp2 = re.sub(r"([^\\])(\$)+", r"\1", tmp)
-    out = re.sub(r"[\\]\$", '$', tmp2)  # remove \ from all \$
-    if utils.scriptTarget=='PsychoJS':
-        out = py2js.expression2js(out)
-    return out if out else ''
+    # Remove braces
+    if legacy:
+        code = val[1:]
+    else:
+        code = val[1:-1]
+    # Translate for Python
+    if target == 'PsychoPy':
+        return code
+    # Translate for JS
+    if utils.scriptTarget == 'PsychoJS':
+        return py2js.expression2js(code)
+
+def getStringFromParamStr(val):
+    # Replace new line with new line char
+    val = re.sub("\n", "\\\\n", val)
+    return val
 
 
 def toList(val):

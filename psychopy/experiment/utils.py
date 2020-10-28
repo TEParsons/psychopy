@@ -30,3 +30,25 @@ class CodeGenerationException(Exception):
 
     def __str__(self):
         return "{}: ".format(self.source, self.message)
+
+def codeBraceParse(val):
+    # Create empty lists to store pairs, start and end points for each level
+    st = [None] * len(re.findall(r"\{", val))
+    en = [None] * len(re.findall(r"\}", val))
+    pairs = []
+    # Iterate through each letter
+    lvl = -1
+    for (i, ch) in enumerate(val):
+        ch = val[i]
+        if ch == "{":
+            # Move up a level when brace is opened, store start point
+            lvl += 1
+            st[lvl] = i
+
+        if ch == "}":
+            # Move down a level when brace is closed, store end point and brace contents
+            en[lvl] = i
+            pairs.append(val[st[lvl]:en[lvl] + 1])
+            lvl -= 1
+    # Return list of braces' contents
+    return pairs
