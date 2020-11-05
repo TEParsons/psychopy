@@ -18,6 +18,72 @@ from .utils import checkValidFilePath
 from .base import _ComparisonMixin
 
 
+class ExpInfo(dict):
+    """
+    Wrapper around dict to give methods for printing filenames from experiment info.
+    """
+
+    class ExpInfoItems(list):
+        """
+        Substitute for dict_items, prints to string as key_value pairs separated by "_"
+        """
+        def __init__(self, **kwargs):
+            list.__init__(self)
+            for (key, value) in kwargs.items():
+                self.append((key, value))
+
+        def __repr__(self):
+            out = []
+            for (key, value) in self:
+                out.append("_".join([str(key), str(value)]))
+            return "_".join(out)
+
+
+    class ExpInfoKeys(list):
+        """
+        Substitute for dict_keys, prints to string as keys separated by "_"
+        """
+        def __init__(self, **kwargs):
+            list.__init__(self)
+            for key in kwargs:
+                self.append(key)
+
+        def __repr__(self):
+            out = []
+            for key in self:
+                out.append(str(key))
+            return "_".join(out)
+
+
+    class ExpInfoValues(list):
+        """
+        Substitute for dict_keys, prints to string as values separated by "_"
+        """
+        def __init__(self, **kwargs):
+            list.__init__(self)
+            for (key, value) in kwargs.items():
+                self.append(value)
+
+        def __repr__(self):
+            out = []
+            for val in self:
+                out.append(str(val))
+            return "_".join(out)
+
+
+    def __init__(self, **kwargs):
+        dict.__init__(self, **kwargs)
+
+    def items(self):
+        return self.ExpInfoItems(**self)
+
+    def keys(self):
+        return self.ExpInfoKeys(**self)
+
+    def values(self):
+        return self.ExpInfoValues(**self)
+
+
 class ExperimentHandler(_ComparisonMixin):
     """A container class for keeping track of multiple loops/handlers
 

@@ -114,11 +114,7 @@ class SettingsComponent(object):
         # if filename is the default value fetch the builder pref for the
         # folder instead
         if filename is None:
-            filename = ("u'xxxx/%s_%s_%s' % (expInfo['participant'], expName,"
-                        " expInfo['date'])")
-        if filename.startswith("u'xxxx"):
-            folder = self.exp.prefsBuilder['savedDataFolder'].strip()
-            filename = filename.replace("xxxx", folder)
+            filename = ("f\"%s/{expInfo.items()}\"" % self.exp.prefsBuilder['savedDataFolder'].strip())
 
         # params
         self.params = {}
@@ -639,8 +635,22 @@ class SettingsComponent(object):
             sorting = "False"
         else:  # in Py2, with no natural order, at least be alphabetical
             sorting = "True"
+        # Get experiment info as dict
         expInfoDict = self.getInfo()
-        buff.writeIndented("expInfo = %s\n" % repr(expInfoDict))
+        # Format into function arguments
+        infoArgs = []
+        for (key, value) in expInfoDict.items():
+            if not value:
+                # Replace empty values with ""
+                value = "\"\""
+            try:
+                # Convert to float if possible
+                value = float(value)
+            except ValueError:
+                pass
+            infoArgs.append(f"{key}={value}")
+        # Write code to create ExpInfo object using function arguments
+        buff.writeIndented(f"expInfo = data.ExpInfo({', '.join(infoArgs)})\n")
         if self.params['Show info dlg'].val:
             buff.writeIndentedLines(
                 "dlg = gui.DlgFromDict(dictionary=expInfo, "
