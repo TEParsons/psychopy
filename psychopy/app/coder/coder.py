@@ -645,7 +645,6 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
         self.app = self.coder.app
         self.SetViewWhiteSpace(self.coder.appData['showWhitespace'])
         self.SetViewEOL(self.coder.appData['showEOLs'])
-        self.Bind(wx.EVT_DROP_FILES, self.coder.filesDropped)
         self.Bind(wx.stc.EVT_STC_MODIFIED, self.onModified)
         self.Bind(wx.stc.EVT_STC_UPDATEUI, self.OnUpdateUI)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed)
@@ -777,32 +776,34 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, ThemeMixin):
         else:
             filen = self.filename
 
-        # python/cython files
-        if any([filen.endswith(i) for i in (
-                'py', 'pyx', 'pxd', 'pxi')]):
+        # lower case the file name
+        filen = filen.lower()
+
+        if any([filen.endswith(i) for i in (  # python/cython files
+                '.py', '.pyx', '.pxd', '.pxi')]):
             return 'Python'
         elif filen.endswith('html'):  # html file
             return 'HTML'
         elif any([filen.endswith(i) for i in (
-                'cpp', 'c', 'h', 'mex', 'hpp')]):  # c-like file
+                '.cpp', '.c', '.h', '.cxx', '.hxx' '.mex', '.hpp')]):  # c-like
             return 'C/C++'
         elif any([filen.endswith(i) for i in (
-                'glsl', 'vert', 'frag')]):  # OpenGL shader program
+                '.glsl', '.vert', '.frag')]):  # OpenGL shader program
             return 'GLSL'
-        elif filen.endswith('m'):  # MATLAB
+        elif filen.endswith('.m'):  # MATLAB
             return 'MATLAB'
-        elif filen.endswith('ino'):  # Arduino
+        elif filen.endswith('.ino'):  # Arduino
             return 'Arduino'
-        elif filen.endswith('R'):  # R
+        elif filen.endswith('.r'):  # R
             return 'R'
-        elif filen.endswith('yaml'):  # YAML
+        elif filen.endswith('.yaml'):  # YAML
             return 'YAML'
-        elif filen.endswith('js'):  # JavaScript
+        elif filen.endswith('.js'):  # JavaScript
             return 'JavaScript'
-        elif filen.endswith('json'):  # JSON
+        elif filen.endswith('.json'):  # JSON
             return 'JSON'
         else:
-            return 'Plain Text'  # default
+            return 'Plain Text'  # default, null lexer used
 
     def getTextUptoCaret(self):
         """Get the text upto the caret."""
@@ -1286,6 +1287,8 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.helpMenu = self.toolsMenu = None
         self.pavloviaMenu.syncBtn.Enable(bool(self.filename))
         self.pavloviaMenu.newBtn.Enable(bool(self.filename))
+        # Link to file drop function
+        self.SetDropTarget(FileDropTarget(targetFrame=self))
 
         # Create source assistant notebook
         self.sourceAsst = aui.AuiNotebook(
@@ -1339,11 +1342,8 @@ class CoderFrame(wx.Frame, ThemeMixin):
                                  MaximizeButton(True))
         self.notebook.SetFocus()
         # Link functions
-        self.notebook.SetDropTarget(FileDropTarget(targetFrame=self.pnlMain))
         self.notebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.fileClose)
         self.notebook.Bind(aui.EVT_AUINOTEBOOK_PAGE_CHANGED, self.pageChanged)
-        self.SetDropTarget(FileDropTarget(targetFrame=self.pnlMain))
-        self.Bind(wx.EVT_DROP_FILES, self.filesDropped)
         self.Bind(wx.EVT_FIND, self.OnFindNext)
         self.Bind(wx.EVT_FIND_NEXT, self.OnFindNext)
         #self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
@@ -1730,6 +1730,14 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.showEOLsChk.Check(self.appData['showEOLs'])
         self.Bind(wx.EVT_MENU, self.setShowEOLs, id=self.showEOLsChk.GetId())
         menu.AppendSeparator()
+        hint = _translate("Enable/disable line wrapping in editors.")
+        self.lineWrapChk = menu.AppendCheckItem(
+            wx.ID_ANY,
+            _translate("Line wrapping"),
+            hint)
+        self.lineWrapChk.Check(False)
+        self.Bind(wx.EVT_MENU, self.onWordWrapCheck, self.lineWrapChk)
+        menu.AppendSeparator()
         # Theme Switcher
         self.themesMenu = ThemeSwitcher(self)
         menu.AppendSubMenu(self.themesMenu,
@@ -1902,6 +1910,16 @@ class CoderFrame(wx.Frame, ThemeMixin):
 
         self.SetStatusBar(self.statusBar)
 
+    def onWordWrapCheck(self, event):
+        """Enable/disable word wrapping when the menu item is checked."""
+        checked = event.IsChecked()
+        for pageId in range(self.notebook.GetPageCount()):
+            page = self.notebook.GetPage(pageId)
+            page.SetWrapMode(
+                wx.stc.STC_WRAP_WORD if checked else wx.stc.STC_WRAP_NONE)
+
+        event.Skip()
+
     def onSetCWDFromEditor(self, event):
         """Set the current working directory to the location of the current file
         in the editor."""
@@ -2068,7 +2086,19 @@ class CoderFrame(wx.Frame, ThemeMixin):
                 self.fileStatusLastChecked = time.time()
 
     def pageChanged(self, event):
+        """Event called when the user swtiches between editor tabs."""
         old = event.GetOldSelection()
+        # close any auto-complete or calltips when swtiching pages
+        if old != wx.NOT_FOUND:
+            oldPage = self.notebook.GetPage(old)
+            if hasattr(oldPage, 'CallTipActive'):
+                if oldPage.CallTipActive():
+                    oldPage.CallTipCancel()
+                    oldPage.openBrackets = 0
+            if hasattr(oldPage, 'AutoCompActive'):
+                if oldPage.AutoCompActive():
+                    oldPage.AutoCompCancel()
+
         new = event.GetSelection()
         self.currentDoc = self.notebook.GetPage(new)
         self.app.updateWindowMenu()
@@ -2100,15 +2130,6 @@ class CoderFrame(wx.Frame, ThemeMixin):
                 self.setFileModified(False)
             self.statusBar.SetStatusText('')
             dlg.Destroy()
-
-    def filesDropped(self, event):
-        fileList = event.GetFiles()
-        for filename in fileList:
-            if os.path.isfile(filename):
-                if filename.lower().endswith('.psyexp'):
-                    self.app.newBuilderFrame(filename)
-                else:
-                    self.setCurrentDoc(filename)
 
     # def pluginManager(self, evt=None, value=True):
     #     """Show the plugin manger frame."""
@@ -2381,6 +2402,9 @@ class CoderFrame(wx.Frame, ThemeMixin):
                 self.toolbar.EnableTool(self.cdrBtnRunner.Id, isExp)
                 self.toolbar.EnableTool(self.cdrBtnRun.Id, isExp)
 
+            # line wrapping
+            self.currentDoc.SetWrapMode(
+                wx.stc.STC_WRAP_WORD if self.lineWrapChk.IsChecked() else wx.stc.STC_WRAP_NONE)
             self.statusBar.SetStatusText(fileType, 2)
 
         self.SetLabel('%s - PsychoPy Coder' % self.currentDoc.filename)
@@ -2567,8 +2591,9 @@ class CoderFrame(wx.Frame, ThemeMixin):
             self.currentDoc.setLexerFromFileName()
             # re-analyse the document
             self.currentDoc.analyseScript()
-
+            # Update status bar and title bar labels
             self.statusBar.SetStatusText(self.currentDoc.getFileType(), 2)
+            self.SetLabel(f'{self.currentDoc.filename} - PsychoPy Coder')
 
         dlg.Destroy()
 
@@ -2715,7 +2740,7 @@ class CoderFrame(wx.Frame, ThemeMixin):
         self.currentDoc.resetFontSize()
 
     def foldAll(self, event):
-        self.currentDoc.FoldAll()
+        self.currentDoc.FoldAll(wx.stc.STC_FOLDACTION_TOGGLE)
 
     # def unfoldAll(self, event):
     #   self.currentDoc.ToggleFoldAll(expand = False)
