@@ -1,7 +1,7 @@
 from builtins import object
 from psychopy import visual, event
 from psychopy.visual import Window
-from psychopy.visual.textbox import TextBox
+from psychopy.visual import TextBox2
 
 import pytest
 
@@ -15,6 +15,23 @@ class Test_textbox(object):
 
     def teardown_class(self):
         self.win.close()
+
+    def test_unicode(self):
+        textbox = TextBox2(self.win, "", "Arial")
+        text = ""
+        for encoding in ['utf-8', 'utf-16']:
+            for asDecimal in range(143859):
+                # Add each unicode character to the data file
+                try:
+                    chr(asDecimal).encode(encoding)
+                except UnicodeEncodeError:
+                    # Skip if not a valid unicode
+                    continue
+                text += chr(asDecimal)
+
+            # Set textbox
+            textbox.text = text
+            textbox.draw()
 
     def test_basic(self):
         pass
