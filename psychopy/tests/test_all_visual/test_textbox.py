@@ -37,7 +37,7 @@ class Test_textbox(object):
              "font": "Noto Sans",
              "screenshot": "textbox_exemplar_1.png"},
             # The same pangram in IPA
-            {"text": "ə saɪkəʊpaɪ zɛlət nəʊz ə smidge ɒv wx, bʌt ˈʤɑːvəskrɪpt ɪz ðə ˈkwɛsʧən",
+            {"text": "ə saɪkəʊpaɪ zɛlət nəʊz ə smidʐ ɒv dɤbɐlju eks, bʌt ˈʤɑːvəskrɪpt ɪz ðə ˈkwɛsʧən",
                 "font": "Noto Sans",
                 "screenshot": "textbox_exemplar_2.png"},
             # The same pangram in Hangul
