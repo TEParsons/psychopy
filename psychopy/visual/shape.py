@@ -83,6 +83,7 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
                  fillColor=None,
                  fillColorSpace='rgb',
                  vertices=((-0.5, 0), (0, +0.5), (+0.5, 0)),
+                 anchor=(0,0),
                  closeShape=True,
                  pos=(0, 0),
                  size=1,
@@ -429,6 +430,7 @@ class ShapeStim(BaseShapeStim):
                  fillColor=None,
                  fillColorSpace='rgb',
                  vertices=((-0.5, 0), (0, +0.5), (+0.5, 0)),
+                 anchor=(0,0),
                  windingRule=None,  # default GL.GLU_TESS_WINDING_ODD
                  closeShape=True,  # False for a line
                  pos=(0, 0),
@@ -455,6 +457,7 @@ class ShapeStim(BaseShapeStim):
                                         fillColor=fillColor,
                                         fillColorSpace=fillColorSpace,
                                         vertices=(),  # dummy verts
+                                        anchor=anchor,
                                         closeShape=self.closeShape,
                                         pos=pos,
                                         size=size,

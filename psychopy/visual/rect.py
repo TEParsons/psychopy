@@ -50,7 +50,8 @@ class Rect(BaseShapeStim):
                  depth=0,
                  interpolate=True,
                  name=None,
-                 autoDraw=False):
+                 autoDraw=False,
+                 anchor=(0,0)):
         """
         Parameters
         ----------
@@ -95,6 +96,7 @@ class Rect(BaseShapeStim):
             fillColor=fillColor,
             fillColorSpace=fillColorSpace,
             vertices=vertices,
+            anchor=anchor,
             closeShape=True,
             pos=pos,
             size=size,
