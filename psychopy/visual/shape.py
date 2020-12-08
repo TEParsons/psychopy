@@ -353,8 +353,8 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         if hasattr(self, "_vertices"):
             self.vertices = self._vertices
 
-    @attributeSetter
-    def vertices(self, value):
+    @property
+    def vertices(self):
         """A list of lists or a numpy array (Nx2) specifying xy positions of
         each vertex, relative to the center of the field.
 
@@ -362,15 +362,15 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
 
         :ref:`Operations <attrib-operations>` supported.
         """
-
-        value -= numpy.array(self.anchor)/2
+        if hasattr(self, "_vertices"):
+            return self._vertices - numpy.array(self.anchor) / 2
+    @vertices.setter
+    def vertices(self, value):
         self._vertices = value
-        self.__dict__['vertices'] = numpy.array(value, float)
-
         # Check shape
-        if not (self.vertices.shape == (2,) or
-                (len(self.vertices.shape) == 2 and
-                 self.vertices.shape[1] == 2)):
+        if not (self._vertices.shape == (2,) or
+                (len(self._vertices.shape) == 2 and
+                 self._vertices.shape[1] == 2)):
             raise ValueError("New value for setXYs should be 2x1 or Nx2")
         self._needVertexUpdate = True
 
