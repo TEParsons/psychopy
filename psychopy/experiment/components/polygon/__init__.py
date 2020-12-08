@@ -45,7 +45,7 @@ class PolygonComponent(BaseVisualComponent):
                  pos=(0, 0), size=(0.5, 0.5), ori=0,
                  startType='time (s)', startVal=0.0,
                  stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+                 startEstim='', durationEstim='', anchor=(0,0)):
         super(PolygonComponent, self).__init__(
             exp, parentName, name=name, units=units,
             pos=pos, size=size, ori=ori,
@@ -109,6 +109,13 @@ class PolygonComponent(BaseVisualComponent):
             hint=msg,
             label=_localized['interpolate'])
 
+        self.params['anchor'] = Param(
+            anchor, valType='code', allowedTypes=[], categ='Layout',
+            updates='constant',
+            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            hint=_translate("What point should the stimulus be anchored to? Coordinates relative to the image, so [-1, -1] is the bottom left corner and [1, 1] is the top right."),
+            label=_localized['anchor'])
+
 
         self.params['size'].hint = _translate(
             "Size of this stimulus [w,h]. Note that for a line only the "
@@ -162,7 +169,7 @@ class PolygonComponent(BaseVisualComponent):
                     "    edges=%s," % str(inits['nVertices'].val) +
                     " size=%(size)s,\n" % inits)
 
-        code += ("    ori=%(ori)s, pos=%(pos)s,\n"
+        code += ("    ori=%(ori)s, pos=%(pos)s, anchor=%(anchor)s,\n"
                  "    lineWidth=%(lineWidth)s, lineColor=%(lineColor)s, lineColorSpace=%(lineColorSpace)s,\n"
                  "    fillColor=%(fillColor)s, fillColorSpace=%(fillColorSpace)s,\n"
                  "    opacity=%(opacity)s, " % inits)

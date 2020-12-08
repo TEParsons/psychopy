@@ -174,6 +174,7 @@ _localized = {
     'pos': _translate('Position [x,y]'),
     'ori': _translate('Orientation'),
     'size': _translate('Size [w,h]'),
+    'anchor': _translate('Anchor [x,y]'),
 
     # for loops
     'Name': _translate('Name'),
