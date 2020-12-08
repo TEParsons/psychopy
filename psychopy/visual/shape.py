@@ -348,8 +348,10 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
                 x = 1
             # Return values
             value = (x, y)
-        # Set anchor
+        # Set anchor and vertices
         self._anchor = value
+        if hasattr(self, "_vertices"):
+            self.vertices = self._vertices
 
     @attributeSetter
     def vertices(self, value):
@@ -362,6 +364,7 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         """
 
         value -= numpy.array(self.anchor)/2
+        self._vertices = value
         self.__dict__['vertices'] = numpy.array(value, float)
 
         # Check shape
