@@ -156,6 +156,7 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         self.depth = depth
         self.ori = numpy.array(ori, float)
         self.size = numpy.array([0.0, 0.0]) + size  # make sure that it's 2D
+        self.anchor = anchor
         if vertices != ():  # flag for when super-init'ing a ShapeStim
             self.vertices = vertices  # call attributeSetter
         self.autoDraw = autoDraw  # call attributeSetter
@@ -300,6 +301,56 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         setAttribute(self, 'size', value, log,
                      operation)  # calls attributeSetter
 
+    @property
+    def anchor(self):
+        if hasattr(self, "_anchor"):
+            return self._anchor
+        else:
+            return (0,0)
+
+    @anchor.setter
+    def anchor(self, value):
+        def _validateAnchor(anchor):
+            if isinstance(anchor, str):
+                # If anchor is a string, mark it as str
+                return str
+            if isinstance(anchor, (list, tuple, numpy.ndarray)):
+                if len(anchor) != 2:
+                    # If anchor is an array which is not 2 long, mark it as invalid
+                    return False
+                if all(isinstance(val, str) for val in anchor):
+                    # If anchor is an array of two strings, mark it as array of strings
+                    return str, str
+                if all(isinstance(val, (int, float)) for val in  value):
+                    # If anchor is an array of two numeric values, mark it as an array of numbers
+                    return float, float
+            # If not returned yet, mark value as invalid
+            return False
+
+        type = _validateAnchor(value)
+        if type == False:
+            # If value is invalid, warn user and revert to default
+            #todo: plug in alert here
+            value = (0,0)
+        if type == str or type == (str, str):
+            # If value is a string or an array of strings, translate it to numeric
+            x = 0
+            y = 0
+            # Look for y anchor keywords
+            if 'top' in value:
+                y = 1
+            if 'bottom' in value:
+                y = -1
+            # Look for x anchor keywords
+            if 'left' in value:
+                x = -1
+            if 'right' in value:
+                x = 1
+            # Return values
+            value = (x, y)
+        # Set anchor
+        self._anchor = value
+
     @attributeSetter
     def vertices(self, value):
         """A list of lists or a numpy array (Nx2) specifying xy positions of
@@ -309,6 +360,8 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
 
         :ref:`Operations <attrib-operations>` supported.
         """
+
+        value -= numpy.array(self.anchor)/2
         self.__dict__['vertices'] = numpy.array(value, float)
 
         # Check shape
