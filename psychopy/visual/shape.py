@@ -366,6 +366,9 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
             return self._vertices - numpy.array(self.anchor) / 2
     @vertices.setter
     def vertices(self, value):
+        # Enforce numpy
+        if not isinstance(value, numpy.ndarray):
+            value = numpy.array(value)
         self._vertices = value
         # Check shape
         if not (self._vertices.shape == (2,) or
