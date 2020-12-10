@@ -10,8 +10,6 @@ from __future__ import absolute_import, print_function
 from os import path
 from psychopy.experiment.components import Param, getInitVals, _translate, BaseVisualComponent
 from psychopy.visual import form
-from psychopy.localization import _localized as __localized
-_localized = __localized.copy()
 
 __author__ = 'Jon Peirce, David Bridges, Anthony Haffey'
 
@@ -21,16 +19,18 @@ iconFile = path.join(thisFolder, 'form.png')
 tooltip = _translate('Form: a Psychopy survey tool')
 
 # only use _localized values for label values, nothing functional:
-_localized.update({'Items': _translate('Items'),
-                   'Text Height': _translate('Text Height'),
-                   'Size': _translate('Size'),
-                   'Pos': _translate('Pos'),
-                   'Style': _translate('Styles'),
-                   'Item Padding': _translate('Item Padding'),
-                   'Data Format': _translate('Data Format'),
-                   'Randomize': _translate('Randomize')
-                   })
+_localized = {
+    'Items': _translate('Items'),
+    'Text Height': _translate('Text Height'),
+    'Size': _translate('Size'),
+    'Pos': _translate('Pos'),
+    'Style': _translate('Styles'),
+    'Item Padding': _translate('Item Padding'),
+    'Data Format': _translate('Data Format'),
+    'Randomize': _translate('Randomize')
+    }
 knownStyles = form.Form.knownStyles
+
 
 class FormComponent(BaseVisualComponent):
     """A class for presenting a survey as a Builder component"""
@@ -80,38 +80,41 @@ class FormComponent(BaseVisualComponent):
         # = the usual as inherited from BaseComponent plus:
 
         self.params['Items'] = Param(
-            items, valType='table', allowedTypes=[], categ='Basic',
+            items, valType='str', allowedTypes=[],
             updates='constant',
             hint=_translate("The csv filename containing the items for your survey."),
             label=_localized['Items'])
 
         self.params['Text Height'] = Param(
-            textHeight, valType='code', allowedTypes=[], categ='Formatting',
+            textHeight, valType='code', allowedTypes=[],
             updates='constant',
             hint=_translate("The size of the item text for Form"),
-            label=_localized['Text Height'])
+            label=_localized['Text Height'],
+            categ="Appearance")
 
         self.params['Randomize'] = Param(
-            randomize, valType='bool', allowedTypes=[], categ='Basic',
+            randomize, valType='bool', allowedTypes=[],
             updates='constant',
             hint=_translate("Do you want to randomize the order of your questions?"),
             label=_localized['Randomize'])
 
         self.params['Style'] = Param(
-            style, valType='fixedList', categ="Appearance",
+            style, valType='fixedList',
             updates='constant', allowedVals=knownStyles,
             hint=_translate(
                     "Styles determine the appearance of the form"),
-            label=_localized['Style'])
+            label=_localized['Style'],
+            categ="Appearance")
 
         self.params['Item Padding'] = Param(
-            itemPadding, valType='code', allowedTypes=[], categ='Layout',
+            itemPadding, valType='code', allowedTypes=[],
             updates='constant',
             hint=_translate("The padding or space between items."),
-            label=_localized['Item Padding'])
+            label=_localized['Item Padding'],
+            categ="Appearance")
 
         self.params['Data Format'] = Param(
-            'rows', valType='str', allowedTypes=[], categ='Basic',
+            'rows', valType='str', allowedTypes=[],
             allowedVals=['columns', 'rows'],
             updates='constant',
             hint=_translate("Store item data by columns, or rows"),
