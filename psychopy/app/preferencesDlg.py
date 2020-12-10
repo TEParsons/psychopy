@@ -5,6 +5,8 @@ from __future__ import absolute_import, print_function
 
 import json
 from builtins import str
+from pathlib import Path
+
 import wx
 import wx.propgrid as pg
 import wx.py
@@ -12,6 +14,7 @@ import platform
 import re
 import os
 
+from psychopy.experiment import components
 from . import dialogs
 from psychopy import localization, prefs
 from psychopy.localization import _translate
@@ -624,6 +627,21 @@ class PreferencesDlg(wx.Dialog):
                             labels=self.themeList,
                             values=[i for i in range(len(self.themeList))],
                             value=default, helpText=helpText)
+                    item = self.proPrefs.sections[sectionName][prefName]
+                    # Add example icon and colours
+                    for i in range(len(item.GetChoices())):
+                        choice = item.GetChoices()[i]
+                        themesPath = Path(prefs.paths['themes'])
+                        try:
+                            with open(str(themesPath / (choice.Text + ".json")), "rb") as fp:
+                                themeSpec = json.load(fp)
+                        except FileNotFoundError:
+                            with open(str(themesPath / "PsychopyLight.json"), "rb") as fp:
+                                themeSpec = json.load(fp)
+                        icon = self.app.iconCache.getBitmap(components.iconFiles["ImageComponent"], themeSpec['icons'])
+                        choice.SetBitmap(icon)
+                        choice.SetBgCol(themeSpec['base']['bg'])
+                        choice.SetFgCol(themeSpec['base']['fg'])
                 elif prefName == 'locale':
                     thisPref = self.app.prefs.app['locale']
                     # '' corresponds to system locale

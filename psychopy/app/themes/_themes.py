@@ -1020,6 +1020,7 @@ class ThemeSwitcher(wx.Menu):
     """Class to make a submenu for switching theme, meaning that the menu will
     always be the same across frames."""
     def __init__(self, frame):
+        self.frame = frame
         # Get list of themes
         themePath = Path(prefs.paths['themes'])
         themeList = {}
@@ -1067,3 +1068,13 @@ class ThemeSwitcher(wx.Menu):
         for item in self.GetMenuItems():
             if item.IsRadio():  # This means it will not attempt to check the separator
                 item.Check(item.ItemLabel.lower() == ThemeMixin.codetheme.lower())
+            # Add example icon and colours
+            themesPath = Path(prefs.paths['themes'])
+            try:
+                with open(str(themesPath / (item.ItemLabel + ".json")), "rb") as fp:
+                    themeSpec = json.load(fp)
+            except FileNotFoundError:
+                with open(str(themesPath / "PsychopyLight.json"), "rb") as fp:
+                    themeSpec = json.load(fp)
+            item.SetBackgroundColour(themeSpec['base']['bg'])
+            item.SetTextColour(themeSpec['base']['fg'])
