@@ -46,23 +46,40 @@ class BrushComponent(BaseVisualComponent):
         self.url = "http://www.psychopy.org/builder/components/brush.html"
         self.exp.requirePsychopyLibs(['visual'])
         self.targets = ['PsychoPy', 'PsychoJS']
-        self.order.extend(['lineWidth', 'opacity', 'buttonRequired'])
+        self.order = ['lineWidth', 'opacity', 'buttonRequired']
 
         # params
+        msg = _translate("Fill color of this brush")
+        self.params['lineColor'] = Param(
+            lineColor, valType='color', inputType="color", allowedTypes=[], categ='Appearance',
+            updates='constant',
+            allowedUpdates=['constant', 'set every repeat'],
+            hint=msg,
+            label=_localized['lineColor'])
+
         msg = _translate("Width of the brush's line (always in pixels and limited to 10px max width)")
         self.params['lineWidth'] = Param(
-            lineWidth, valType='code', allowedTypes=[], categ='Appearance',
+            lineWidth, valType='num', inputType="spin", allowedTypes=[], categ='Appearance',
             updates='constant',
             allowedUpdates=['constant', 'set every repeat'],
             hint=msg,
             label=_localized['lineWidth'])
+
+        msg = _translate("Choice of color space for the fill color "
+                         "(rgb, dkl, lms, hsv)")
+        self.params['lineColorSpace'] = Param(
+            lineColorSpace, valType='str', inputType="choice", categ='Appearance',
+            allowedVals=['rgb', 'dkl', 'lms', 'hsv'],
+            updates='constant',
+            hint=msg,
+            label=_localized['fillColorSpace'])
 
         msg = _translate("The line opacity")
         self.params['opacity'].hint=msg
 
         msg = _translate("Whether a button needs to be pressed to draw (True/False)")
         self.params['buttonRequired'] = Param(
-            buttonRequired, valType='code', allowedTypes=[], categ='Basic',
+            buttonRequired, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
             updates='constant',
             allowedUpdates=['constant', 'set every repeat'],
             hint=msg,
@@ -70,8 +87,11 @@ class BrushComponent(BaseVisualComponent):
 
         # Remove BaseVisual params which are not needed
         del self.params['color']  # because color is defined by lineColor
-        self.params['fillColor'].label = _localized['lineColor']
+        del self.params['colorSpace']
+        del self.params['fillColor']
+        del self.params['fillColorSpace']
         del self.params['borderColor']
+        del self.params['borderColorSpace']
         del self.params['size']  # because size determined by lineWidth
         del self.params['ori']
         del self.params['pos']
@@ -81,13 +101,13 @@ class BrushComponent(BaseVisualComponent):
         params = getInitVals(self.params)
         code = ("{name} = visual.Brush(win=win, name='{name}',\n"
                 "   lineWidth={lineWidth},\n"
-                "   lineColor={fillColor},\n"
-                "   lineColorSpace={colorSpace},\n"
+                "   lineColor={lineColor},\n"
+                "   lineColorSpace={lineColorSpace},\n"
                 "   opacity={opacity},\n"
                 "   buttonRequired={buttonRequired})").format(name=params['name'],
                                                 lineWidth=params['lineWidth'],
-                                                fillColor=params['fillColor'],
-                                                colorSpace=params['colorSpace'],
+                                                lineColor=params['lineColor'],
+                                                lineColorSpace=params['lineColorSpace'],
                                                 opacity=params['opacity'],
                                                 buttonRequired=params['buttonRequired'])
         buff.writeIndentedLines(code)
@@ -114,7 +134,7 @@ class BrushComponent(BaseVisualComponent):
 
         buff.writeIndentedLines(code)
         # add reset function
-        code = ("{name}Reset = function() {{\n"
+        code = ("{name}Reset = {name}.reset = function() {{\n"
                 "  if ({name}Shapes.length > 0) {{\n"
                 "    for (let shape of {name}Shapes) {{\n"
                 "      shape.setAutoDraw(false);\n"

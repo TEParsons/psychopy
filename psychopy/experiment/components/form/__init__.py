@@ -59,6 +59,8 @@ class FormComponent(BaseVisualComponent):
             startEstim=startEstim, durationEstim=durationEstim)
 
         # these are defined by the BaseVisual but we don't want them
+        del self.params['color']
+        del self.params['colorSpace']
         del self.params['ori']
         del self.params['units']  # we only support height units right now
 
@@ -78,38 +80,52 @@ class FormComponent(BaseVisualComponent):
         # = the usual as inherited from BaseComponent plus:
 
         self.params['Items'] = Param(
-            items, valType='str', allowedTypes=[], categ='Basic',
+            items, valType='file', inputType="table", allowedTypes=[], categ='Basic',
             updates='constant',
             hint=_translate("The csv filename containing the items for your survey."),
             label=_localized['Items'])
 
+        self.params['Size'] = Param(
+            size, valType='list', inputType="single", allowedTypes=[], categ='Layout',
+            updates='constant',
+            hint=_translate(
+                "Size of the Form on screen in 'height' units. e.g. (1, .7) height units for horizontal,"
+                "and vertical, respectively"),
+            label=_localized['Size'])
+
+        self.params['Pos'] = Param(
+            pos, valType='list', inputType="single", allowedTypes=[], categ='Layout',
+            updates='constant',
+            hint=_translate("x,y position of the form on screen"),
+            label=_localized['Pos'])
+
         self.params['Text Height'] = Param(
-            textHeight, valType='code', allowedTypes=[], categ='Formatting',
+            textHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
             updates='constant',
             hint=_translate("The size of the item text for Form"),
             label=_localized['Text Height'])
 
         self.params['Randomize'] = Param(
-            randomize, valType='bool', allowedTypes=[], categ='Basic',
+            randomize, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
             updates='constant',
             hint=_translate("Do you want to randomize the order of your questions?"),
             label=_localized['Randomize'])
 
         self.params['Style'] = Param(
-            style, valType='fixedList', categ="Appearance",
+            style, valType='str', inputType="choice", categ="Appearance",
             updates='constant', allowedVals=knownStyles,
             hint=_translate(
                     "Styles determine the appearance of the form"),
             label=_localized['Style'])
 
         self.params['Item Padding'] = Param(
-            itemPadding, valType='code', allowedTypes=[], categ='Layout',
+            itemPadding, valType='num', inputType="single", allowedTypes=[], categ='Layout',
             updates='constant',
             hint=_translate("The padding or space between items."),
             label=_localized['Item Padding'])
 
         self.params['Data Format'] = Param(
-            'rows', valType='str', allowedTypes=[], categ='Basic',
+            'rows', valType='str', inputType="choice", allowedTypes=[], categ='Basic',
             allowedVals=['columns', 'rows'],
             updates='constant',
             hint=_translate("Store item data by columns, or rows"),
@@ -121,10 +137,6 @@ class FormComponent(BaseVisualComponent):
         initStr = ("win.allowStencil = True\n"
                    "{name} = visual.Form(win=win, name='{name}',\n"
                    "    items={Items},\n"
-                   "    colorSpace={colorSpace},\n"
-                   "    foreColor={color},\n"
-                   "    fillColor={fillColor},\n"
-                   "    borderColor={borderColor},\n"
                    "    textHeight={Text Height},\n"
                    "    randomize={Randomize},\n"
                    "    size={size},\n"
@@ -142,8 +154,8 @@ class FormComponent(BaseVisualComponent):
                    "  items : {Items},\n"
                    "  textHeight : {Text Height},\n"
                    "  randomize : {Randomize},\n"
-                   "  size : {Size},\n"
-                   "  pos : {Pos},\n"
+                   "  size : {size},\n"
+                   "  pos : {pos},\n"
                    "  style : {Style},\n"
                    "  itemPadding : {Item Padding}\n"
                    "}});\n".format(**inits))

@@ -27,10 +27,12 @@ from .. import experiment
 from .. validators import NameValidator, CodeSnippetValidator
 from .dlgsConditions import DlgConditions
 from .dlgsCode import DlgCodeComponentProperties, CodeBox
+from . import paramCtrls
 from psychopy import data, logging
 from psychopy.localization import _translate
 from psychopy.tools import versionchooser as vc
-
+from ...colorpicker import PsychoColorPicker
+from pathlib import Path
 
 white = wx.Colour(255, 255, 255, 255)
 codeSyntaxOkay = wx.Colour(220, 250, 220, 255)  # light green
@@ -97,10 +99,7 @@ class ParamCtrls(object):
 
         if type(param.val) == numpy.ndarray:
             initial = param.val.tolist()  # convert numpy arrays to lists
-        _nonCode = ('name', 'Experiment info')
         label = _translate(label)
-        if param.valType == 'code' and fieldName not in _nonCode:
-            label += ' $'
         self.nameCtrl = wx.StaticText(parent, -1, label, size=wx.DefaultSize)
 
         if fieldName == 'Use version':
@@ -111,101 +110,60 @@ class ParamCtrls(object):
                 options = vc._versionFilter(vc.versionOptions(local=False), wx.__version__)
                 versions = vc._versionFilter(vc.availableVersions(local=False), wx.__version__)
                 param.allowedVals = (options + [''] + versions)
-        if (param.valType == 'extendedStr'
-                or fieldName == 'text'):  # because text used to be 'str' until 2020.2
-            # for text input we need a bigger (multiline) box
-            if fieldName == 'customize_everything':
-                sx, sy = 300, 400
-            elif fieldName == 'customize':
-                sx, sy = 300, 200
-            else:
-                sx, sy = 100, 200
-            # set viewer small, then it SHOULD increase with wx.aui control
-            self.valueCtrl = wx.TextCtrl(parent, -1, value=str(param.val), pos=wx.DefaultPosition,
-                                         size=wx.Size(sx, sy), style=wx.TE_MULTILINE)
+
+        if param.inputType == "single":
+            # Create single line string control
+            self.valueCtrl = paramCtrls.SingleLineCtrl(parent,
+                                                   val=str(param.val), valType=param.valType,
+                                                   fieldName=fieldName,size=wx.Size(self.valueWidth, 24))
+        elif param.inputType == 'multi':
+            # Create multiline string control
+            self.valueCtrl = paramCtrls.MultiLineCtrl(parent,
+                                                      val=str(param.val), valType=param.valType,
+                                                      fieldName=fieldName, size=wx.Size(self.valueWidth, 48))
+            # Set focus if field is text of a Textbox or Text component
             if fieldName == 'text':
                 self.valueCtrl.SetFocus()
-        elif fieldName == 'Experiment info':
+        elif param.inputType == 'spin':
+            self.valueCtrl = paramCtrls.IntCtrl(parent,
+                                                val=param.val, valType=param.valType,
+                                                fieldName=fieldName,size=wx.Size(self.valueWidth, 24),
+                                                limits=param.allowedVals)
+        elif param.inputType == 'choice':
+            self.valueCtrl = paramCtrls.ChoiceCtrl(parent,
+                                                   val=str(param.val), valType=param.valType, choices=param.allowedVals,
+                                                   fieldName=fieldName, size=wx.Size(self.valueWidth, -1))
+        elif param.inputType == 'bool':
+            self.valueCtrl = paramCtrls.BoolCtrl(parent,
+                                         name=fieldName,size=wx.Size(self.valueWidth, 24))
+            self.valueCtrl.SetValue(param.val)
+        elif param.inputType == 'file':
+            self.valueCtrl = paramCtrls.FileCtrl(parent,
+                                                 val=str(param.val), valType=param.valType,
+                                                 fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
+            self.valueCtrl.allowedVals = param.allowedVals
+        elif param.inputType == 'fileList':
+            self.valueCtrl = paramCtrls.FileListCtrl(parent,
+                                          choices=param.val, valType=param.valType,
+                                          size=wx.Size(self.valueWidth, 100), pathtype="rel")
+        elif param.inputType == 'table':
+            self.valueCtrl = paramCtrls.TableCtrl(parent, val=param.val, valType=param.valType,
+                                                  fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
+        elif param.inputType == 'color':
+            self.valueCtrl = paramCtrls.ColorCtrl(parent,
+                                                  val=param.val, valType=param.valType,
+                                                  fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
+        else:
+            self.valueCtrl = paramCtrls.SingleLineCtrl(parent,
+                                                   val=str(param.val), valType=param.valType,
+                                                   fieldName=fieldName,size=wx.Size(self.valueWidth, 24))
+            logging.warn(f"Parameter {fieldName} has unrecognised inputType \"{param.inputType}\"")
+
+        if fieldName == 'Experiment info':
             # for expInfo convert from a string to the list-of-dicts
             val = self.expInfoToListWidget(param.val)
             self.valueCtrl = dialogs.ListWidget(
                 parent, val, order=['Field', 'Default'])
-        elif param.valType == 'extendedCode':
-            # set viewer small, then it will increase with wx.aui control
-            self.valueCtrl = CodeBox(parent, -1, pos=wx.DefaultPosition,
-                                     size=wx.Size(100, 100), style=0,
-                                     prefs=appPrefs)
-            if len(param.val):
-                self.valueCtrl.AddText(str(param.val))
-            # code input fields: one day change these to wx.stc fields?
-            # self.valueCtrl = wx.TextCtrl(parent,-1,unicode(param.val),
-            #    style=wx.TE_MULTILINE,
-            #    size=wx.Size(self.valueWidth*2,160))
-        elif param.valType == 'fixedList':
-            self.valueCtrl = wx.CheckListBox(parent, -1, pos=wx.DefaultPosition,
-                                             size=wx.Size(100, 200),
-                                             choices=param.allowedVals)
-            self.valueCtrl.SetCheckedStrings(param.val)
-        elif param.valType == 'bool':
-            # only True or False - use a checkbox
-            self.valueCtrl = wx.CheckBox(parent,
-                                         name=fieldName,
-                                         size=wx.Size(self.valueWidth, -1))
-            self.valueCtrl.SetValue(param.val)
-        elif param.valType == 'fileList':
-            self.valueCtrl = FileListCtrl(parent,
-                                          choices=param.val,
-                                          size=wx.Size(self.valueWidth, 100)
-                                          )
-        elif len(param.allowedVals) > 1:
-            # there are limited options - use a Choice control
-            # use localized text or fall through to non-localized,
-            # for future-proofing, parallel-port addresses, etc:
-            if param.allowedLabels:
-                labels = param.allowedLabels
-            else:
-                labels = param.allowedVals
-            # add each label to the dropdown
-            choiceLabels = []
-            for val in labels:
-                try:
-                    choiceLabels.append(_localized[val])
-                except KeyError:
-                    choiceLabels.append(val)
-            self.valueCtrl = wx.Choice(parent, choices=choiceLabels,
-                                       name=fieldName,
-                                       size=wx.Size(self.valueWidth, -1))
-            # stash original non-localized choices:
-            self.valueCtrl._choices = copy.copy(param.allowedVals)
-            # set display to the localized version of the currently selected
-            # value:
-            try:
-                index = param.allowedVals.index(param.val)
-            except Exception:
-                msg = ("%r was given as parameter %r but it isn't "
-                       "in the list of allowed values %s. "
-                       "Reverting to use %r for this Component")
-                vals = (param.val, fieldName,
-                        param.allowedVals,
-                        param.allowedVals[0])
-                logging.warn(msg % vals)
-                logging.flush()
-                index = 0
-            self.valueCtrl.SetSelection(index)
-        elif param.valType == 'color':
-            val = str(param.val)
-            self.valueCtrl = wx.TextCtrl(parent, -1, val, name=fieldName,
-                                         size=wx.Size(self.valueWidth, -1))
-        else:
-            # create the full set of ctrls
-            val = str(param.val)
-            self.valueCtrl = wx.TextCtrl(parent, -1, val, name=fieldName,
-                                         size=wx.Size(self.valueWidth, -1))
-            # set focus for these fields; seems to get reset elsewhere (?)
-            focusFields = ('allowedKeys', 'image', 'movie', 'sound',
-                           'scaleDescription', 'Begin Routine')
-            if fieldName in focusFields:
-                self.valueCtrl.SetFocus()
 
         try:
             self.valueCtrl.SetToolTip(wx.ToolTip(_translate(param.hint)))
@@ -218,7 +176,7 @@ class ParamCtrls(object):
         # add a Validator to the valueCtrl
         if fieldName == "name":
             self.valueCtrl.SetValidator(NameValidator())
-        elif isinstance(self.valueCtrl, (wx.TextCtrl, CodeBox)):
+        elif param.inputType in ("single", "multi"):
             # only want anything that is valType code, or can be with $
             self.valueCtrl.SetValidator(CodeSnippetValidator(fieldName))
 
@@ -511,7 +469,13 @@ class _BaseParamsDlg(wx.Dialog):
                       'Online':_translate('Online'),
                       'Testing':_translate('Testing'),
                       'Audio':_translate('Audio'),
-                      'Format':_translate('Format')}
+                      'Format':_translate('Format'),
+                      'Formatting':_translate('Formatting'),
+                      'Texture':_translate('Texture'),
+                      'Timing':_translate('Timing'),
+                      'Playback':_translate('Playback'),
+                      'Hardware':_translate('Hardware'),
+                      'Interface':_translate('Interface')}
         for categName in categNames:
             theseParams = categs[categName]
             page = wx.Panel(self.ctrls, -1)
@@ -795,10 +759,10 @@ class _BaseParamsDlg(wx.Dialog):
                     pass
 
         if fieldName in ['text']:
-            sizer.AddGrowableRow(currRow)  # doesn't seem to work though
-            # self.Bind(EVT_ETC_LAYOUT_NEEDED, self.onNewTextSize,
-            #    ctrls.valueCtrl)
+            sizer.AddGrowableRow(currRow)
             ctrls.valueCtrl.Bind(wx.EVT_KEY_UP, self.doValidate)
+        elif param.valType == 'fileList':
+            sizer.AddGrowableRow(currRow)  # doesn't seem to work though
         elif fieldName in ('color', 'fillColor', 'lineColor'):
             ctrls.valueCtrl.Bind(wx.EVT_RIGHT_DOWN, self.launchColorPicker)
         elif valType == 'extendedCode':
@@ -822,19 +786,12 @@ class _BaseParamsDlg(wx.Dialog):
 
     def launchColorPicker(self, event):
         # bring up a colorPicker
-        rgb = self.app.colorPicker(None)  # str, remapped to -1..+1
-        # apply to color ctrl
-        ctrlName = event.GetEventObject().GetName()
-        thisParam = self.paramCtrls[ctrlName]
-        thisParam.valueCtrl.SetValue('$' + rgb)  # $ flag as code
-        # make sure we set colorspace to rgb
-        colorSpace = self.paramCtrls[ctrlName + 'Space']
-        colorSpace.valueCtrl.SetStringSelection('rgb')
+        PsychoColorPicker(self.frame)
 
     def onNewTextSize(self, event):
         self.Fit()  # for ExpandoTextCtrl this is needed
 
-    def show(self):
+    def show(self, testing=False):
         """Adds an OK and cancel button, shows dialogue.
 
         This method returns wx.ID_OK (as from ShowModal), but also
@@ -902,8 +859,11 @@ class _BaseParamsDlg(wx.Dialog):
         if self.timeout is not None:
             timeout = wx.CallLater(self.timeout, self.autoTerminate)
             timeout.Start()
-        retVal = self.ShowModal()
-        self.OK = bool(retVal == wx.ID_OK)
+        if testing:
+            self.Show()
+        else:
+            retVal = self.ShowModal()
+            self.OK = bool(retVal == wx.ID_OK)
         return wx.ID_OK
 
     def autoTerminate(self, event=None, retval=1):
@@ -1781,7 +1741,7 @@ class DlgComponentProperties(_BaseParamsDlg):
                  helpUrl=None, suppressTitles=True, size=wx.DefaultSize,
                  style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT,
                  editing=False, depends=[],
-                 timeout=None):
+                 timeout=None, testing=False, type=None):
         style = style | wx.RESIZE_BORDER
         _BaseParamsDlg.__init__(self, frame, title, params, order,
                                 helpUrl=helpUrl, size=size, style=style,
@@ -1790,6 +1750,7 @@ class DlgComponentProperties(_BaseParamsDlg):
         self.frame = frame
         self.app = frame.app
         self.dpi = self.app.dpi
+        self.type = type
 
         # for input devices:
         if 'storeCorrect' in self.params:
@@ -1799,10 +1760,11 @@ class DlgComponentProperties(_BaseParamsDlg):
                       self.paramCtrls['storeCorrect'].valueCtrl)
 
         # for all components
-        self.show()
-        if self.OK:
-            self.params = self.getParams()  # get new vals from dlg
-        self.Destroy()
+        self.show(testing)
+        if not testing:
+            if self.OK:
+                self.params = self.getParams()  # get new vals from dlg
+            self.Destroy()
 
     def onStoreCorrectChange(self, event=None):
         """store correct has been checked/unchecked. Show or hide the
@@ -1936,21 +1898,25 @@ class DlgExperimentProperties(_BaseParamsDlg):
         return wx.ID_OK
 
 class FileListCtrl(wx.ListBox):
-    def __init__(self, parent, choices=[], size=None):
+    def __init__(self, parent, choices=[], size=None, pathtype="rel"):
         wx.ListBox.__init__(self)
         parent.Bind(wx.EVT_DROP_FILES, self.addItem)
         if type(choices) == str:
             choices = data.utils.listFromString(choices)
         self.Create(id=wx.ID_ANY, parent=parent, choices=choices, size=size, style=wx.LB_EXTENDED | wx.LB_HSCROLL)
-        self.addBtn = wx.Button(parent, -1, size=wx.Size(20,20), label="+")
+        # can now get/set things like self.parent
+        self.app = parent.app
+        self.builderFrame = self.GetTopLevelParent().frame
+        self.addBtn = wx.Button(parent, -1, style=wx.BU_EXACTFIT, label="+")
         self.addBtn.Bind(wx.EVT_BUTTON, self.addItem)
-        self.subBtn = wx.Button(parent, -1, size=wx.Size(20,20), label="-")
+        self.subBtn = wx.Button(parent, -1, style=wx.BU_EXACTFIT, label="-")
         self.subBtn.Bind(wx.EVT_BUTTON, self.removeItem)
 
         self._szr = wx.BoxSizer(wx.HORIZONTAL)
         self.btns = wx.BoxSizer(wx.VERTICAL)
         self.btns.AddMany((self.addBtn, self.subBtn))
-        self._szr.AddMany((self, self.btns))
+        self._szr.Add(self, proportion=1, flag=wx.EXPAND)
+        self._szr.Add(self.btns)
 
     def addItem(self, event):
         if event.GetEventObject() == self.addBtn:
@@ -1960,13 +1926,16 @@ class FileListCtrl(wx.ListBox):
                                 wildcard=_translate(_wld))
             if dlg.ShowModal() != wx.ID_OK:
                 return 0
-            filename = dlg.GetPaths()
-            self.InsertItems(filename, 0)
+            fileList = dlg.GetPaths()
         else:
             fileList = event.GetFiles()
-            for filename in fileList:
-                if os.path.isfile(filename):
-                    self.InsertItems(filename, 0)
+        relPaths = []
+        expFile = self.builderFrame.filename
+        folder = Path(expFile).parent
+        for filename in fileList:
+            relPaths.append(
+                os.path.relpath(filename, folder))
+        self.InsertItems(relPaths, 0)
 
     def removeItem(self, event):
         i = self.GetSelections()
@@ -1978,7 +1947,6 @@ class FileListCtrl(wx.ListBox):
 
     def GetValue(self):
         return self.Items
-
 
 def _relpath(path, start='.'):
     """This code is based on os.path.relpath in the Python 2.6 distribution,
