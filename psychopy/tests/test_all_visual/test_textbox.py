@@ -77,9 +77,7 @@ class Test_textbox(object):
 
     def test_colors(self):
         textbox = TextBox2(self.win, "",
-                           "Consolas", pos=(0, 0), size=(1, 1), letterHeight=0.1, units='height', colorSpace="rgb")
-        textbox.fontMGR.addGoogleFont("Noto Sans")
-        textbox.font = "Noto Sans"
+                           "Noto Sans", pos=(0, 0), size=(1, 1), letterHeight=0.1, units='height', colorSpace="rgb")
         textbox.text = "A PsychoPy zealot knows a smidge of wx, but JavaScript is the question."
         # Some exemplar text to test basic colors
         exemplars = [
