@@ -825,25 +825,13 @@ class Caret(ColorMixin):
         self.colorSpace = colorSpace
         self.color = color
 
-    @attributeSetter
-    def color(self, color):
-        self.setColor(color)
-        self._desiredRGB = [0.89, -0.35, -0.28]
-        # if self.colorSpace not in ['rgb', 'dkl', 'lms', 'hsv']:
-        #     self._desiredRGB = [c / 127.5 - 1 for c in self.rgb]
-        # else:
-        #     self._desiredRGB = self.rgb
-
     def draw(self):
         if not self.visible:
             return
         if core.getTime() % 1 > 0.6:  # Flash every other second
             return
         gl.glLineWidth(self.width)
-        rgb = self._desiredRGB
-        gl.glColor4f(
-            rgb[0], rgb[1], rgb[2], self.textbox.opacity
-        )
+        gl.glColor4f(*self._foreColor.render('rgba1'))
         gl.glBegin(gl.GL_LINES)
         gl.glVertex2f(self.vertices[0, 0], self.vertices[0, 1])
         gl.glVertex2f(self.vertices[1, 0], self.vertices[1, 1])
