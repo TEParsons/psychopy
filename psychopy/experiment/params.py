@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Part of the PsychoPy library
-# Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2020 Open Science Tools Ltd.
+# Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2021 Open Science Tools Ltd.
 # Distributed under the terms of the GNU General Public License (GPL).
 
 """Experiment classes:
@@ -28,6 +28,9 @@ from . import utils
 from . import py2js
 
 # standard_library.install_aliases()
+from ..colors import Color
+from numpy import ndarray
+from ..alerts import alert
 
 
 def _findParam(name, node):
@@ -41,6 +44,15 @@ def _findParam(name, node):
         if attr.get('name') == name:
             return attr
 
+inputDefaults = {
+    'str': 'single',
+    'code': 'single',
+    'num': 'single',
+    'bool': 'bool',
+    'list': 'single',
+    'file': 'file',
+    'color': 'color',
+}
 
 class Param(object):
     """Defines parameters for Experiment Components
@@ -98,7 +110,7 @@ class Param(object):
     $myPathologicalVa$rName
     """
 
-    def __init__(self, val, valType, allowedVals=None, allowedTypes=None,
+    def __init__(self, val, valType, inputType=None, allowedVals=None, allowedTypes=None,
                  hint="", label="", updates=None, allowedUpdates=None,
                  allowedLabels=None,
                  categ="Basic"):
@@ -139,6 +151,13 @@ class Param(object):
         self.staticUpdater = None
         self.categ = categ
         self.readOnly = False
+        self.codeWanted = False
+        if inputType:
+            self.inputType = inputType
+        elif valType in inputDefaults:
+            self.inputType = inputDefaults[valType]
+        else:
+            self.inputType = "String"
 
     def __str__(self):
         if self.valType == 'num':
@@ -152,30 +171,35 @@ class Param(object):
                 return "%i" % self.val  # int and float -> str(int)
             except TypeError:
                 return "{}".format(self.val)  # try array of float instead?
-        elif self.valType in ['extendedStr','str']:
+        elif self.valType in ['extendedStr','str', 'file', 'table', 'color']:
             # at least 1 non-escaped '$' anywhere --> code wanted
             # return str if code wanted
             # return repr if str wanted; this neatly handles "it's" and 'He
             # says "hello"'
+            val = self.val
             if isinstance(self.val, basestring):
-                codeWanted = utils.unescapedDollarSign_re.search(self.val)
-                if codeWanted:
+                valid, val = self.dollarSyntax()
+                if self.codeWanted and valid:
+                    # If code is wanted, return code (translated to JS if needed)
                     if utils.scriptTarget == 'PsychoJS':
-                        valJS = py2js.expression2js(self.val.strip('$'))
+                        valJS = py2js.expression2js(val)
                         if self.val != valJS:
                             logging.debug("Rewriting with py2js: {} -> {}".format(self.val, valJS))
                         return valJS
                     else:
-                        return "%s" % getCodeFromParamStr(self.val)
-                else:  # str wanted
-                    # remove \ from all \$
-                    s = repr(re.sub(r"[\\]\$", '$', self.val))
-                    # if target is python2.x then unicode will be u'something'
-                    # but for other targets that will raise an annoying error
+                        return val
+                else:
+                    # If str is wanted, return literal
                     if utils.scriptTarget != 'PsychoPy':
-                        if s.startswith("u'") or s.startswith('u"'):
-                            s = s[1:]
-                    return s
+                        if val.startswith("u'") or val.startswith('u"'):
+                            # if target is python2.x then unicode will be u'something'
+                            # but for other targets that will raise an annoying error
+                            val = val[1:]
+                    if self.valType in ['file', 'table']:
+                        # If param is a file of any kind, escape any \
+                        val = re.sub(r"\\", r"\\\\", val)
+                    val=re.sub("\n", "\\n", val) # Replace line breaks with escaped line break character
+                    return repr(val)
             return repr(self.val)
         elif self.valType in ['code', 'extendedCode']:
             isStr = isinstance(self.val, basestring)
@@ -200,7 +224,7 @@ class Param(object):
             else:
                 return val
         elif self.valType == 'list':
-            return "%s" %(toList(self.val))
+            return "{}".format(toList(self.val))
         elif self.valType == 'fixedList':
             return "{}".format(self.val)
         elif self.valType == 'fileList':
@@ -212,6 +236,11 @@ class Param(object):
                 return "%s" % self.val
         elif self.valType == "table":
             return "%s" % self.val
+        elif self.valType == "color":
+            if re.match(r"\$", self.val):
+                return self.val.strip('$')
+            else:
+                return f"\"{self.val}\""
         else:
             raise TypeError("Can't represent a Param of type %s" %
                             self.valType)
@@ -232,6 +261,46 @@ class Param(object):
         """Return a bool, so we can do `if thisParam`
         rather than `if thisParam.val`"""
         return bool(self.val)
+
+    def dollarSyntax(self):
+        """
+        Interpret string according to dollar syntax, return:
+        1: Whether syntax is valid (True/False)
+        2: Whether code is wanted (True/False)
+        3: The value, stripped of any unnecessary $
+        """
+        val = self.val
+        if self.valType in ['extendedStr','str', 'file', 'table', 'color']:
+            # How to handle dollar signs in a string param
+            self.codeWanted = val.startswith("$")
+
+            if not re.search(r"\$", str(val)):
+                # Return if there are no $
+                return True, val
+            if self.codeWanted:
+                # If value begins with an unescaped $, remove the first char and treat the rest as code
+                val = val[1:]
+                inComment = "".join(re.findall("\#.*", val))
+                inQuotes = "".join(re.findall("[\'\"][^\"|^\']*[\'\"]", val))
+                if not re.findall(r"\$", val):
+                    # Return if there are no further dollar signs
+                    return True, val
+                if len(re.findall(r"\$", val)) == len(re.findall(r"\$", inComment)):
+                    # Return if all $ are commented out
+                    return True, val
+                if len(re.findall(r"\$", val)) - len(re.findall(r"\$", inComment)) == len(re.findall(r"\\\$", inQuotes)):
+                    # Return if all non-commended $ are in strings and escaped
+                    return True, val
+            else:
+                # If value does not begin with an unescaped $, treat it as a string
+                if not re.findall(r"(?<!\\)\$", val):
+                    # Return if all $ are escaped (\$)
+                    return True, val
+        else:
+            # If valType does not interact with $, return True
+            return True, val
+        # Return false if method has not returned yet
+        return False, val
 
     __nonzero__ = __bool__  # for python2 compatibility
 
@@ -260,8 +329,10 @@ def toList(val):
     -------
     A list of entries in the string value
     """
-    if type(val) == list:
+    if isinstance(val, (list, tuple, ndarray)):
         return val  # already a list. Nothing to do
+    if isinstance(val, (int, float)):
+        return [val] # single value, just needs putting in a cell
     # we really just need to check if they need parentheses
     stripped = val.strip()
     if utils.scriptTarget == "PsychoJS":
