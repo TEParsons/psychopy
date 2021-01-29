@@ -409,35 +409,32 @@ class ElementArrayStim(MinimalStim, TextureMixin, ColorMixin):
         simultaneously or use operations on colors.
         """
         if hasattr(self, '_colors'):
-            return self._colors
+            # Return array of rendered colors
+            return self._colors.render(self.colorSpace)
     @colors.setter
     def colors(self, value):
-        self.setColors(value, self.colorSpace)
-
-    @property
-    def colorSpace(self):
-        """The type of color specified is the same as those in other stimuli
-        ('rgb','dkl','lms'...) but note that for this stimulus you cannot
-        currently use text-based colors (e.g. names or hex values).
-
-        Keeping this exception in mind, see :ref:`colorspaces` for more info.
-        """
-        if hasattr(self, '_colorSpace'):
-            return self._colorSpace
-    @colorSpace.setter
-    def colorSpace(self, space):
-        self._colorSpace = space
+        # Create blank array of colors
+        self._colors = Color(value, self.colorSpace, self.contrast)
+        self._needColorUpdate = True
 
     def setColors(self, colors, colorSpace=None, operation='', log=None):
         """See ``color`` for more info on the color parameter  and
         ``colorSpace`` for more info in the colorSpace parameter.
         """
-        self._colors = []
-        if not isinstance(colors, (list, tuple)):
-            colors = [colors]
-        for color in colors:
-            self._colors.append(Color(color, colorSpace))
-        self._needColorUpdate = True
+        self.colorSpace = colorSpace
+        self.colors = colors
+
+    @property
+    def opacity(self):
+        if hasattr(self, "_opacity"):
+            return self._opacity
+    @opacity.setter
+    def opacity(self, value):
+        self._opacity = value
+        if hasattr(self, "_colors"):
+            # Set the alpha value of each color to be the desired opacity
+            self._colors.alpha = value
+
 
     @attributeSetter
     def contrs(self, value):
@@ -525,10 +522,7 @@ class ElementArrayStim(MinimalStim, TextureMixin, ColorMixin):
         cpcd = ctypes.POINTER(ctypes.c_double)
         RGBAs = numpy.zeros([len(self.verticesPix), 4], 'd')
         v = 0
-        while v < len(self.verticesPix):
-            for col in self.colors:
-                RGBAs[v,:] = col.render('rgba1')
-                v += 1
+        RGBAs[:,:] = self._colors.render('rgba1')
         RGBAs = RGBAs.reshape([len(self.verticesPix), 1, 4]).repeat(4, 1)
         GL.glColorPointer(4, GL.GL_DOUBLE, 0,
                           RGBAs.ctypes.data_as(cpcd))

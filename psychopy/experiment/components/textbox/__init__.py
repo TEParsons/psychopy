@@ -54,8 +54,8 @@ class TextboxComponent(BaseVisualComponent):
                  startType='time (s)', startVal=0.0, anchor='center',
                  stopType='duration (s)', stopVal=1.0,
                  startEstim='', durationEstim='',
-                 languageStyle='LTR', fillColor=None,
-                 borderColor=None, borderWidth=2,
+                 languageStyle='LTR', fillColor="None",
+                 borderColor="None", borderWidth=2,
                  flipHoriz=False,
                  flipVert=False,
                  editable=False, autoLog=True):
@@ -74,11 +74,12 @@ class TextboxComponent(BaseVisualComponent):
                                             durationEstim=durationEstim)
         self.type = 'Textbox'
         self.url = "http://www.psychopy.org/builder/components/text.html"
-        self.order = [  # controls both tab order and params within tabs
-            "font", # Format tab
-            "color", "fillColor",  # Color tab next
-            "anchor",  # Layout tab
-                      ]
+        self.order += [  # controls order of params within tabs
+            "editable", "text",  # Basic tab
+            "borderWidth", "opacity",  # Appearance tab
+            "font", "letterHeight", "lineSpacing", "bold", "italic",  # Formatting tab
+            ]
+        self.order.insert(self.order.index("units"), "padding") # Add "padding" just before spatial units
         # params
         _allow3 = ['constant', 'set every repeat', 'set every frame']  # list
         self.params['color'].label = _translate("Text Color")
