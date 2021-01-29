@@ -1,4 +1,4 @@
-﻿# Personality Inventories - Form Class Demonstration
+# Personality Inventories - Form Class Demonstration
 
 ## The experiment
 
