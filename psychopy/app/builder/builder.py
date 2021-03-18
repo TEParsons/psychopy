@@ -2632,7 +2632,7 @@ class FlowPanel(wx.Panel):
                 self.Update()
 
             def _applyAppTheme(self):
-                self.SetBackgroundColour(ThemeMixin.appColors['frame_bg'])
+                self.SetBackgroundColour(ThemeMixin.appColors['panel_bg'])
                 self.SetForegroundColour(ThemeMixin.appColors['text'])
 
         class LoopEnd(wx.Button):
@@ -2642,6 +2642,7 @@ class FlowPanel(wx.Panel):
                                    size=(50, 50),
                                    style=wx.BORDER_NONE)
                 self.parent = parent
+                self.ctrl = None
                 self._applyAppTheme()
 
             def _applyAppTheme(self):
@@ -2655,6 +2656,7 @@ class FlowPanel(wx.Panel):
                                    size=(50, 50),
                                    style=wx.BORDER_NONE)
                 self.parent = parent
+                self.ctrl = None
                 self._applyAppTheme()
 
             def _applyAppTheme(self):
@@ -2662,12 +2664,15 @@ class FlowPanel(wx.Panel):
                 self.SetForegroundColour(ThemeMixin.appColors['fl_flowline_fg'])
 
         class LoopCtrl(wx.Button):
-            def __init__(self, parent):
+            def __init__(self, parent, start, end):
                 wx.Button.__init__(self, parent,
                                    label="loop",
                                    size=(25, 35),
                                    style=wx.BORDER_NONE)
                 self.parent = parent
+                self.start = start
+                self.end = end
+                start.ctrl = end.ctrl = self
                 self._applyAppTheme()
 
             def _applyAppTheme(self):
@@ -2725,6 +2730,8 @@ class FlowPanel(wx.Panel):
         def addLoopStart(self, col):
             newLoopStart = self.LoopStart(self)
             loopEnd = self.openLoop
+            newLoopCtrl = self.LoopCtrl(self, start=newLoopStart, end=loopEnd)
+
             # Shift everything else up
             if col + 1 < self.sizer.GetCols():
                 for i in range(col + 1, self.sizer.GetCols()).__reversed__():
@@ -2739,13 +2746,27 @@ class FlowPanel(wx.Panel):
             self.openLoop = False
 
             # Loop is closed, so make loop ctrl
-            newLoopCtrl = self.LoopCtrl(self)
+            lvl = 2
             startI = self.sizer.GetItemPosition(loopEnd)[1]
             endI = self.sizer.GetItemPosition(newLoopStart)[1]
-            self.sizer.Add(newLoopCtrl, pos=(2, endI), span=(1, startI-endI+1), flag=wx.CENTER | wx.EXPAND)
-
+            for loop in self.getAllLoops():
+                thisLvl = self.sizer.GetItemPosition(loop)[0]
+                thisStart = self.sizer.GetItemPosition(loop.start)[1]
+                thisEnd = self.sizer.GetItemPosition(loop.end)[1]
+                if min(thisStart, thisEnd) > min(startI, endI) and max(thisStart, thisEnd) < max(startI, endI):
+                    lvl = max(lvl, thisLvl+1)
+            self.sizer.Add(newLoopCtrl,
+                           pos=(lvl, min(endI, startI)), span=(1, abs(startI-endI)+1),
+                           flag=wx.CENTER | wx.EXPAND)
             self.sizer.Layout()
             self.parent.sizer.Layout()
+
+        def getAllLoops(self):
+            loops = []
+            for obj in self.sizer.GetChildren():
+                if isinstance(obj, self.LoopCtrl):
+                    loops.append(obj)
+            return loops
 
 
         @property
@@ -2827,6 +2848,7 @@ class FlowPanel(wx.Panel):
 
     def _applyAppTheme(self):
         cs = ThemeMixin.appColors
+        self.SetBackgroundColour(cs['panel_bg'])
         for key, btn in self.buttons.items():
             btn.SetBackgroundColour(cs['frame_bg'])
             btn.SetForegroundColour(cs['text'])
