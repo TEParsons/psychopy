@@ -22,6 +22,7 @@ from ._base import BaseVisualComponent, BaseComponent
 from ..params import Param
 from psychopy.localization import _translate
 from psychopy.experiment import py2js
+from pathlib import Path
 
 excludeComponents = ['BaseComponent', 'BaseVisualComponent',  # templates only
                      'EyetrackerComponent']  # this one isn't ready yet
@@ -50,22 +51,46 @@ def getAllCategories(folderList=()):
 
 
 def getAllComponents(folderList=(), fetchIcons=True):
-    """Get a dictionary of all available components, from the builtins as well
-    as all folders in the folderlist.
-    User-defined components will override built-ins with the same name.
-    """
     if isinstance(folderList, basestring):
         raise TypeError('folderList should be iterable, not a string')
-    components = getComponents(fetchIcons=fetchIcons)  # get the built-ins
+    if not folderList:
+        folderList = [__file__]
     for folder in folderList:
-        userComps = getComponents(folder)
-        for thisKey in userComps:
-            components[thisKey] = userComps[thisKey]
+        # Convert folder to Path object
+        folder = Path(folder)
+        # If given a file rather than folder, use its parent folder
+        if not folder.is_dir():
+            folder = folder.parent
+        # Safe import all modules within this folder (apart from protected ones with a _)
+        for loc in folder.glob("*"):
+            if loc.is_dir() and not loc.name.startswith("_"):
+                import_module("." + loc.name, package="psychopy.experiment.components")
+        # Get list of subclasses of BaseStandalone
+        classList = getSubclasses(BaseComponent)
+        # Get list indexed by class name
+        classDict = {c.__name__: c for c in classList}
+        # Remove components mark as excluded
+        for key in excludeComponents:
+            del classDict[key]
+        # Include SettingsComponent (even though it's not a BaseComponent child)
+        classDict['SettingsComponent'] = import_module(".settings", package="psychopy.experiment.components").SettingsComponent
 
-    # add components registered by plugins that have been loaded
-    components.update(pluginComponents)
+        return classDict
 
-    return components
+
+def getSubclasses(cls):
+    """Recursvely get subclasses of a class within current import space"""
+    if isinstance(cls, type):
+        # If given a class, append it
+        subs = [cls]
+        # Iterate through subclasses
+        for sub in cls.__subclasses__():
+            # Recursively call this function
+            subs += getSubclasses(sub)
+        return subs
+    else:
+        # Return nothing if not a class
+        return []
 
 
 def getComponents(folder=None, fetchIcons=True):
