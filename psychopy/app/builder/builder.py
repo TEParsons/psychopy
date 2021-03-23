@@ -1588,6 +1588,7 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
 
     def __init__(self, parent):
         wx.ScrolledWindow.__init__(self, parent, size=(180, -1))
+        self.parent = parent
         self.frame = parent.frame
         # Setup sizer
         self.sizer = wx.FlexGridSizer(1, 0, 0)
@@ -1666,6 +1667,10 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
         self.exp.namespace.remove(name)
         # Delete routine object
         del self.frame.exp.routines[name]
+        # Close any tabs
+        for i in range(self.parent.notebook.GetPageCount()):
+            if self.parent.notebook.GetPageText(i) == name:
+                self.parent.notebook.DeletePage(i)
         # Update undo stack
         self.frame.addToUndoStack("REMOVE Routine `%s`" % name)
         # Refresh chooser
