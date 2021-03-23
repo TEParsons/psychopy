@@ -92,6 +92,7 @@ _localized = {
 
 cs = ThemeMixin.appColors
 
+
 class BuilderFrame(wx.Frame, ThemeMixin):
     """Defines construction of the Psychopy Builder Frame"""
 
@@ -162,9 +163,8 @@ class BuilderFrame(wx.Frame, ThemeMixin):
 
         # create our panels
         self.flowPanel = FlowPanel(frame=self)
-        self.routinePanel = RoutinesNotebook(self)
+        self.routinePanel = RoutinePanel(self)
         self.componentButtons = ComponentsPanel(self)
-        self.routineManager = RoutineManager(self)
         # menus and toolbars
         self.toolbar = PsychopyToolbar(frame=self)
         self.SetToolBar(self.toolbar)
@@ -197,9 +197,8 @@ class BuilderFrame(wx.Frame, ThemeMixin):
                           aui.AuiPaneInfo().
                           Name("Routines").Caption("Routines").CaptionVisible(True).
                           Floatable(False).
-                          Movable(False).
-                          CloseButton(False).MaximizeButton(True).PaneBorder(False).
-                          Center())  # 'center panes' expand
+                          RightDockable(True).LeftDockable(True).
+                          CloseButton(False).PaneBorder(False))  # 'center panes' expand
         rtPane = self._mgr.GetPane('Routines')
         self._mgr.AddPane(self.componentButtons,
                           aui.AuiPaneInfo().
@@ -216,12 +215,6 @@ class BuilderFrame(wx.Frame, ThemeMixin):
                           RightDockable(True).LeftDockable(True).
                           CloseButton(False).PaneBorder(False))
         flowPane = self._mgr.GetPane('Flow')
-        self._mgr.AddPane(self.routineManager,
-                          aui.AuiPaneInfo().
-                          Name("Routine Manager").Caption("Routine Manager").CaptionVisible(True).
-                          Floatable(False).RightDockable(True).LeftDockable(True).
-                          CloseButton(False).PaneBorder(False))
-        routineManager = self._mgr.GetPane('Routine Manager')
         self.layoutPanes()
         rtPane.CaptionVisible(True)
         # tell the manager to 'commit' all the changes just made
@@ -383,12 +376,12 @@ class BuilderFrame(wx.Frame, ThemeMixin):
                            _translate("&Routine Larger\t%s") % keys[
                                'largerRoutine'],
                            _translate("Larger routine items"))
-        self.Bind(wx.EVT_MENU, self.routinePanel.increaseSize, item)
+        self.Bind(wx.EVT_MENU, self.routinePanel.notebook.increaseSize, item)
         item = menu.Append(wx.ID_ANY,
                            _translate("&Routine Smaller\t%s") % keys[
                                'smallerRoutine'],
                            _translate("Smaller routine items"))
-        self.Bind(wx.EVT_MENU, self.routinePanel.decreaseSize, item)
+        self.Bind(wx.EVT_MENU, self.routinePanel.notebook.decreaseSize, item)
         menu.AppendSeparator()
         # Add Theme Switcher
         self.themesMenu = ThemeSwitcher(self)
@@ -685,7 +678,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
             self.project = None
             print(e)
         self.app.updateWindowMenu()
-        self.routineManager.populate()
+        self.routinePanel.manager.populate()
 
     def fileSave(self, event=None, filename=None):
         """Save file, revert to SaveAs if the file hasn't yet been saved
@@ -927,7 +920,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         self.appData['frames'] = copy.copy(tmp2)
 
         # close self
-        self.routinePanel.removePages()
+        self.routinePanel.notebook.removePages()
         self.filename = 'untitled.psyexp'
         # add the current exp as the start point for undo:
         self.resetUndoStack()
@@ -939,7 +932,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         """Updates Flow Panel, Routine Panel, and Window Title simultaneously
         """
         self.flowPanel.draw()
-        self.routinePanel.redrawRoutines()
+        self.routinePanel.notebook.redrawRoutines()
         self.updateWindowTitle()
 
     def layoutPanes(self):
@@ -1183,7 +1176,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         """copy the current routine from self.routinePanel
         to self.app.copiedRoutine.
         """
-        r = copy.deepcopy(self.routinePanel.getCurrentRoutine())
+        r = copy.deepcopy(self.routinePanel.notebook.getCurrentRoutine())
         if r is not None:
             self.app.copiedRoutine = r
 
@@ -1215,7 +1208,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
                 self.exp.namespace.add(newName)
                 newComp.params['name'].val = newName
             # could do redrawRoutines but would be slower?
-            self.routinePanel.addRoutinePage(newRoutine.name, newRoutine)
+            self.routinePanel.notebook.addRoutinePage(newRoutine.name, newRoutine)
             self.addToUndoStack("PASTE Routine `%s`" % newRoutine.name)
         dlg.Destroy()
 
@@ -1224,7 +1217,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         Paste the copied Component (if there is one) into the current
         Routine
         """
-        routinePage = self.routinePanel.getCurrentPage()
+        routinePage = self.routinePanel.notebook.getCurrentPage()
         routinePage.pasteCompon()
 
     def onURL(self, evt):
@@ -1256,17 +1249,17 @@ class BuilderFrame(wx.Frame, ThemeMixin):
     def addRoutine(self, event=None):
         """Defines ability to add routine in the routine panel
         """
-        self.routinePanel.createNewRoutine()
-        self.routineManager.populate()
+        self.routinePanel.notebook.createNewRoutine()
+        self.routinePanel.manager.populate()
 
     def renameRoutine(self, name, event=None, returnName=True):
         """Defines ability to rename routine in the routine panel
         """
         # get notebook details
-        currentRoutine = self.routinePanel.getCurrentPage()
-        currentRoutineIndex = self.routinePanel.GetPageIndex(currentRoutine)
-        routine = self.routinePanel.GetPage(
-            self.routinePanel.GetSelection()).routine
+        currentRoutine = self.routinePanel.notebook.getCurrentPage()
+        currentRoutineIndex = self.routinePanel.notebook.GetPageIndex(currentRoutine)
+        routine = self.routinePanel.notebook.GetPage(
+            self.routinePanel.notebook.GetSelection()).routine
         oldName = routine.name
         msg = _translate("What is the new name for the Routine?")
         dlg = wx.TextEntryDialog(self, message=msg, value=oldName,
@@ -1285,7 +1278,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
                 for comp in self.exp.routines[name]:
                     comp.parentName = name
                 self.exp.namespace.rename(oldName, name)
-                self.routinePanel.renameRoutinePage(currentRoutineIndex, name)
+                self.routinePanel.notebook.renameRoutinePage(currentRoutineIndex, name)
                 self.addToUndoStack("`RENAME Routine `%s`" % oldName)
                 dlg.Destroy()
                 self.flowPanel.draw()
@@ -1442,12 +1435,12 @@ class RoutinesNotebook(aui.AuiNotebook, ThemeMixin):
     """A notebook that stores one or more routines
     """
 
-    def __init__(self, frame, id=-1):
-        self.frame = frame
-        self.app = frame.app
+    def __init__(self, parent, id=-1):
+        self.frame = parent.frame
+        self.app = self.frame.app
         self.routineMaxSize = 2
         self.appData = self.app.prefs.appData
-        aui.AuiNotebook.__init__(self, frame, id)
+        aui.AuiNotebook.__init__(self, parent, id)
 
         # double buffered better rendering except if retina
 
@@ -1547,6 +1540,24 @@ class RoutinesNotebook(aui.AuiNotebook, ThemeMixin):
             self.SetSelection(currPage)
 
 
+class RoutinePanel(scrolledpanel.ScrolledPanel, ThemeMixin):
+    def __init__(self, frame):
+        scrolledpanel.ScrolledPanel.__init__(self, frame)
+        self.frame = frame
+        self.sizer = wx.FlexGridSizer(2, 6, 6)
+        self.SetSizer(self.sizer)
+        self.sizer.AddGrowableRow(0)
+
+        self.manager = RoutineManager(self)
+        self.sizer.Add(self.manager, flag=wx.EXPAND)
+
+        self.notebook = RoutinesNotebook(self)
+        self.sizer.AddGrowableCol(1)
+        self.sizer.Add(self.notebook, flag=wx.EXPAND)
+
+        self.sizer.Layout()
+
+
 class RoutineManager(wx.ScrolledWindow, ThemeMixin):
     class RoutineCtrlButton(wx.Button):
         def __init__(self, parent, label, callback):
@@ -1575,23 +1586,25 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
             self.Refresh()
 
     def __init__(self, parent):
-        wx.ScrolledWindow.__init__(self, parent)
-        self.frame = parent
+        wx.ScrolledWindow.__init__(self, parent, size=(180, -1))
+        self.frame = parent.frame
         # Setup sizer
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer = wx.FlexGridSizer(1, 6, 6)
         self.SetSizer(self.sizer)
+        self.sizer.AddGrowableCol(0)
         # Add chooser
-        self.chooser = wx.ListBox(self, size=(180, 270), style=wx.LB_SINGLE | wx.BORDER_NONE)
+        self.chooser = wx.ListBox(self, style=wx.LB_SINGLE | wx.BORDER_NONE)
+        self.sizer.AddGrowableRow(0)
         self.sizer.Add(self.chooser, border=6, flag=wx.EXPAND | wx.ALL)
         self.chooser.Bind(wx.EVT_LISTBOX_DCLICK, self.openRoutine)
         # Add new routine button
         self.newBtn = self.RoutineCtrlButton(self, label=_translate("New Routine"),
                                              callback=self.frame.addRoutine)
-        self.sizer.Add(self.newBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        self.sizer.Add(self.newBtn, border=6, flag=wx.EXPAND | wx.LEFT | wx.BOTTOM)
         # Add delete routine button
         self.deleteBtn = self.RoutineCtrlButton(self, label=_translate("Delete Routine"),
                                                 callback=self.deleteRoutine)
-        self.sizer.Add(self.deleteBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        self.sizer.Add(self.deleteBtn, border=6, flag=wx.EXPAND | wx.LEFT | wx.BOTTOM)
         # Populate chooser
         self.populate()
 
@@ -1610,8 +1623,7 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
 
     def openRoutine(self, event=None):
         name = self.chooser.GetStringSelection()
-        self.frame.routinePanel.setCurrentRoutine(self.exp.routines[name])
-
+        self.frame.routinePanel.notebook.setCurrentRoutine(self.exp.routines[name])
 
     def deleteRoutine(self, event=None):
         # Get selection
@@ -1620,7 +1632,6 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
         if name not in self.exp.routines:
             return
         routine = self.exp.routines[name]
-        del self.frame.exp.routines[name]
         # Remove this routine object from the flow
         if routine in self.exp.flow:
             self.exp.flow.removeComponent(routine)
@@ -1629,11 +1640,12 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
         for c in self.exp.routines[name]:
             self.exp.namespace.remove(c.params['name'].val)
         self.exp.namespace.remove(name)
+        # Delete routine object
+        del self.frame.exp.routines[name]
         # Update undo stack
-        self.frame.addToUndoStack("REMOVE Routine `%s`" % (name))
+        self.frame.addToUndoStack("REMOVE Routine `%s`" % name)
         # Refresh chooser
         self.populate()
-
 
     def renameRoutine(self, event=None):
         self.frame.renameRoutine(event)
@@ -2301,8 +2313,8 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel):
             self.Bind(wx.EVT_RIGHT_DOWN, self.onRightClick)
 
         def onClick(self, evt=None, timeout=None):
-            routine = self.parent.frame.routinePanel.getCurrentRoutine()
-            page = self.parent.frame.routinePanel.getCurrentPage()
+            routine = self.parent.frame.routinePanel.notebook.getCurrentRoutine()
+            page = self.parent.frame.routinePanel.notebook.getCurrentPage()
             comp = self.component(parentName=routine.name, exp=self.parent.frame.exp)
             name = comp.params['name'].val
             # does this component have a help page?
@@ -2857,7 +2869,7 @@ class FlowPanel(wx.ScrolledWindow):
         """selecting (new) is a short-cut for:
         make new routine, insert it into the flow
         """
-        newRoutine = self.frame.routinePanel.createNewRoutine(returnName=True)
+        newRoutine = self.frame.routinePanel.notebook.createNewRoutine(returnName=True)
         if newRoutine:
             self.routinesFromID[event.GetId()] = newRoutine
             self.onInsertRoutineSelect(event)
@@ -3008,7 +3020,7 @@ class FlowPanel(wx.ScrolledWindow):
                         if comp.getType() in handlerTypes:
                             self.editLoopProperties(loop=comp)
                         if comp.getType() == 'Routine':
-                            self.frame.routinePanel.setCurrentRoutine(
+                            self.frame.routinePanel.notebook.setCurrentRoutine(
                                 routine=comp)
             elif event.RightDown():
                 icons = self.pdc.FindObjectsByBBox(x, y)
@@ -3027,7 +3039,7 @@ class FlowPanel(wx.ScrolledWindow):
                             comp = thisComp
                             icon = thisIcon
                             break  # we've found a Routine so stop looking
-                self.frame.routinePanel.setCurrentRoutine(comp)
+                self.frame.routinePanel.notebook.setCurrentRoutine(comp)
                 try:
                     self._menuComponentID = icon
                     xy = wx.Point(x + self.GetPosition()[0],
