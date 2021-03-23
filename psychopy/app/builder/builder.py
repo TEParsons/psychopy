@@ -1589,22 +1589,27 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
         wx.ScrolledWindow.__init__(self, parent, size=(180, -1))
         self.frame = parent.frame
         # Setup sizer
-        self.sizer = wx.FlexGridSizer(1, 6, 6)
+        self.sizer = wx.FlexGridSizer(1, 0, 0)
         self.SetSizer(self.sizer)
         self.sizer.AddGrowableCol(0)
         # Add chooser
         self.chooser = wx.ListBox(self, style=wx.LB_SINGLE | wx.BORDER_NONE)
         self.sizer.AddGrowableRow(0)
         self.sizer.Add(self.chooser, border=6, flag=wx.EXPAND | wx.ALL)
+        self.chooser.Bind(wx.EVT_LISTBOX, self.onChange)
         self.chooser.Bind(wx.EVT_LISTBOX_DCLICK, self.openRoutine)
         # Add new routine button
         self.newBtn = self.RoutineCtrlButton(self, label=_translate("New Routine"),
                                              callback=self.frame.addRoutine)
-        self.sizer.Add(self.newBtn, border=6, flag=wx.EXPAND | wx.LEFT | wx.BOTTOM)
+        self.sizer.Add(self.newBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        # Add insert routine button
+        self.insertBtn = self.RoutineCtrlButton(self, label=_translate("Add To Flow"),
+                                                callback=self.insertRoutine)
+        self.sizer.Add(self.insertBtn, border=6, flag=wx.EXPAND | wx.ALL)
         # Add delete routine button
         self.deleteBtn = self.RoutineCtrlButton(self, label=_translate("Delete Routine"),
                                                 callback=self.deleteRoutine)
-        self.sizer.Add(self.deleteBtn, border=6, flag=wx.EXPAND | wx.LEFT | wx.BOTTOM)
+        self.sizer.Add(self.deleteBtn, border=6, flag=wx.EXPAND | wx.ALL)
         # Populate chooser
         self.populate()
 
@@ -1620,6 +1625,24 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
         self.chooser.Clear()
         for name in self.exp.routines:
             self.chooser.Append(name)
+        self.onChange()
+
+    def onChange(self, event=None):
+        selected = self.chooser.GetSelection() >= 0
+        self.deleteBtn.Enable(selected)
+        self.insertBtn.Enable(selected)
+
+    def insertRoutine(self, event=None):
+        flowPanel = self.frame.flowPanel
+        name = self.chooser.GetStringSelection()
+
+        flowPanel.mode = 'routine'
+        flowPanel.btnInsertRoutine.SetLabel(_translate('CANCEL Insert'))
+        flowPanel.frame.SetStatusText(_translate(
+            'Click where you want to insert the Routine, or CANCEL insert.'))
+        flowPanel.insertingRoutine = name
+        x = flowPanel.getNearestGapPoint(0)
+        flowPanel.drawEntryPoints([x])
 
     def openRoutine(self, event=None):
         name = self.chooser.GetStringSelection()
