@@ -933,6 +933,7 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         """
         self.flowPanel.draw()
         self.routinePanel.notebook.redrawRoutines()
+        self.routinePanel.manager.populate()
         self.updateWindowTitle()
 
     def layoutPanes(self):
