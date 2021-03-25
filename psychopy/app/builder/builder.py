@@ -461,12 +461,6 @@ class BuilderFrame(wx.Frame, ThemeMixin):
         menu.AppendSeparator()
 
         item = menu.Append(wx.ID_ANY,
-                           _translate("Insert Routine in Flow"),
-                           _translate(
-                               "Select one of your routines to be inserted"
-                               " into the experiment flow"))
-        self.Bind(wx.EVT_MENU, self.flowPanel.onInsertRoutine, item)
-        item = menu.Append(wx.ID_ANY,
                            _translate("Insert Loop in Flow"),
                            _translate("Create a new loop in your flow window"))
         self.Bind(wx.EVT_MENU, self.flowPanel.insertLoop, item)
@@ -1638,13 +1632,26 @@ class RoutineManager(wx.ScrolledWindow, ThemeMixin):
         flowPanel = self.frame.flowPanel
         name = self.chooser.GetStringSelection()
 
+        if flowPanel.mode == 'routine':
+            self.cancelInsertRoutine()
+            return
         flowPanel.mode = 'routine'
-        flowPanel.btnInsertRoutine.SetLabel(_translate('CANCEL Insert'))
+        self.insertBtn.SetLabel(_translate('CANCEL Insert'))
         flowPanel.frame.SetStatusText(_translate(
             'Click where you want to insert the Routine, or CANCEL insert.'))
+        self.deleteBtn.Enable(False)
+        self.newBtn.Enable(False)
+        flowPanel.btnInsertLoop.Enable(False)
         flowPanel.insertingRoutine = name
         x = flowPanel.getNearestGapPoint(0)
         flowPanel.drawEntryPoints([x])
+
+    def cancelInsertRoutine(self, event=None):
+        flowPanel = self.frame.flowPanel
+        flowPanel.clearMode()
+        self.newBtn.Enable(True)
+        self.deleteBtn.Enable(True)
+        self.insertBtn.SetLabel("Add To Flow")
 
     def openRoutine(self, event=None):
         name = self.chooser.GetStringSelection()
@@ -2776,18 +2783,9 @@ class FlowPanel(wx.ScrolledWindow):
             id = wx.NewIdRef()
             self.contextItemFromID[id] = item
             self.contextIDFromItem[item] = id
-
-        # self.btnInsertRoutine = wx.Button(self,-1,
-        #                                  'Insert Routine', pos=(10,10))
-        # self.btnInsertLoop = wx.Button(self,-1,'Insert Loop', pos=(10,30))
         labelRoutine = _translate('Insert Routine ')
         labelLoop = _translate('Insert Loop     ')
         btnHeight = 50
-        # Create add routine button
-        self.btnInsertRoutine = PsychopyPlateBtn(
-            self, -1, labelRoutine, pos=(10, 10), size=(120, btnHeight),
-            style=platebtn.PB_STYLE_SQUARE
-        )
         # Create add loop button
         self.btnInsertLoop = PsychopyPlateBtn(
             self, -1, labelLoop, pos=(10, btnHeight+20),
@@ -2801,7 +2799,6 @@ class FlowPanel(wx.ScrolledWindow):
 
         # bind events
         self.Bind(wx.EVT_MOUSE_EVENTS, self.OnMouse)
-        self.Bind(wx.EVT_BUTTON, self.onInsertRoutine, self.btnInsertRoutine)
         self.Bind(wx.EVT_BUTTON, self.setLoopPoint1, self.btnInsertLoop)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
@@ -2824,9 +2821,6 @@ class FlowPanel(wx.ScrolledWindow):
         self.btnInsertLoop.SetBackgroundColour(cs['frame_bg'])
         self.btnInsertLoop.SetForegroundColour(cs['text'])
         self.btnInsertLoop.Update()
-        self.btnInsertRoutine.SetBackgroundColour(cs['frame_bg'])
-        self.btnInsertRoutine.SetForegroundColour(cs['text'])
-        self.btnInsertRoutine.Update()
         # Set background
         self.SetBackgroundColour(cs['panel_bg'])
 
@@ -2845,10 +2839,7 @@ class FlowPanel(wx.ScrolledWindow):
         self.gapsExcluded = []
         self.draw()
         self.frame.SetStatusText("")
-        self.btnInsertRoutine.SetLabel(_translate('Insert Routine'))
-        self.btnInsertRoutine.Update()
         self.btnInsertLoop.SetLabel(_translate('Insert Loop'))
-        self.btnInsertRoutine.Update()
 
     def ConvertEventCoords(self, event):
         xView, yView = self.GetViewStart()
@@ -2864,36 +2855,6 @@ class FlowPanel(wx.ScrolledWindow):
         xDelta, yDelta = self.GetScrollPixelsPerUnit()
         r.Offset((-(xView * xDelta), -(yView * yDelta)))
 
-    def onInsertRoutine(self, evt):
-        """For when the insert Routine button is pressed - bring up
-        dialog and present insertion point on flow line.
-        see self.insertRoutine() for further info
-        """
-        if self.mode.startswith('loopPoint'):
-            self.clearMode()
-        elif self.mode == 'routine':
-            # clicked again with label now being "Cancel..."
-            self.clearMode()
-            return
-        self.frame.SetStatusText(_translate(
-            "Select a Routine to insert (Esc to exit)"))
-        menu = wx.Menu()
-        self.routinesFromID = {}
-        id = wx.NewIdRef()
-        menu.Append(id, '(new)')
-        self.routinesFromID[id] = '(new)'
-        menu.Bind(wx.EVT_MENU, self.insertNewRoutine, id=id)
-        for routine in self.frame.exp.routines:
-            id = wx.NewIdRef()
-            menu.Append(id, routine)
-            self.routinesFromID[id] = routine
-            menu.Bind(wx.EVT_MENU, self.onInsertRoutineSelect, id=id)
-        btnPos = self.btnInsertRoutine.GetRect()
-        menuPos = (btnPos[0], btnPos[1] + btnPos[3])
-        self.PopupMenu(menu, menuPos)
-        menu.Bind(wx.EVT_MENU_CLOSE, self.clearMode)
-        menu.Destroy()  # destroy to avoid mem leak
-
     def insertNewRoutine(self, event):
         """selecting (new) is a short-cut for:
         make new routine, insert it into the flow
@@ -2904,19 +2865,6 @@ class FlowPanel(wx.ScrolledWindow):
             self.onInsertRoutineSelect(event)
         else:
             self.clearMode()
-
-    def onInsertRoutineSelect(self, event):
-        """User has selected a routine to be entered so bring up the
-        entrypoint marker and await mouse button press.
-        see self.insertRoutine() for further info
-        """
-        self.mode = 'routine'
-        self.btnInsertRoutine.SetLabel(_translate('CANCEL Insert'))
-        self.frame.SetStatusText(_translate(
-            'Click where you want to insert the Routine, or CANCEL insert.'))
-        self.insertingRoutine = self.routinesFromID[event.GetId()]
-        x = self.getNearestGapPoint(0)
-        self.drawEntryPoints([x])
 
     def insertRoutine(self, ii):
         """Insert a routine into the Flow knowing its name and location
