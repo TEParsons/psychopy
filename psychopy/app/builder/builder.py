@@ -2878,7 +2878,7 @@ class FlowPanel(wx.ScrolledWindow):
         self.frame.exp.flow.addRoutine(rtn, ii)
         self.frame.addToUndoStack("ADD Routine `%s`" % rtn.name)
         # reset flow drawing (remove entry point)
-        self.clearMode()
+        self.frame.routinePanel.manager.cancelInsertRoutine()
 
     def setLoopPoint1(self, evt=None):
         """Someone pushed the insert loop button.
