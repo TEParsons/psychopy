@@ -20,6 +20,7 @@ import os
 # sys.path.append(os.path.abspath('.'))
 
 import psychopy
+from pathlib import Path
 
 # -- General configuration -----------------------------------------------------
 
@@ -114,6 +115,15 @@ napoleon_include_special_with_doc = False
 
 
 # -- Options for HTML output ---------------------------------------------------
+
+# Emojis
+rst_prolog = ""
+for icon in (Path(__file__).parent / "images" / "emojis").glob("*.png"):
+    rst_prolog += (
+        ".. |:{name}:| image:: {path}\n"
+            "\t:height: 11\n"
+            "\t:width: 11\n"
+    ).format(name=icon.stem, path="../source/images/emojis/" + icon.name)
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
