@@ -832,6 +832,56 @@ class Color(object):
     #     self._cache = {'rec709TF': color}
 
 
+class ShadeArray:
+    """
+    An array of different shades from a base Color object, created by adjusting the saturation and lightness of the
+    base color so that as shade increases, lightness increases and saturation decreases. This is useful for making
+    appealing color pallettes
+    """
+    def __init__(self, color, granularity=8):
+        self.granularity = granularity
+        self.base = color
+
+    @property
+    def base(self):
+        """The base Color from which all shades are derived"""
+        return self._base
+
+    @base.setter
+    def base(self, color):
+        self._requested = color
+        # Make sure it's a valid color
+        assert isinstance(color, Color), f"Base color of a ShadeArray must be an object of type psychopy.colors.Color"
+        # Store base
+        self._base = color
+        # Generate shades
+        self.shades = []
+        for n in range(-self.granularity, self.granularity+1):
+            # Get base HSL
+            h, s, v, a = list(self._base.hsva)
+            # Desaturate as n increases
+            s = min(max(s - n/self.granularity, 0), 1)
+            # Lighten as n increases
+            v = min(max(v + n/self.granularity, 0), 1)
+            # Reassemble hsl and make a new colour
+            new = Color((h, s, v, a), 'hsva')
+            self.shades.append(new)
+
+    def __add__(self, other):
+        # Can only be added to numbers
+        assert isinstance(other, int), "Only integers can be added to or subtracted from ShadesArray objects"
+        # Clamp other value to an int between -granularity and granularity
+        other = min(range(-self.granularity, self.granularity+1), key=lambda x:abs(x-other))
+        # Convert to a 0-based index
+        other += self.granularity
+        # Return the corresponding shade
+        return self.shades[other]
+
+    def __sub__(self, other):
+        # Add as negative
+        return self + -other
+
+
 # ------------------------------------------------------------------------------
 # Legacy functions
 #
