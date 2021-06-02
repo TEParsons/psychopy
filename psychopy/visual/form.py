@@ -576,7 +576,7 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
         if type(ctrl) == psychopy.visual.Slider:
             # Set radio button layout
             if item['layout'] == 'horiz':
-                return 0.03 + ctrl.labelHeight*3
+                return ctrl.size[1] + ctrl.labelHeight*3
             elif item['layout'] == 'vert':
                 # for vertical take into account the nOptions
                 return ctrl.labelHeight*len(item['options'])
