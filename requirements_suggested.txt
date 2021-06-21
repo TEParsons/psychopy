@@ -5,3 +5,4 @@ egi
 iolabs
 pyfilesec
 markdown-it
+pygments

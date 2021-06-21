@@ -37,6 +37,12 @@ try:
     import markdown_it as md
 except ImportError:
     md = None
+try:
+    import pygments
+    import pygments.lexers
+    import pygments.formatters.html
+except ImportError:
+    pygments = None
 import wx.lib.agw.aui as aui  # some versions of phoenix
 try:
     from wx.adv import PseudoDC
@@ -2717,7 +2723,9 @@ class ReadmeFrame(wx.Frame):
         self._fileLastModTime = os.path.getmtime(filename)
         self.rawText = readmeText
         if md:
-            renderedText = md.MarkdownIt().render(readmeText)
+            parser = md.MarkdownIt()
+            parser.options['highlight'] = self.highlight
+            renderedText = parser.render(readmeText)
         else:
             renderedText = readmeText.replace("\n", "<br>")
         self.ctrl.SetPage(renderedText)
@@ -2752,6 +2760,18 @@ class ReadmeFrame(wx.Frame):
             self.Hide()
         else:
             self.Show()
+
+    @staticmethod
+    def highlight(content, langName, langAttrs):
+        # If pygments not installed, return content as is
+        if pygments is None:
+            return content
+        # If have pygments, do highlighting
+        return pygments.highlight(
+            content,
+            pygments.lexers.get_lexer_by_name(langName or "python"),
+            pygments.formatters.html.HtmlFormatter()
+        )
 
 
 class FlowPanel(wx.ScrolledWindow):
