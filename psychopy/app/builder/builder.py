@@ -2767,9 +2767,13 @@ class ReadmeFrame(wx.Frame):
         if pygments is None:
             return content
         # If have pygments, do highlighting
+        if langName:
+            lexer = pygments.lexers.get_lexer_by_name(langName)
+        else:
+            lexer = pygments.lexers.guess_lexer(content)
         return pygments.highlight(
             content,
-            pygments.lexers.get_lexer_by_name(langName or "python"),
+            lexer,
             pygments.formatters.html.HtmlFormatter()
         )
 
