@@ -17,6 +17,7 @@ from psychopy import logging
 import psychopy
 from ...experiment import components
 import json
+import pygments.token
 
 if sys.platform=='win32':
     from matplotlib import font_manager
@@ -1105,3 +1106,18 @@ class ThemeSwitcher(wx.Menu):
         for item in self.GetMenuItems():
             if item.IsRadio():  # This means it will not attempt to check the separator
                 item.Check(item.ItemLabel.lower() == ThemeMixin.codetheme.lower())
+
+def newTheme(name):
+    """
+    Make a blank file with all the necessary keys for a code theme
+    """
+    # Make template json from pygments tokens
+    template = json.dumps(
+        {str(key): "" for key in pygments.token.STANDARD_TYPES},
+        indent=4
+    )
+    # Write to file
+    with open(Path(__file__).parent / (name + ".json"), "wb") as f:
+        f.write(
+            template.encode()
+        )
