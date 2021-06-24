@@ -1112,6 +1112,7 @@ def newTheme(name):
     Make a blank file with all the necessary keys for a code theme.
 
     Uses pygments token names, as documented here: https://pygments.org/docs/tokens/
+    and pygments spec, as documented here: https://pygments.org/docs/styledevelopment/#creating-own-styles
     """
     # Make template json from pygments tokens
     template = json.dumps(
