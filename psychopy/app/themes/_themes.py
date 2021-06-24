@@ -1109,11 +1109,13 @@ class ThemeSwitcher(wx.Menu):
 
 def newTheme(name):
     """
-    Make a blank file with all the necessary keys for a code theme
+    Make a blank file with all the necessary keys for a code theme.
+
+    Uses pygments token names, as documented here: https://pygments.org/docs/tokens/
     """
     # Make template json from pygments tokens
     template = json.dumps(
-        {str(key): "" for key in pygments.token.STANDARD_TYPES},
+        {str(key).replace("Token.", ""): "" for key in pygments.token.STANDARD_TYPES if str(key) != "Token"},
         indent=4
     )
     # Write to file
