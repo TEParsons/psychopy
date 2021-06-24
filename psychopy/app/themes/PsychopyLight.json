@@ -1,152 +1,88 @@
 {
-  "app": "light",
-  "icons": "light",
-  "info": "Psychopy's default look",
-  "base": {
-    "fg": "#000000",
-    "bg": "#FFFFFF",
-    "font": "JetBrains Mono"
-  },
-  "margin": {
-    "fg": "",
-    "bg": "#F2F2F2",
-    "font": ""
-  },
-  "caret": {
-    "fg": "#F46E75",
-    "bg": "#F2F2F2",
-    "font": "bold"
-  },
-  "select": {
-    "fg": "#FFFFFF",
-    "bg": "#75757D",
-    "font": ""
-  },
-  "indent": {
-    "fg": "#D4D4D4",
-    "bg": "#D4D4D4",
-    "font": ""
-  },
-  "brace": {
-    "fg": "",
-    "bg": "#F2F2F2",
-    "font": ""
-  },
-  "operator": {
-    "fg": "",
-    "bg": "",
-    "font": ""
-  },
-  "keyword": {
-    "fg": "#F2545B",
-    "bg": "",
-    "font": ""
-  },
-  "keyword2": {
-    "fg": "#02A9EA",
-    "bg": "",
-    "font": "italic,bold"
-  },
-  "controlchar": {
-    "fg": "",
-    "bg": "",
-    "font": ""
-  },
-  "id": {
-    "fg": "",
-    "bg": "",
-    "font": ""
-  },
-  "num": {
-    "fg": "#028EC5",
-    "bg": "",
-    "font": ""
-  },
-  "char": {
-    "fg": "#75757D",
-    "bg": "",
-    "font": ""
-  },
-  "str": {
-    "fg": "#75757D",
-    "bg": "",
-    "font": ""
-  },
-  "openstr": {
-    "fg": "#75757D",
-    "bg": "#f2f2f2",
-    "font": ""
-  },
-  "infix": {
-    "fg": "#f2545b",
-    "bg": "",
-    "font": ""
-  },
-  "openinfix": {
-    "fg": "#f2545b",
-    "bg": "#f2f2f2",
-    "font": ""
-  },
-  "decorator": {
-    "fg": "#EC9703",
-    "bg": "",
-    "font": ""
-  },
-  "class": {
-    "fg": "",
-    "bg": "",
-    "font": ""
-  },
-  "def": {
-    "fg": "",
-    "bg": "",
-    "font": ""
-  },
-  "comment": {
-    "fg": "#39A141",
-    "bg": "",
-    "font": ""
-  },
-  "commentblock": {
-    "fg": "#39A141",
-    "bg": "#f2f2f2",
-    "font": ""
-  },
-  "commentkw": {
-    "fg": "#39A141",
-    "bg": "",
-    "font": ""
-  },
-  "commenterror": {
-    "fg": "#39A141",
-    "bg": "",
-    "font": ""
-  },
-  "documentation": {
-    "fg": "#75757D",
-    "bg": "",
-    "font": "italic"
-  },
-  "documentation2": {
-    "fg": "#75757D",
-    "bg": "",
-    "font": "italic"
-  },
-  "whitespace": {
-    "fg": "#D4D4D4",
-    "bg": "",
-    "font": "bold"
-  },
-  "python": {
-
-  },
-  "c++": {
-
-  },
-  "r": {
-
-  },
-  "json": {
-
-  }
+    "Info": "PsychoPy's default look",
+    "App": "light",
+    "Icons": "light",
+    "Font": "JetBrains Mono",
+    "Margin": "#000000 bg:#F2F2F2",
+    "Caret": "#F46E75 bold",
+    "Select": "#FFFFFF bg:#75757D",
+    "Style": {
+        "Text": "#000000",
+        "Text.Whitespace": "#D4D4D4 bold",
+        "Escape": "",
+        "Error": "",
+        "Other": "",
+        "Keyword": "#F2545B",
+        "Keyword.Constant": "#F2545B bold",
+        "Keyword.Declaration": "",
+        "Keyword.Namespace": "",
+        "Keyword.Pseudo": "",
+        "Keyword.Reserved": "#F2545B bold",
+        "Keyword.Type": "",
+        "Name": "",
+        "Name.Attribute": "",
+        "Name.Builtin": "",
+        "Name.Builtin.Pseudo": "",
+        "Name.Class": "",
+        "Name.Constant": "",
+        "Name.Decorator": "#F2545B bold",
+        "Name.Entity": "",
+        "Name.Exception": "",
+        "Name.Function": "",
+        "Name.Function.Magic": "",
+        "Name.Property": "",
+        "Name.Label": "",
+        "Name.Namespace": "",
+        "Name.Other": "",
+        "Name.Tag": "",
+        "Name.Variable": "",
+        "Name.Variable.Class": "",
+        "Name.Variable.Global": "",
+        "Name.Variable.Instance": "",
+        "Name.Variable.Magic": "",
+        "Literal": "",
+        "Literal.Date": "",
+        "Literal.String": "#75757D",
+        "Literal.String.Affix": "",
+        "Literal.String.Backtick": "",
+        "Literal.String.Char": "",
+        "Literal.String.Delimiter": "",
+        "Literal.String.Doc": "#75757D italic",
+        "Literal.String.Double": "",
+        "Literal.String.Escape": "",
+        "Literal.String.Heredoc": "",
+        "Literal.String.Interpol": "",
+        "Literal.String.Other": "",
+        "Literal.String.Regex": "#75757D bg: #f2f2f2",
+        "Literal.String.Single": "",
+        "Literal.String.Symbol": "",
+        "Literal.Number": "#028EC5",
+        "Literal.Number.Bin": "",
+        "Literal.Number.Float": "",
+        "Literal.Number.Hex": "",
+        "Literal.Number.Integer": "",
+        "Literal.Number.Integer.Long": "",
+        "Literal.Number.Oct": "",
+        "Operator": "",
+        "Operator.Word": "",
+        "Punctuation": "",
+        "Comment": "#39A141",
+        "Comment.Hashbang": "",
+        "Comment.Multiline": "",
+        "Comment.Preproc": "",
+        "Comment.PreprocFile": "",
+        "Comment.Single": "",
+        "Comment.Special": "",
+        "Generic": "",
+        "Generic.Deleted": "",
+        "Generic.Emph": "",
+        "Generic.Error": "#F2545B",
+        "Generic.Heading": "",
+        "Generic.Inserted": "",
+        "Generic.Output": "",
+        "Generic.Prompt": "",
+        "Generic.Strong": "",
+        "Generic.Subheading": "",
+        "Generic.Traceback": ""
+    }
 }
