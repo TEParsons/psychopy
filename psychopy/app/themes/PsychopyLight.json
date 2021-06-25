@@ -1,12 +1,15 @@
 {
-    "Info": "PsychoPy's default look",
-    "App": "light",
-    "Icons": "light",
-    "Font": "JetBrains Mono",
-    "Margin": "#000000 bg:#F2F2F2",
-    "Caret": "#F46E75 bold",
-    "Select": "#FFFFFF bg:#75757D",
-    "Style": {
+    "info": "PsychoPy's default look",
+    "app": "light",
+    "icons": "light",
+    "font": "JetBrains Mono",
+    "line_number_color": "#000000",
+    "line_number_special_color": "#FFFFFF",
+    "line_number_background_color": "#F2F2F2",
+    "line_number_special_background_color": "#F2545B",
+    "highlight_color": "#F2F2F2",
+    "background_color": "#FFFFFF",
+    "styles": {
         "Text": "#000000",
         "Text.Whitespace": "#D4D4D4 bold",
         "Escape": "",
