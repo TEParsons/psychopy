@@ -18,6 +18,7 @@ import psychopy
 from ...experiment import components
 import json
 import pygments.token
+import pygments.style
 
 if sys.platform=='win32':
     from matplotlib import font_manager
@@ -1124,3 +1125,21 @@ def newTheme(name):
         f.write(
             template.encode()
         )
+
+
+class PsychopyTheme(pygments.style.Style):
+    def __init__(self, name):
+        pygments.style.Style.__init__(self)
+
+        with open(Path(__file__).parent / name + ".json") as f:
+            theme = json.loads(f.read())
+
+        self.styles = {}
+        for key in theme['styles']:
+            self.styles[pygments.token.string_to_tokentype(key)] = theme['styles'][key] or ""
+        self.line_number_color = theme['line_number_color'] or "#000000"
+        self.line_number_special_color = theme['line_number_color'] or "#FFFFFF"
+        self.line_number_background_color = theme['line_number_color'] or "#F2F2F2"
+        self.line_number_special_background_color = theme['line_number_color'] or "#F2545B"
+        self.highlight_color = theme['line_number_color'] or "#F2F2F2"
+        self.background_color = theme['line_number_color'] or "#FFFFFF"
