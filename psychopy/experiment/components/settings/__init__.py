@@ -104,13 +104,10 @@ class SettingsComponent(object):
     iconFile = Path(__file__).parent / 'settings.png'
     tooltip = _translate("Edit settings for this experiment")
 
-    def __init__(self, parentName, exp, expName='', fullScr=True,
-                 winSize=(1024, 768), screen=1, monitor='testMonitor',
-                 showMouse=False, saveLogFile=True, showExpInfo=True,
+    def __init__(self, parentName, exp, expName='',
+                 saveLogFile=True, showExpInfo=True,
                  expInfo="{'participant':'', 'session':'001'}",
-                 units='height', logging='exp',
-                 color='$[0,0,0]', colorSpace='rgb', enableEscape=True,
-                 blendMode='avg',
+                 logging='exp', enableEscape=True,
                  saveXLSXFile=False, saveCSVFile=False, saveHDF5File=False,
                  saveWideCSVFile=True, savePsydatFile=True,
                  savedDataFolder='', savedDataDelim='auto',
@@ -123,7 +120,15 @@ class SettingsComponent(object):
                  elTrackingMode='PUPIL_CR_TRACKING', elPupilMeasure='PUPIL_AREA', elPupilAlgorithm='ELLIPSE_FIT',
                  elAddress='100.1.1.1',
                  tbModel="", tbLicenseFile="", tbSerialNo="", tbSampleRate=60,
-                 filename=None, exportHTML='on Sync'):
+                 filename=None, exportHTML='on Sync',
+                 # Legacy screen
+                 units='height',
+                 color='$[0,0,0]', colorSpace='rgb',
+                 blendMode='avg',
+                 fullScr=True,
+                 winSize=(1024, 768), screen=1, monitor='testMonitor',
+                 showMouse=False
+                 ):
         self.type = 'Settings'
         self.exp = exp  # so we can access the experiment if necess
         self.exp.requirePsychopyLibs(['visual', 'gui'])
@@ -182,55 +187,6 @@ class SettingsComponent(object):
             hint=_translate("The version of PsychoPy to use when running "
                             "the experiment."),
             label=_localized["Use version"], categ='Basic')
-
-        # screen params
-        self.params['Full-screen window'] = Param(
-            fullScr, valType='bool', inputType="bool", allowedTypes=[],
-            hint=_translate("Run the experiment full-screen (recommended)"),
-            label=_localized["Full-screen window"], categ='Screen')
-        self.params['Window size (pixels)'] = Param(
-            winSize, valType='list', inputType="single", allowedTypes=[],
-            hint=_translate("Size of window (if not fullscreen)"),
-            label=_localized["Window size (pixels)"], categ='Screen')
-        self.params['Screen'] = Param(
-            screen, valType='num', inputType="spin", allowedTypes=[],
-            hint=_translate("Which physical screen to run on (1 or 2)"),
-            label=_localized["Screen"], categ='Screen')
-        self.params['Monitor'] = Param(
-            monitor, valType='str', inputType="single", allowedTypes=[],
-            hint=_translate("Name of the monitor (from Monitor Center). Right"
-                            "-click to go there, then copy & paste a monitor "
-                            "name here."),
-            label=_localized["Monitor"], categ="Screen")
-        self.params['color'] = Param(
-            color, valType='color', inputType="color", allowedTypes=[],
-            hint=_translate("Color of the screen (e.g. black, $[1.0,1.0,1.0],"
-                            " $variable. Right-click to bring up a "
-                            "color-picker.)"),
-            label=_localized["color"], categ='Screen')
-        self.params['colorSpace'] = Param(
-            colorSpace, valType='str', inputType="choice",
-            hint=_translate("Needed if color is defined numerically (see "
-                            "PsychoPy documentation on color spaces)"),
-            allowedVals=['rgb', 'dkl', 'lms', 'hsv', 'hex'],
-            label=_localized["colorSpace"], categ="Screen")
-        self.params['Units'] = Param(
-            units, valType='str', inputType="choice", allowedTypes=[],
-            allowedVals=['use prefs', 'deg', 'pix', 'cm', 'norm', 'height',
-                         'degFlatPos', 'degFlat'],
-            hint=_translate("Units to use for window/stimulus coordinates "
-                            "(e.g. cm, pix, deg)"),
-            label=_localized["Units"], categ='Screen')
-        self.params['blendMode'] = Param(
-            blendMode, valType='str', inputType="choice",
-            allowedTypes=[], allowedVals=['add', 'avg'],
-            hint=_translate("Should new stimuli be added or averaged with "
-                            "the stimuli that have been drawn already"),
-            label=_localized["blendMode"], categ='Screen')
-        self.params['Show mouse'] = Param(
-            showMouse, valType='bool', inputType="bool", allowedTypes=[],
-            hint=_translate("Should the mouse be visible on screen?"),
-            label=_localized["Show mouse"], categ='Screen')
 
         # sound params
         self.params['Force stereo'] = Param(
