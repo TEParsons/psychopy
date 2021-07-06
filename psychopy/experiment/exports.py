@@ -155,7 +155,7 @@ class NameSpace(object):
                         't', 'frameN', 'currentLoop', 'dlg', '_thisDir',
                         'endExpNow',
                         'globalClock', 'routineTimer', 'frameDur',
-                        'theseKeys', 'win', 'x', 'y', 'level', 'component',
+                        'theseKeys', 'x', 'y', 'level', 'component',
                         'thisComponent']
         # user-entered, from Builder dialog or conditions file:
         self.user = []

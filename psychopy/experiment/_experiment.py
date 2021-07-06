@@ -224,7 +224,6 @@ class Experiment(object):
             self_copy.settings.writeStartCode(script, self_copy.psychopyVersion)
             # writes any components with a writeStartCode()
             self_copy.flow.writeStartCode(script)
-            self_copy.settings.writeWindowCode(script)  # create our visual.Window()
             self_copy.settings.writeIohubCode(script)
             # for JS the routine begin/frame/end code are funcs so write here
 

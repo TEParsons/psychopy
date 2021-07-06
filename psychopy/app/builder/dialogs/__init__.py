@@ -1666,47 +1666,8 @@ class DlgExperimentProperties(_BaseParamsDlg):
         self.app = frame.app
         self.dpi = self.app.dpi
 
-        # for input devices:
-        # do this just to set the initial values to be
-        self.paramCtrls['Full-screen window'].setChangesCallback(self.onFullScrChange)
-        self.onFullScrChange(event=None)
-        self.Bind(wx.EVT_CHECKBOX, self.onFullScrChange,
-                  self.paramCtrls['Full-screen window'].valueCtrl)
-
         # for all components
         self.show()
         if self.OK:
             self.params = self.getParams()  # get new vals from dlg
         self.Destroy()
-
-    def onFullScrChange(self, event=None):
-        """full-screen has been checked / unchecked.
-        Show or hide the window size field accordingly
-        """
-        if self.paramCtrls['Full-screen window'].valueCtrl.GetValue():
-            # get screen size for requested display
-            numDisplays = wx.Display.GetCount()
-            try:
-                screenValue = int(
-                    self.paramCtrls['Screen'].valueCtrl.GetValue())
-            except ValueError:
-                # param control currently contains no integer value
-                screenValue = 1
-            if screenValue < 1 or screenValue > numDisplays:
-                logging.error("User requested non-existent screen")
-                screenN = 0
-            else:
-                screenN = screenValue - 1
-            size = list(wx.Display(screenN).GetGeometry()[2:])
-            # set vals and disable changes
-            field = 'Window size (pixels)'
-            self.paramCtrls[field].valueCtrl.SetValue(str(size))
-            self.paramCtrls[field].param.val = size
-            self.paramCtrls[field].valueCtrl.Disable()
-            self.paramCtrls[field].nameCtrl.Disable()
-        else:
-            self.paramCtrls['Window size (pixels)'].valueCtrl.Enable()
-            self.paramCtrls['Window size (pixels)'].nameCtrl.Enable()
-        self.mainSizer.Layout()
-        self.Fit()
-        self.Refresh()
