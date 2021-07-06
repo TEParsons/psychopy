@@ -41,8 +41,8 @@ class WindowRoutine(BaseStandaloneRoutine):
             {"dependsOn": "Full-screen window",  # must be param name
              "condition": "==True",  # val to check for
              "param": "Window size (pixels)",  # param property to alter
-             "true": "show",  # what to do with param if condition is True
-             "false": "hide",  # permitted: hide, show, enable, disable
+             "true": "hide",  # what to do with param if condition is True
+             "false": "show",  # permitted: hide, show, enable, disable
              }
         )
         self.params['Window size (pixels)'] = Param(
