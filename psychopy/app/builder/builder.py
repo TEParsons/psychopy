@@ -3498,8 +3498,18 @@ class FlowPanel(wx.ScrolledWindow):
         draw=False is for a dry-run, esp to compute and return size
         without drawing or setting a pdc ID
         """
+        icons = {
+            "win": wx.Icon(wx.Bitmap(str(
+                Path(__file__).parent.parent / "Resources" / "light" / "monitor16.png"
+            )))
+        }
+        # Is this an icon or text?
+        isIcon = routine.name in icons
+        # Get name
         name = routine.name
-        if self.appData['flowSize'] == 0 and len(name) > 5:
+        if isIcon:
+            name = "O"
+        elif self.appData['flowSize'] == 0 and len(name) > 5:
             name = ' ' + name[:4] + '..'
         else:
             name = ' ' + name + ' '
@@ -3541,11 +3551,18 @@ class FlowPanel(wx.ScrolledWindow):
             dc.SetPen(wx.Pen(wx.Colour(rtEdge[0], rtEdge[1],
                                        rtEdge[2], wx.ALPHA_OPAQUE)))
             dc.SetBrush(wx.Brush(rtFill))
-            dc.DrawRoundedRectangle(
-                rect, (4, 6, 8)[self.appData['flowSize']])
+            if isIcon:
+                dc.DrawCircle(
+                    pos[0] + (w + pad) / 2, pos[1] + (h + pad) / 2, w + pad/2)
+            else:
+                dc.DrawRoundedRectangle(
+                    rect, (4, 6, 8)[self.appData['flowSize']])
             # draw text
             dc.SetTextForeground(rtText)
-            dc.DrawLabel(name, rect, alignment=wx.ALIGN_CENTRE)
+            if isIcon:
+                dc.DrawIcon(icons[routine.name], (pos[0] + (w + pad - 16)/2, pos[1] + (h + pad - 16)/2))
+            else:
+                dc.DrawLabel(name, rect, alignment=wx.ALIGN_CENTRE)
             if nonSlip and self.appData['flowSize'] != 0:
                 font.SetPointSize(font.GetPointSize() * 0.6)
                 dc.SetFont(font)
