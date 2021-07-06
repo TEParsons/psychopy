@@ -48,6 +48,7 @@ import locale
 
 from collections import namedtuple, OrderedDict
 
+from .routines.window import WindowRoutine
 from ..alerts import alert
 
 RequiredImport = namedtuple('RequiredImport',
@@ -94,6 +95,10 @@ class Experiment(object):
 
         _settingsComp = getComponents(fetchIcons=False)['SettingsComponent']
         self.settings = _settingsComp(parentName='', exp=self)
+        # Make window routine
+        self.window = WindowRoutine(self)
+        self.addStandaloneRoutine("win", self.window)
+        self.flow.addRoutine(self.window, 0)
         # this will be the xml.dom.minidom.doc object for saving
         self._doc = xml.ElementTree()
         self.namespace = NameSpace(self)  # manage variable names
