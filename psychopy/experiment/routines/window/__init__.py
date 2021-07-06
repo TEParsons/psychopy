@@ -31,6 +31,8 @@ class WindowRoutine(BaseStandaloneRoutine):
         # Hide stop ctrls
         del self.params['stopType']
         del self.params['stopVal']
+        # Do not allow disabled window
+        del self.params['disabled']
 
         # Setup params
         self.params['Full-screen window'] = Param(
