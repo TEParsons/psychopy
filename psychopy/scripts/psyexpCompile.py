@@ -167,10 +167,13 @@ def compileScript(infile=None, version=None, outfile=None):
         exp = deepcopy(exp)
         for key, routine in list(exp.routines.items()):  # PY2/3 compat
             if isinstance(routine, BaseStandaloneRoutine):
-                if routine.params['disabled']:
-                    for node in exp.flow:
-                        if node == routine:
-                            exp.flow.removeComponent(node)
+                try:
+                    if routine.params['disabled']:
+                        for node in exp.flow:
+                            if node == routine:
+                                exp.flow.removeComponent(node)
+                except KeyError:
+                    pass
             else:
                 for component in routine:
                     try:
