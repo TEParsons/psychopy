@@ -21,6 +21,7 @@ import copy
 import traceback
 import codecs
 import numpy
+from datetime import date
 
 from pkg_resources import parse_version
 import wx.stc
@@ -37,6 +38,12 @@ try:
     import markdown_it as md
 except ImportError:
     md = None
+try:
+    import pybtex.database as bib
+    from pybtex.plugin import find_plugin as bib_find
+except ImportError:
+    bib = None
+    bib_find = None
 import wx.lib.agw.aui as aui  # some versions of phoenix
 try:
     from wx.adv import PseudoDC
@@ -2690,9 +2697,7 @@ class ReadmeFrame(wx.Frame):
         if filename is None:  # check if we can write to the directory
             return False
         elif not os.path.exists(filename):
-            with open(filename, "w") as f:
-                f.write("")
-            self.filename = filename
+            self.newReadmeFile(filename)
             return False
         elif not os.access(filename, os.R_OK):
             msg = "Found readme file (%s) no read permissions"
@@ -2728,6 +2733,37 @@ class ReadmeFrame(wx.Frame):
     def refresh(self, evt=None):
         if hasattr(self, 'filename'):
             self.setFile(self.filename)
+
+    def newReadmeFile(self, filename):
+        # Open file
+        f = open(filename, "w")
+        # Write preamble
+        f.write(
+            ("---\n"
+             "Please cite as follows:\n")
+        )
+        if bib is None:
+            # If bibtex isn't installed, use placeholder
+            f.write(
+                "> Last-Name, I.N.I.T.I.A.L.S (YEAR, MONTH DATE). Experiment Name. Retrieved from https://gitlab.pavlovia.org/link-to-your-experiment"
+            )
+        else:
+            today = date.today()
+            # If bibtex is installed, make a bibtex object
+            cite = bib.Entry('article', [
+                ('title', 'Screen Scale'),
+                ('author', bib.Person('Wakefield L. Morys-Carter')),
+                ('url', 'https://gitlab.pavlovia.org/Wake/screenscale/commits/master'),
+                ('day', str(today.day)),
+                ('month', str(today.month)),
+                ('year', str(today.year)),
+            ])
+
+            # Write to file
+            formatter = bib_find('pybtex.style.formatting', 'apa')()
+            #f.write("> " + formatter.format_entry(cite))
+        # Store filename
+        self.filename = filename
 
     def fileEdit(self, evt=None):
         self.parent.app.showCoder()
