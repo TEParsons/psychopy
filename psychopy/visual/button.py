@@ -8,10 +8,9 @@
 # Distributed under the terms of the GNU General Public License (GPL).
 
 from psychopy import event, core
+from psychopy.authors import Author
 from psychopy.visual import TextBox2
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED, STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
-
-__author__ = 'Anthony Haffey & Todd Parsons'
 
 class ButtonStim(TextBox2):
     """A class for putting a button into your experiment. A button is essentially a TextBox with a Mouse component contained within it, making it easy to check whether it has been clicked on.
@@ -58,3 +57,5 @@ class ButtonStim(TextBox2):
             self.buttonClock.reset()  # Reset clock
         # Set status
         self._status = value
+
+__author__ = [Author('Anthony Haffey', ButtonStim), Author('Todd Parsons', ButtonStim)]

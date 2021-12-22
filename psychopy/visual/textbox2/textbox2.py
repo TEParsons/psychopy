@@ -28,6 +28,7 @@ from ..rect import Rect
 from ... import core, alerts, layout
 
 from psychopy.tools.linebreak import get_breakable_points, break_units
+from ...authors import Author
 
 allFonts = FontManager()
 
@@ -1308,3 +1309,6 @@ class Caret(ColorMixin):
             [x, bottom],
             [x, top]
         ])
+
+
+__author__ = [Author("Jon Peirce", TextBox2), Author("Sol Simpson", TextBox2), Author("Matthew Cutone", TextBox2), Author("Todd Parsons", TextBox2)]

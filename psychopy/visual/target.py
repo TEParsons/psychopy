@@ -2,6 +2,7 @@ from .shape import ShapeStim
 from .basevisual import ColorMixin, WindowMixin
 from psychopy.colors import Color
 from .. import layout
+from ..authors import Author
 
 knownStyles = ["circles", "cross", ]
 
@@ -266,3 +267,5 @@ def targetFromDict(win, spec,
                pos=pos, units=units,
                colorSpace=colorSpace,
                autoLog=autoLog, autoDraw=autoDraw)
+
+__author__ = Author("Todd Parsons", TargetStim)

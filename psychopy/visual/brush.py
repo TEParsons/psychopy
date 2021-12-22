@@ -12,8 +12,7 @@ Inspired by rockNroll87q - https://github.com/rockNroll87q/pyDrawing
 from psychopy import event, logging
 from .shape import ShapeStim
 from .basevisual import MinimalStim
-
-__author__ = 'David Bridges'
+from ..authors import Author
 
 
 class Brush(MinimalStim):
@@ -192,3 +191,5 @@ class Brush(MinimalStim):
             Button press required (True or False).
         """
         self.buttonRequired = value
+
+__author__ = Author('David Bridges', Brush)

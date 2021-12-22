@@ -17,8 +17,7 @@ from psychopy import logging, layout
 from random import shuffle
 from pathlib import Path
 
-__author__ = 'Jon Peirce, David Bridges, Anthony Haffey'
-
+from ..authors import Author
 from ..colors import Color
 
 _REQUIRED = -12349872349873  # an unlikely int
@@ -1175,3 +1174,7 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
                     ctrl.value = values[item['index']]
                 else:
                     ctrl.text = values[item['index']]
+
+
+__author__ = [Author('Jon Peirce', Form), Author("David Bridges", Form), Author("Anthony Haffey", Form),
+              Author("Todd Parsons", Form)]

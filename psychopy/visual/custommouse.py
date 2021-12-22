@@ -15,6 +15,7 @@ import os
 
 import psychopy  # so we can get the __path__
 from psychopy import event, logging
+from psychopy.authors import Author
 
 from psychopy.visual.image import ImageStim
 from psychopy.visual.basevisual import MinimalStim
@@ -246,3 +247,5 @@ class CustomMouse(MinimalStim):
         self.mouse.setVisible(True)
         self.lastPos = self.mouse.getPos()  # hardware mouse's position
         self.mouse.setVisible(False)
+
+__author__ = Author("Sol Simpson", CustomMouse)

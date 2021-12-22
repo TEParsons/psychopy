@@ -1,4 +1,5 @@
 from .shape import ShapeStim
+from ..authors import Author
 from ..event import Mouse
 from ..core import Clock
 
@@ -126,3 +127,6 @@ class ROI(ShapeStim):
         self.timesOff = []
         self.clock.reset()
         self.wasLookedIn = False
+
+
+__author__ = [Author("Todd Parsons", ROI), Author("Sol Simpson", ROI)]

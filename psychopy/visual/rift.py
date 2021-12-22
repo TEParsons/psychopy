@@ -25,6 +25,8 @@ __all__ = ['Rift']
 # module will still load, but the `Rift` class will fail to load. This allows
 # the Rift library to be lazy-loaded on systems without PsychXR.
 #
+from psychopy.authors import Author
+
 _HAS_PSYCHXR_ = True
 
 try:
@@ -2649,3 +2651,5 @@ class Rift(window.Window):
 #         logging.debug(msg)
 #     elif level == libovr.LOG_LEVEL_ERROR:
 #         logging.error(msg)
+
+__author__ = Author("Matthew Cutone", Rift)

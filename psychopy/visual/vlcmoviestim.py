@@ -20,6 +20,7 @@ import ctypes
 import weakref
 
 from psychopy import core, logging
+from psychopy.authors import Author
 from psychopy.tools.attributetools import logAttrib, setAttribute
 from psychopy.tools.filetools import pathToString
 from psychopy.visual.basevisual import BaseVisualStim, ContainerMixin
@@ -1271,3 +1272,5 @@ def vlcMediaEventCallback(event, user_data, player):
 
 if __name__ == "__main__":
     pass
+
+__author__ = Author("Matthew Cutone", VlcMovieStim)

@@ -23,7 +23,7 @@ if sys.platform == 'win32':
                 windll.shcore.SetProcessDpiAwareness(enableHighDPI)
             except OSError:
                 pass
-
+from ..authors import getAll
 from psychopy import event  # import before visual or
 from psychopy.visual import filters
 from psychopy.visual.backends import gamma
@@ -117,3 +117,5 @@ try:
     lazy_import(globals(), lazyImports)
 except Exception:
     exec(lazyImports)
+
+__author__ = getAll()
