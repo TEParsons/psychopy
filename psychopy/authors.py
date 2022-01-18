@@ -143,6 +143,31 @@ class _Author:
 Author.__doc__ = _Author.__doc__
 
 
+def gen_authors():
+    from psychopy import visual, alerts, app, contrib, data, demos, experiment, gui, hardware, iohub, localization, monitors, parallel, platform_specific, plugins, preferences, projects, scripts,sound, tests, tools, visual, voicekey, clock, compatibility, constants, colors, core, event, exceptions, filters, gamma, info, layout, locale_setup, logging, microphone, web
+    preface = (
+        "Authors\n"
+        "-------\n"
+        "\n"
+        "**PsychoPy is developed through community effort.**\n"
+        "\n"
+        "The project was created and is maintained by Jonathan Peirce. The following individuals have contributed code or documentation to PsychoPy:\n"
+    )
+    main = ""
+    for auth in contributors:
+        main += f"* {auth}\n"
+    now = datetime.now().strftime('%d %B %Y')
+    footer = (
+        f"---\n"
+        f"*This list was auto-generated via `psychopy.authors.gen_authors`. Do not edit manually.*\n"
+        f"\n"
+        f"*Last updated on {now}.*\n"
+    )
+
+    with open(Path(__file__).parent.parent / "AUTHORS.md", "w") as f:
+        f.write(preface + main + footer)
+
+
 # Add some authors with full details here so they can be referenced by just name elsewhere
 peircej = Author(
     "Peirce", "Jon",
