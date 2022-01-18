@@ -1,4 +1,6 @@
+from datetime import datetime
 import inspect
+from pathlib import Path
 
 # Array of contributors
 contributors = []
@@ -91,20 +93,26 @@ class _Author:
         return same
 
     def __repr__(self):
+        return (
+            f"<Author: {self}>"
+        )
+
+    def __str__(self):
+        # Get middle names as initials
         if self.middlenames:
             initials = "".join([mname[0].capitalize() + ". " for mname in self.middlenames])
         else:
             initials = ""
+        # Get github username in brackets with an @
         if self.github:
             github = f" (@{self.github})"
         else:
             github = ""
-
+        # Construct and return string
         return (
-            f"<Author: "
-            f"{self.forename.capitalize()} {initials}{self.surname.capitalize()}{github}, "
-            f"{len(self.refs)} contribution{'s' if len(self.refs) != 1 else ''}"
-            f">"
+            f"{self.forename.capitalize()} {initials}{self.surname.capitalize()}{github}: "
+            f"{len(self.classes)} class{'es' if len(self.classes) != 1 else ''}, "
+            f"{len(self.functions)} function{'s' if len(self.functions) != 1 else ''}."
         )
 
     def credit(self, contrib):
@@ -154,7 +162,5 @@ TEParsons = Author(
         "twitter": "@ToddEParsons",
     }
 )
-
-
 TEParsons.credit(_Author)
 
