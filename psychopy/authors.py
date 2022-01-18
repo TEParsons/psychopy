@@ -120,7 +120,8 @@ class _Author:
         Credit this author with working on a particular class, function or module.
         """
         # Add the contribution to their references
-        self.refs.append(contrib)
+        if contrib not in self.refs:
+            self.refs.append(contrib)
         # Return own handle for one-line crediting
         return self
 
