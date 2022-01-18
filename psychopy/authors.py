@@ -24,24 +24,33 @@ class Author:
         """
         List of all contributions credited to this author in modules which have been imported
         """
-        return Author._refs[self.name]
+        if self.name in Author._refs:
+            return Author._refs[self.name]
+        else:
+            return []
 
     @property
     def classes(self):
         """
         List of classes credited to this author in modules which have been imported
         """
-        return [ref for ref in Author._refs[self.name] if inspect.isclass(ref)]
+        if self.name in Author._refs:
+            return [ref for ref in Author._refs[self.name] if inspect.isclass(ref)]
+        else:
+            return []
 
     @property
     def functions(self):
         """
         List of functions credited to this author in modules which have been imported
         """
-        return [ref for ref in Author._refs[self.name] if inspect.isfunction(ref) or inspect.ismethod(ref)]
+        if self.name in Author._refs:
+            return [ref for ref in Author._refs[self.name] if inspect.isfunction(ref) or inspect.ismethod(ref)]
+        else:
+            return []
 
 
-def getAll():
+def getAllAuthors():
     """
     List all authors credited in modules which have been imported
     """
