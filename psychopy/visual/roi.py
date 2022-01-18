@@ -129,4 +129,4 @@ class ROI(ShapeStim):
         self.wasLookedIn = False
 
 
-__author__ = [Author("Todd Parsons", ROI), Author("Sol Simpson", ROI)]
+__author__ = [Author("Parsons", "Todd").credit(ROI), Author("Simpson", "Sol").credit(ROI)]

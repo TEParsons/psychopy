@@ -268,4 +268,5 @@ def targetFromDict(win, spec,
                colorSpace=colorSpace,
                autoLog=autoLog, autoDraw=autoDraw)
 
-__author__ = Author("Todd Parsons", TargetStim)
+
+__author__ = Author("Parsons", "Todd").credit(TargetStim)

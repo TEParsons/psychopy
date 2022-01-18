@@ -1176,5 +1176,5 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
                     ctrl.text = values[item['index']]
 
 
-__author__ = [Author('Jon Peirce', Form), Author("David Bridges", Form), Author("Anthony Haffey", Form),
-              Author("Todd Parsons", Form)]
+__author__ = [Author('Peirce', 'Jon').credit(Form), Author('Bridges', 'David').credit(Form), Author('Haffey', 'Anthony').credit(Form),
+              Author('Parsons', 'Todd').credit(Form)]

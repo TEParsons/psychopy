@@ -1273,4 +1273,4 @@ def vlcMediaEventCallback(event, user_data, player):
 if __name__ == "__main__":
     pass
 
-__author__ = Author("Matthew Cutone", VlcMovieStim)
+__author__ = Author("Cutone", "Matthew").credit(VlcMovieStim)

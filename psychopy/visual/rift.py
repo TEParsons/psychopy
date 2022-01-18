@@ -2652,4 +2652,4 @@ class Rift(window.Window):
 #     elif level == libovr.LOG_LEVEL_ERROR:
 #         logging.error(msg)
 
-__author__ = Author("Matthew Cutone", Rift)
+__author__ = Author("Cutone", "Matthew").credit(Rift)

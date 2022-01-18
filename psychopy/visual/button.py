@@ -58,4 +58,4 @@ class ButtonStim(TextBox2):
         # Set status
         self._status = value
 
-__author__ = [Author('Anthony Haffey', ButtonStim), Author('Todd Parsons', ButtonStim)]
+__author__ = [Author('Haffey', 'Anthony').credit(ButtonStim), Author('Parsons', 'Todd').credit(ButtonStim)]

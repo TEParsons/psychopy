@@ -192,4 +192,5 @@ class Brush(MinimalStim):
         """
         self.buttonRequired = value
 
-__author__ = Author('David Bridges', Brush)
+
+__author__ = Author('Bridges', 'David').credit(Brush)

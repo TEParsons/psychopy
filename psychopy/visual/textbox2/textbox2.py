@@ -1311,4 +1311,9 @@ class Caret(ColorMixin):
         ])
 
 
-__author__ = [Author("Jon Peirce", TextBox2), Author("Sol Simpson", TextBox2), Author("Matthew Cutone", TextBox2), Author("Todd Parsons", TextBox2)]
+__author__ = [
+    Author("Peirce", "Jon").credit(TextBox2),
+    Author("Simpson", "Sol").credit(TextBox2),
+    Author("Cutone", "Matthew").credit(TextBox2),
+    Author("Parsons", "Todd").credit(TextBox2)
+]

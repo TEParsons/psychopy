@@ -248,4 +248,5 @@ class CustomMouse(MinimalStim):
         self.lastPos = self.mouse.getPos()  # hardware mouse's position
         self.mouse.setVisible(False)
 
-__author__ = Author("Sol Simpson", CustomMouse)
+
+__author__ = Author("Simpson", "Sol").credit(CustomMouse)
