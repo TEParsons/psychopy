@@ -7,9 +7,36 @@ from psychopy.visual.rect import Rect
 
 
 class GridStim(ElementArrayStim):
+    """
+    Create an evenly spaced rectangular grid.
+
+    Parameters
+    ----------
+    win : :class:`~psychopy.visual.Window`
+        Window this grid is being drawn to. The stimulus instance will
+        allocate its required resources using that Windows context. In many
+        cases, a stimulus instance cannot be drawn on different windows
+        unless those windows share the same OpenGL context, which permits
+        resources to be shared between them.
+    size : list, tuple
+        Size of the grid, corresponds to `fieldSize` in :class:`~psychopy.visual.ElementArray`
+    pos : list, tuple
+        Position of the centre of the grid, corresponds to `fieldPos` in :class:`~psychopy.visual.ElementArray`
+    cellSize : list, tuple
+        Size of each cell within the grid, in the same units as the grid.
+    units : list, tuple
+        Spatial units in which to define size, pos and cellSize
+    lineWidth : float
+        Value between 0 and 1 determining the width of the grid lines relative to the size of one cell, with 1.0
+        representing half of the cell size (meaning the lines cover the entire cell) and 0.0 being an invisible line.
+    borderColor : list, tuple or :class:`~psychopy.colors.Color`
+        Color of the grid lines.
+    fillColor : list, tuple or :class:`~psychopy.colors.Color`
+        Color of the grid's background, set to None for a transparent background.
+    """
     def __init__(self, win,
-                 size=None, pos=(0, 0), cellSize=None, lineWidth=None, units=None,
-                 borderColor='white', fillColor=None):
+                 size=None, pos=(0, 0), cellSize=None, units=None,
+                 lineWidth=None, borderColor='white', fillColor=None):
         # Do dynamic defaults
         if units is None:
             # Default units is just from window
