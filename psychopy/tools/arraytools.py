@@ -396,11 +396,15 @@ def createLumPattern(patternType, res, texParams=None, maskParams=None):
         invVar = (1.0 / maskStdev) ** 2.0
         intensity = numpy.exp(-rad ** 2.0 / (2.0 * invVar)) * 2 - 1
     elif patternType == "cross":
+        if "lineWidth" in allMaskParams:
+            w = allMaskParams['lineWidth']
+        else:
+            w = 0.2
         X, Y = numpy.mgrid[-1:1:1j * res, -1:1:1j * res]
-        tfNegCross = (((X < -0.2) & (Y < -0.2)) |
-                      ((X < -0.2) & (Y > 0.2)) |
-                      ((X > 0.2) & (Y < -0.2)) |
-                      ((X > 0.2) & (Y > 0.2)))
+        tfNegCross = (((X < -w) & (Y < -w)) |
+                      ((X < -w) & (Y > w)) |
+                      ((X > w) & (Y < -w)) |
+                      ((X > w) & (Y > w)))
         # tfNegCross == True at places where the cross is transparent,
         # i.e. the four corners
         intensity = numpy.where(tfNegCross, -1, 1)
