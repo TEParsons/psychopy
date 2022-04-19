@@ -588,7 +588,6 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
                             eval(evalStr)
             # Update sizer
             if isChanged:
-                self.sizer.SetEmptyCellSize((0, 0))
                 self.sizer.Layout()
                 if isinstance(self.dlg, wx.Dialog):
                     self.dlg.Fit()
