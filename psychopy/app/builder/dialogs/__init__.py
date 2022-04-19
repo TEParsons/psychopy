@@ -40,10 +40,9 @@ codeSyntaxOkay = wx.Colour(220, 250, 220, 255)  # light green
 from ..localizedStrings import _localizedDialogs as _localized
 
 
-class ParamCtrls():
+class ParamCtrls(wx.Panel):
 
-    def __init__(self, dlg, label, param, parent, fieldName,
-                 browse=False, noCtrls=False, advanced=False, appPrefs=None):
+    def __init__(self, parent, param, fieldName, labelWidth=150, extrasWidth=100):
         """Create a set of ctrls for a particular Component Parameter, to be
         used in Component Properties dialogs. These need to be positioned
         by the calling dlg.
@@ -70,9 +69,18 @@ class ParamCtrls():
         tweaked (e.g., add '$'). Component._localized.keys() are
         `fieldName`s, and .values() are `label`s.
         """
-        super(ParamCtrls, self).__init__()
+        # Initialise as panel
+        wx.Panel.__init__(self, parent)
+        # Setup sizers
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+        self.lblSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.lblSizer, flag=wx.EXPAND)
+        self.ctrlSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.ctrlSizer, flag=wx.EXPAND)
+
         self.param = param
-        self.dlg = dlg
+        self.dlg = parent.dlg
         self.dpi = self.dlg.dpi
         self.valueWidth = self.dpi * 3.5
         # try to find the experiment
@@ -94,13 +102,10 @@ class ParamCtrls():
         # we need the following:
         self.nameCtrl = self.valueCtrl = self.typeCtrl = None
         self.updateCtrl = self.browseCtrl = None
-        if noCtrls:
-            return  # we don't need to do any more
 
-        if type(param.val) == numpy.ndarray:
-            initial = param.val.tolist()  # convert numpy arrays to lists
-        label = _translate(label)
-        self.nameCtrl = wx.StaticText(parent, -1, label, size=wx.DefaultSize)
+        self.nameCtrl = wx.StaticText(self, label=param.label)
+        # Add value ctrl to sizer
+        self.lblSizer.Add(self.nameCtrl, border=0, flag=wx.ALL | wx.ALIGN_BOTTOM)
 
         if fieldName == 'Use version':
             # _localVersionsCache is the default (faster) when creating
@@ -113,12 +118,12 @@ class ParamCtrls():
 
         if param.inputType == "single":
             # Create single line string control
-            self.valueCtrl = paramCtrls.SingleLineCtrl(parent,
+            self.valueCtrl = paramCtrls.SingleLineCtrl(self,
                                                        val=str(param.val), valType=param.valType,
                                                        fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         elif param.inputType == 'multi':
             # Create multiline string control
-            self.valueCtrl = paramCtrls.MultiLineCtrl(parent,
+            self.valueCtrl = paramCtrls.MultiLineCtrl(self,
                                                       val=str(param.val), valType=param.valType,
                                                       fieldName=fieldName, size=wx.Size(self.valueWidth, 144))
             # Set focus if field is text of a Textbox or Text component
@@ -126,61 +131,67 @@ class ParamCtrls():
                 self.valueCtrl.SetFocus()
         elif param.inputType == 'spin':
             # Create single line string control
-            self.valueCtrl = paramCtrls.SingleLineCtrl(parent,
+            self.valueCtrl = paramCtrls.SingleLineCtrl(self,
                                                        val=str(param.val), valType=param.valType,
                                                        fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
             # Will have to disable spinCtrl until we have a dropdown for inputType, sadly
-            # self.valueCtrl = paramCtrls.IntCtrl(parent,
+            # self.valueCtrl = paramCtrls.IntCtrl(self,
             #                                     val=param.val, valType=param.valType,
             #                                     fieldName=fieldName,size=wx.Size(self.valueWidth, 24),
             #                                     limits=param.allowedVals)
         elif param.inputType == 'choice':
-            self.valueCtrl = paramCtrls.ChoiceCtrl(parent,
+            self.valueCtrl = paramCtrls.ChoiceCtrl(self,
                                                    val=str(param.val), valType=param.valType, choices=param.allowedVals,
                                                    fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         elif param.inputType == 'multiChoice':
-            self.valueCtrl = paramCtrls.MultiChoiceCtrl(parent, valType=param.valType,
+            self.valueCtrl = paramCtrls.MultiChoiceCtrl(self, valType=param.valType,
                                                         vals=param.val, choices=param.allowedVals, fieldName=fieldName,
                                                         size=wx.Size(self.valueWidth, -1))
         elif param.inputType == 'bool':
-            self.valueCtrl = paramCtrls.BoolCtrl(parent,
+            self.valueCtrl = paramCtrls.BoolCtrl(self,
                                                  name=fieldName, size=wx.Size(self.valueWidth, 24))
             self.valueCtrl.SetValue(bool(param))
-        elif param.inputType == 'file' or browse:
-            self.valueCtrl = paramCtrls.FileCtrl(parent,
+        elif param.inputType == 'file':
+            self.valueCtrl = paramCtrls.FileCtrl(self,
                                                  val=str(param.val), valType=param.valType,
                                                  fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
             self.valueCtrl.allowedVals = param.allowedVals
         elif param.inputType == 'fileList':
-            self.valueCtrl = paramCtrls.FileListCtrl(parent,
+            self.valueCtrl = paramCtrls.FileListCtrl(self,
                                                      choices=param.val, valType=param.valType,
                                                      size=wx.Size(self.valueWidth, 100), pathtype="rel")
         elif param.inputType == 'table':
-            self.valueCtrl = paramCtrls.TableCtrl(parent, val=param.val, valType=param.valType,
+            self.valueCtrl = paramCtrls.TableCtrl(self, val=param.val, valType=param.valType,
                                                   fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         elif param.inputType == 'color':
-            self.valueCtrl = paramCtrls.ColorCtrl(parent,
+            self.valueCtrl = paramCtrls.ColorCtrl(self,
                                                   val=param.val, valType=param.valType,
                                                   fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         elif param.inputType == 'dict':
-            self.valueCtrl = paramCtrls.DictCtrl(parent,
+            self.valueCtrl = paramCtrls.DictCtrl(self,
                                                  val=self.exp.settings.getInfo(), valType=param.valType,
                                                  fieldName=fieldName)
         elif param.inputType == 'inv':
-            self.valueCtrl = paramCtrls.InvalidCtrl(parent,
+            self.valueCtrl = paramCtrls.InvalidCtrl(self,
                                                     val=str(param.val), valType=param.valType,
                                                     fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         else:
-            self.valueCtrl = paramCtrls.SingleLineCtrl(parent,
+            self.valueCtrl = paramCtrls.SingleLineCtrl(self,
                                                        val=str(param.val), valType=param.valType,
                                                        fieldName=fieldName,size=wx.Size(self.valueWidth, 24))
             logging.warn(f"Parameter {fieldName} has unrecognised inputType \"{param.inputType}\"")
+
+        # Add value ctrl to sizer
+        if hasattr(self.valueCtrl, '_szr'):
+            self.ctrlSizer.Add(self.valueCtrl._szr, proportion=1, border=3, flag=wx.ALL | wx.EXPAND)
+        else:
+            self.ctrlSizer.Add(self.valueCtrl, proportion=1, border=3, flag=wx.ALL | wx.EXPAND)
 
         # if fieldName == 'Experiment info':
         #     # for expInfo convert from a string to the list-of-dicts
         # val = self.expInfoToListWidget(param.val)
         #     self.valueCtrl = dialogs.ListWidget(
-        #         parent, val, order=['Field', 'Default'])
+        #         self, val, order=['Field', 'Default'])
         if hasattr(self.valueCtrl, 'SetToolTip'):
             self.valueCtrl.SetToolTip(wx.ToolTip(_translate(param.hint)))
         if len(param.allowedVals) == 1 or param.readOnly:
@@ -196,12 +207,13 @@ class ParamCtrls():
         # create the type control
         if len(param.allowedTypes):
             # are there any components with non-empty allowedTypes?
-            self.typeCtrl = wx.Choice(parent, choices=param.allowedTypes)
+            self.typeCtrl = wx.Choice(self, choices=param.allowedTypes, size=(extrasWidth, -1))
             self.typeCtrl._choices = copy.copy(param.allowedTypes)
             index = param.allowedTypes.index(param.valType)
             self.typeCtrl.SetSelection(index)
             if len(param.allowedTypes) == 1:
                 self.typeCtrl.Disable()  # visible but can't be changed
+            self.ctrlSizer.Add(self.typeCtrl, border=3, flag=wx.ALL | wx.ALIGN_CENTER)
 
         # create update control
         if param.allowedUpdates is not None and len(param.allowedUpdates):
@@ -221,7 +233,7 @@ class ParamCtrls():
                         routineName, static.params['name'])
                     allowedUpdates.append(msg + fullName)
                     updateLabels.append(localizedMsg + fullName)
-            self.updateCtrl = wx.Choice(parent, choices=updateLabels)
+            self.updateCtrl = wx.Choice(self, choices=updateLabels, size=(extrasWidth, -1))
             # stash non-localized choices to allow retrieval by index:
             self.updateCtrl._choices = copy.copy(allowedUpdates)
             # If parameter isn't in list, default to the first choice
@@ -231,6 +243,7 @@ class ParamCtrls():
             index = allowedUpdates.index(param.updates)
             # set by integer index, not string value
             self.updateCtrl.SetSelection(index)
+            self.ctrlSizer.Add(self.updateCtrl, border=3, flag=wx.ALL | wx.EXPAND)
 
         if param.allowedUpdates != None and len(param.allowedUpdates) == 1:
             self.updateCtrl.Disable()  # visible but can't be changed
@@ -462,13 +475,12 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
             self.dlg = dlg
             self.app = self.dlg.app
             # Setup sizer
-            self.sizer = wx.GridBagSizer(0, 0)
-            self.SetSizer(self.sizer)
-            # Add empty row for spacing
-            self.sizer.Add(wx.StaticText(self, label=""), (0, 0))
+            self.border = wx.BoxSizer()
+            self.SetSizer(self.border)
+            self.sizer = wx.BoxSizer(wx.VERTICAL)
+            self.border.Add(self.sizer, border=12, proportion=1, flag=wx.ALL | wx.EXPAND)
             # Add controls
             self.ctrls = {}
-            self.row = 1
             # Sort params
             sortedParams = OrderedDict(params)
             for name in reversed(self.parent.element.order):
@@ -495,33 +507,19 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
             # Make controls
             for name, param in sortedParams.items():
                 self.addParam(name, param)
-            # Add growable
-            self.sizer.AddGrowableCol(1, 1)
+            self.Layout()
             # Check depends
             self.checkDepends()
 
         def addParam(self, name, param):
             # Make ctrl
-            self.ctrls[name] = ParamCtrls(self.dlg, param.label, param, self, name)
-            # Add value ctrl
-            _flag = wx.EXPAND | wx.ALL
-            if hasattr(self.ctrls[name].valueCtrl, '_szr'):
-                self.sizer.Add(self.ctrls[name].valueCtrl._szr, (self.row, 1), border=6, flag=_flag)
-            else:
-                self.sizer.Add(self.ctrls[name].valueCtrl, (self.row, 1), border=6, flag=_flag)
-            # Add other ctrl stuff
-            _flag = wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-            self.sizer.Add(self.ctrls[name].nameCtrl, (self.row, 0), (1, 1), border=5, flag=_flag)
-            if self.ctrls[name].typeCtrl:
-                self.sizer.Add(self.ctrls[name].typeCtrl, (self.row, 2), border=5, flag=_flag)
-            if self.ctrls[name].updateCtrl:
-                self.sizer.Add(self.ctrls[name].updateCtrl, (self.row, 3), border=5, flag=_flag)
+            self.ctrls[name] = ParamCtrls(self, param=param, fieldName=name)
+            # Add ctrl
+            self.sizer.Add(self.ctrls[name], border=6, flag=wx.ALL | wx.EXPAND)
             # Link to depends callback
             self.ctrls[name].setChangesCallback(self.doValidate)
             if name == 'name':
                 self.ctrls[name].valueCtrl.SetFocus()
-            # Iterate row
-            self.row += 1
 
         def addStartStopCtrl(self, params):
             # Make controls
@@ -529,13 +527,11 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
             # Add to dict of ctrls
             self.ctrls.update(panel.ctrls)
             # Add label
-            _flag = wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-            self.sizer.Add(panel.label, (self.row, 0), (1, 1), border=5, flag=_flag)
+            _flag = wx.LEFT | wx.RIGHT
+            self.sizer.Add(panel.label, border=5, flag=_flag)
             # Add ctrls
             _flag = wx.EXPAND | wx.ALL
-            self.sizer.Add(panel, (self.row, 1), border=6, flag=_flag)
-            # Iterate row
-            self.row += 1
+            self.sizer.Add(panel, border=6, flag=_flag)
 
             return panel
 
