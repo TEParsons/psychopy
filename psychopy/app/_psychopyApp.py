@@ -481,6 +481,8 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         parser.add_argument('-c', dest='coder', action="store_true")
         parser.add_argument('--runner', dest='runner', action="store_true")
         parser.add_argument('-r', dest='runner', action="store_true")
+        parser.add_argument('-l', dest='loghelp', action="store_true")
+        parser.add_argument('--loghelp', dest='loghelp', action="store_true")
         parser.add_argument('-x', dest='direct', action='store_true')
         view, args = parser.parse_known_args(sys.argv)
         # Check from filetype if any windows need to be open
@@ -491,7 +493,7 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             view.runner = True
             runlist = [file for file in args if file.endswith('.psyrun')]
         # If still no window specified, use default from prefs
-        if not any(getattr(view, key) for key in ['builder', 'coder', 'runner']):
+        if not any(getattr(view, key) for key in ['builder', 'coder', 'runner', 'loghelp']):
             if self.prefs.app['defaultView'] in view:
                 setattr(view, self.prefs.app['defaultView'], True)
             elif self.prefs.app['defaultView'] == 'all':
@@ -514,6 +516,11 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             self.showRunner()
             for exp in [file for file in args if file.endswith('.psyexp') or file.endswith('.py')]:
                 self.runner.panel.runFile(exp)
+        if view.loghelp:
+            loghelper = dialogs.LoggingHelper(self)
+            self.trackFrame(loghelper)
+            loghelper.Show()
+            return
 
         # send anonymous info to www.psychopy.org/usage.php
         # please don't disable this, it's important for PsychoPy's development

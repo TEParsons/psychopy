@@ -12,6 +12,10 @@ ListWidget:
     takes a list of dictionaries (with identical fields) and allows
     the user to add/remove entries. e.g. expInfo control
 """
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 import wx
 from wx.lib.newevent import NewEvent
@@ -630,6 +634,99 @@ class ListWidget(GlobSizer):
         for child in self.Children:
             if hasattr(child.Window, "Validate"):
                 child.Window.Validate()
+
+
+class LoggingHelper(wx.Frame):
+    def __init__(self, app):
+        wx.Frame.__init__(
+            self, parent=None,
+            id=wx.ID_ANY, title="PsychoPy Logging Helper", name="PsychoPy Logging Helper",
+            pos=wx.DefaultPosition, size=(720, 480),
+            style=wx.DEFAULT_FRAME_STYLE
+        )
+        self.SetBackgroundColour("white")
+        self.app = app
+        self.frameType = "loghelp"
+        self.filename = None
+        # Setup sizer
+        self.border = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.border)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.border.Add(self.sizer, proportion=1, border=12, flag=wx.ALL | wx.EXPAND)
+
+        # Add log file to stdout
+        self.logFile = Path(os.environ['APPDATA']) / 'psychopy3' / 'last_app_load.log'
+        self.stdout = logging.LogFile(f=str(self.logFile))
+        # Show log file contents
+        self.logViewerLbl = wx.StaticText(self, label="Log file contents:")
+        self.sizer.Add(self.logViewerLbl, border=3, flag=wx.ALL | wx.EXPAND)
+        self.logViewer = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.sizer.Add(self.logViewer, proportion=1, border=3, flag=wx.ALL | wx.EXPAND)
+        self.flush()
+        # Refresh button
+        self.refreshBtn = wx.Button(self, label="Reload logs")
+        self.refreshBtn.Bind(wx.EVT_BUTTON, self.flush)
+        self.sizer.Add(self.refreshBtn, border=3, flag=wx.ALL | wx.EXPAND)
+
+        # Add button to open prefs folder
+        self.openPrefsBtn = wx.Button(self, label="Open prefs / logs folder")
+        self.openPrefsBtn.Bind(wx.EVT_BUTTON, self.openLogFile)
+        self.sizer.Add(self.openPrefsBtn, border=3, flag=wx.ALL | wx.EXPAND)
+
+        self.sizer.AddSpacer(6)
+
+        # Try frames panel
+        self.tryFramesLbl = wx.StaticText(self, label="Try opening PsychoPy windows:")
+        self.sizer.Add(self.tryFramesLbl, border=3, flag=wx.ALL | wx.EXPAND)
+        self.tryFrameSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.tryFrameSizer, border=3, flag=wx.ALL | wx.EXPAND)
+        # Frame type ctrl
+        self.frameTypeCtrl = wx.Choice(self, choices=["builder", "coder", "runner"])
+        self.frameTypeCtrl.SetStringSelection("builder")
+        self.tryFrameSizer.Add(self.frameTypeCtrl, proportion=1, border=3, flag=wx.ALL | wx.EXPAND)
+        # Try frame btn
+        self.tryFrameBtn = wx.Button(self, label="Try...")
+        self.tryFrameBtn.Bind(wx.EVT_BUTTON, self.tryFrame)
+        self.tryFrameSizer.Add(self.tryFrameBtn, border=3, flag=wx.ALL | wx.EXPAND)
+
+    def openLogFile(self, evt=None):
+        # Choose a command according to OS
+        if sys.platform in ['win32']:
+            comm = "explorer"
+        elif sys.platform in ['darwin']:
+            comm = "open"
+        elif sys.platform in ['linux', 'linux2']:
+            comm = "dolphin"
+        # Use command to open themes folder
+        folder = Path(os.environ['APPDATA']) / 'psychopy3'
+        subprocess.call(f"{comm} {folder}", shell=True)
+
+    def flush(self, evt=None):
+        self.stdout.logger.flush()
+        if self.logFile.is_file():
+            with open(str(self.logFile), "r") as f:
+                self.logViewer.SetValue(f.read())
+
+    def tryFrame(self, evt=None):
+        type = self.frameTypeCtrl.GetStringSelection()
+        frame = None
+
+        try:
+            if type == "builder":
+                frame = self.app.newBuilderFrame()
+            if type == "coder":
+                self.app.showCoder()
+                frame = self.app.coder
+            if type == "runner":
+                frame = self.app.newRunnerFrame()
+                frame.Show()
+        except BaseException as err:
+            logging.error(err)
+            wx.EndBusyCursor()
+            if frame is not None:
+                frame.Close()
+
+        self.flush()
 
 
 if __name__ == '__main__':
