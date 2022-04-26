@@ -194,16 +194,6 @@ class ParamCtrls():
             # only want anything that is valType code, or can be with $
             self.valueCtrl.SetValidator(CodeSnippetValidator(fieldName))
 
-        # create the type control
-        if len(param.allowedTypes):
-            # are there any components with non-empty allowedTypes?
-            self.typeCtrl = wx.Choice(parent, choices=param.allowedTypes)
-            self.typeCtrl._choices = copy.copy(param.allowedTypes)
-            index = param.allowedTypes.index(param.valType)
-            self.typeCtrl.SetSelection(index)
-            if len(param.allowedTypes) == 1:
-                self.typeCtrl.Disable()  # visible but can't be changed
-
         # create update control
         if param.allowedUpdates is not None and len(param.allowedUpdates):
             # updates = display-only version of allowed updates
@@ -229,6 +219,10 @@ class ParamCtrls():
             self.updateCtrl = UpdatesCtrl(parent, choices=updateLabels, initial=param.updates)
             # stash non-localized choices to allow retrieval by index:
             self.updateCtrl._choices = copy.copy(allowedUpdates)
+
+            # Make types ctrl
+            self.typeCtrl = TypeCtrl(parent, choices=param.allowedTypes, initial=param.valType)
+            self.typeCtrl.Show(bool(param.allowedTypes))
 
         if param.allowedUpdates != None and len(param.allowedUpdates) == 1:
             self.updateCtrl.Disable()  # visible but can't be changed
@@ -395,7 +389,7 @@ class UpdatesCtrl(IconCtrl):
         "set every repeat": icons.ButtonIcon(stem="everyrepeat", size=(16, 16)),
         "set every frame": icons.ButtonIcon(stem="everyframe", size=(16, 16)),
         "static": icons.ButtonIcon(stem="setduring", size=(16, 16)),
-        None: wx.Bitmap(),
+        None: icons.ButtonIcon(stem="cogwindow", size=(16, 16)),
     }
 
     tooltips = {
@@ -403,6 +397,30 @@ class UpdatesCtrl(IconCtrl):
         "set every repeat": _translate("Value will be set at the start of this routine, each time it repeats."),
         "set every frame": _translate("Value will be set every frame that the component is active."),
         "static": _translate("Value will be set during the static component '{}'"),
+        None: "",
+    }
+
+
+class TypeCtrl(IconCtrl):
+    """
+    Control for the valType of a parameter in a ParamNotebook.
+
+    Displays only the icon associated with the current choice, with a tooltip on hover. On click, opens a menu
+    with options listed by text and associated icons.
+    """
+    bitmaps = {
+        "str": icons.ButtonIcon(stem="valtype-str", size=(16, 16)),
+        "code": icons.ButtonIcon(stem="valtype-py", size=(16, 16)),
+        "color": icons.ButtonIcon(stem="valtype-color", size=(16, 16)),
+        "bool": icons.ButtonIcon(stem="valtype-bool", size=(16, 16)),
+        None: icons.ButtonIcon(stem="cogwindow", size=(16, 16)),
+    }
+
+    tooltips = {
+        "str": _translate("This parameter will be compiled to your code as a string"),
+        "code": _translate("This parameter will be compiled to your code as Python code"),
+        "color": _translate("This parameter will be compiled to your code as a color value"),
+        "bool": _translate("This parameter will be compiled to your code as a boolean (True/False)"),
         None: "",
     }
 
