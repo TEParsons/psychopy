@@ -959,7 +959,8 @@ class IconCtrl(wx.Button):
         """
         Open menu like in wx.Choice
         """
-        self.PopupMenu(self.menu)
+        w, h = self.GetSize()
+        self.PopupMenu(self.menu, (0, h))
 
     def onMenuSelect(self, evt=None):
         """
@@ -972,6 +973,11 @@ class IconCtrl(wx.Button):
         val = btn.GetItemLabel()
         # Set value
         self.setValue(val)
+        # Emit event
+        evt = wx.CommandEvent(wx.EVT_CHOICE.typeId)
+        evt.SetEventObject(self)
+        evt.SetString(val)
+        wx.PostEvent(self, evt)
 
     def setValue(self, value):
         """
@@ -1008,9 +1014,6 @@ class IconCtrl(wx.Button):
         if value in self.bitmaps:
             # If value is in bitmap dict, return from dict
             icn = self.bitmaps[value]
-        elif "set during" in value:
-            # If we're setting during a static component, return bitmap for static
-            icn = self.bitmaps["static"]
         else:
             # Otherwise, use fallback bitmap
             icn = self.bitmaps[None]
@@ -1024,10 +1027,6 @@ class IconCtrl(wx.Button):
         if value in self.tooltips:
             # If value is in tooltips dict, return from dict
             tt = self.tooltips[value]
-        elif "set during" in value:
-            # If we're setting during a static component, return tooltip for static
-            compName = value.replace("set during: ", "")
-            tt = self.tooltips["static"].format(compName)
         else:
             # Otherwise, use fallback
             tt = self.tooltips[None]
