@@ -210,6 +210,8 @@ class FormComponent(BaseVisualComponent):
                    "  size : {size},\n"
                    "  pos : {pos},\n"
                    "  style : {Style},\n"
+                   "  fillColor : {fillColor}, borderColor : {borderColor}, itemColor : {itemColor}, \n"
+                   "  responseColor : {responseColor}, markerColor : {markerColor}, colorSpace : {colorSpace},\n"
                    "  itemPadding : {Item Padding}\n"
                    "}});\n".format(**inits))
         buff.writeIndentedLines(initStr)
