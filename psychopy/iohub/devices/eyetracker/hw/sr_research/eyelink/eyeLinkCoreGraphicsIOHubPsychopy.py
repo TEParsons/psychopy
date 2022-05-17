@@ -16,36 +16,41 @@ import pylink
 
 
 class FixationTarget():
-    def __init__(self, psychopy_eyelink_graphics):
+    def __init__(self, psychopy_eyelink_graphics, target=None):
         win = psychopy_eyelink_graphics.window
         color_type = psychopy_eyelink_graphics.getCalibSetting(['color_type'])
         unit_type = psychopy_eyelink_graphics.getCalibSetting(['unit_type'])
 
-        outer_fill_color = outer_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_color'])
-        inner_fill_color = inner_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_color'])
+        if target is None:
+            # If not given a TargetStim, make one
+            outer_fill_color = outer_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_color'])
+            inner_fill_color = inner_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_color'])
 
-        if outer_fill_color is None:
-            outer_fill_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_fill_color'])
-            outer_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_line_color'])
-        if inner_fill_color is None:
-            inner_fill_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_fill_color'])
-            inner_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_line_color'])
+            if outer_fill_color is None:
+                outer_fill_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_fill_color'])
+                outer_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_line_color'])
+            if inner_fill_color is None:
+                inner_fill_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_fill_color'])
+                inner_line_color = psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_line_color'])
 
-        self.calibrationPoint = visual.TargetStim(
-            win, name="CP", style="circles",
-            radius=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_diameter']) / 2.0,
-            fillColor=outer_fill_color,
-            borderColor=outer_line_color,
-            lineWidth=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_stroke_width']),
-            innerRadius=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_diameter']) / 2.0,
-            innerFillColor=inner_fill_color,
-            innerBorderColor=inner_line_color,
-            innerLineWidth=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_stroke_width']),
-            pos=(0, 0),
-            units=unit_type,
-            colorSpace=color_type,
-            autoLog=False
-        )
+            target = visual.TargetStim(
+                win, name="CP", style="circles",
+                radius=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_diameter']) / 2.0,
+                fillColor=outer_fill_color,
+                borderColor=outer_line_color,
+                lineWidth=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'outer_stroke_width']),
+                innerRadius=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_diameter']) / 2.0,
+                innerFillColor=inner_fill_color,
+                innerBorderColor=inner_line_color,
+                innerLineWidth=psychopy_eyelink_graphics.getCalibSetting(['target_attributes', 'inner_stroke_width']),
+                pos=(0, 0),
+                units=unit_type,
+                colorSpace=color_type,
+                autoLog=False
+            )
+        else:
+            target.win = win
+        self.calibrationPoint = target
         self.calibrationPointOuter = self.calibrationPoint.outer
         self.calibrationPointInner = self.calibrationPoint.inner
 
@@ -305,7 +310,7 @@ class EyeLinkCoreGraphicsIOHubPsychopy(pylink.EyeLinkCustomDisplay):
     # on camera setup.
     IOHUB_HEARTBEAT_INTERVAL = 0.050
 
-    def __init__(self, eyetrackerInterface, calibration_args):
+    def __init__(self, eyetrackerInterface, calibration_args, target=None):
         pylink.EyeLinkCustomDisplay.__init__(self)
         self._eyetrackerinterface = eyetrackerInterface
         display = eyetrackerInterface._display_device
@@ -371,7 +376,7 @@ class EyeLinkCoreGraphicsIOHubPsychopy(pylink.EyeLinkCustomDisplay):
         self.blankdisplay = BlankScreen(self.window, self.getCalibSetting(['screen_background_color']))
         self.textmsg = TextLine(self)
         self.introscreen = IntroScreen(self)
-        self.fixationpoint = FixationTarget(self)
+        self.fixationpoint = FixationTarget(self, target=target)
         self.imagetitlestim = None
         self.eye_image = None
         self.state = None

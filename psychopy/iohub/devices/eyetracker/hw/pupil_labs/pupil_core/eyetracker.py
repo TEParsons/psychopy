@@ -189,7 +189,7 @@ class EyeTracker(EyeTrackerDevice):
         """
         return self._pupil_remote is not None
 
-    def runSetupProcedure(self, calibration_args: Optional[Dict] =None) -> int:
+    def runSetupProcedure(self, calibration_args: Optional[Dict] =None, target=None) -> int:
         """
         The runSetupProcedure method starts the Pupil Capture calibration choreography.
 
@@ -199,6 +199,9 @@ class EyeTracker(EyeTrackerDevice):
             aborted, or failed.
 
         :param calibration_args: This argument will be ignored and has only been added
+            for the purpose of compatibility with the Common Eye Tracker Interface
+
+        :param target: This argument will be ignored and has only been added
             for the purpose of compatibility with the Common Eye Tracker Interface
         
         :return:

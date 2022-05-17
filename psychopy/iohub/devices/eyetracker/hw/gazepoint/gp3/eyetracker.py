@@ -421,7 +421,7 @@ class EyeTracker(EyeTrackerDevice):
             return self._recording
         return False
 
-    def runSetupProcedure(self, calibration_args={}):
+    def runSetupProcedure(self, calibration_args={}, target=None):
         """
         Start the eye tracker calibration procedure.
         """
@@ -443,7 +443,7 @@ class EyeTracker(EyeTrackerDevice):
 
         else:
             from .gazepointCalibrationGraphics import GazepointPsychopyCalibrationGraphics
-            calibration = GazepointPsychopyCalibrationGraphics(self, calibration_args)
+            calibration = GazepointPsychopyCalibrationGraphics(self, calibration_args, target=target)
 
             calibration.runCalibration()
 

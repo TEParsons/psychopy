@@ -195,12 +195,12 @@ class EyeTracker(EyeTrackerDevice):
         Tracker Interface."""
         return EyeTrackerConstants.EYETRACKER_INTERFACE_METHOD_NOT_SUPPORTED
 
-    def runSetupProcedure(self, calibration_args={}):
+    def runSetupProcedure(self, calibration_args={}, target=None):
         """runSetupProcedure performs a calibration routine for the Tobii eye
         tracking system.
         """
         try:
-            genv = TobiiPsychopyCalibrationGraphics(self, calibration_args)
+            genv = TobiiPsychopyCalibrationGraphics(self, calibration_args, target=target)
 
             calibrationOK = genv.runCalibration()
 

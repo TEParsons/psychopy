@@ -21,7 +21,7 @@ class GazepointPsychopyCalibrationGraphics:
 
     _keyboard_key_index = KeyboardInputEvent.CLASS_ATTRIBUTE_NAMES.index('key')
 
-    def __init__(self, eyetrackerInterface, calibration_args):
+    def __init__(self, eyetrackerInterface, calibration_args, target=None):
         self._eyetracker = eyetrackerInterface
         self.screenSize = eyetrackerInterface._display_device.getPixelResolution()
         self.width = self.screenSize[0]
@@ -104,7 +104,7 @@ class GazepointPsychopyCalibrationGraphics:
             colorSpace=color_type)
         self.window.flip(clearBuffer=True)
 
-        self._createStim()
+        self._createStim(target=target)
         self._registerEventMonitors()
         self._lastMsgPumpTime = currentTime()
 
@@ -175,7 +175,7 @@ class GazepointPsychopyCalibrationGraphics:
             self._msg_queue = self._msg_queue[1:]
             return msg
 
-    def _createStim(self):
+    def _createStim(self, target=None):
         """
             outer_diameter: 35
             outer_stroke_width: 5
@@ -191,21 +191,27 @@ class GazepointPsychopyCalibrationGraphics:
         color_type = self.getCalibSetting('color_type')
         unit_type = self.getCalibSetting('unit_type')
 
-        self.calibrationPoint = visual.TargetStim(
-            self.window, name="CP", style="circles",
-            radius=self.getCalibSetting(['target_attributes', 'outer_diameter']) / 2.0,
-            fillColor=self.getCalibSetting(['target_attributes', 'outer_fill_color']),
-            borderColor=self.getCalibSetting(['target_attributes', 'outer_line_color']),
-            lineWidth=self.getCalibSetting(['target_attributes', 'outer_stroke_width']),
-            innerRadius=self.getCalibSetting(['target_attributes', 'inner_diameter']) / 2.0,
-            innerFillColor=self.getCalibSetting(['target_attributes', 'inner_fill_color']),
-            innerBorderColor=self.getCalibSetting(['target_attributes', 'inner_line_color']),
-            innerLineWidth=self.getCalibSetting(['target_attributes', 'inner_stroke_width']),
-            pos=(0, 0),
-            units=unit_type,
-            colorSpace=color_type,
-            autoLog=False
-        )
+        if target is None:
+            # If not given a target, make one
+            target = visual.TargetStim(
+                self.window, name="CP", style="circles",
+                radius=self.getCalibSetting(['target_attributes', 'outer_diameter']) / 2.0,
+                fillColor=self.getCalibSetting(['target_attributes', 'outer_fill_color']),
+                borderColor=self.getCalibSetting(['target_attributes', 'outer_line_color']),
+                lineWidth=self.getCalibSetting(['target_attributes', 'outer_stroke_width']),
+                innerRadius=self.getCalibSetting(['target_attributes', 'inner_diameter']) / 2.0,
+                innerFillColor=self.getCalibSetting(['target_attributes', 'inner_fill_color']),
+                innerBorderColor=self.getCalibSetting(['target_attributes', 'inner_line_color']),
+                innerLineWidth=self.getCalibSetting(['target_attributes', 'inner_stroke_width']),
+                pos=(0, 0),
+                units=unit_type,
+                colorSpace=color_type,
+                autoLog=False
+            )
+        else:
+            # If given a target, make sure it is in the correct window
+            target.win = self.window
+        self.calibrationPoint = target
         self.calibrationPointINNER = self.calibrationPoint.inner
         self.calibrationPointOUTER = self.calibrationPoint.outer
 

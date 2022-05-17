@@ -15,6 +15,7 @@ class EyetrackerCalibrationRoutine(BaseStandaloneRoutine):
     def __init__(self, exp, name='calibration',
                  progressMode="time", targetDur=1.5, expandDur=1, expandScale=1.5,
                  movementAnimation=True, movementDur=1.0, targetDelay=1.0,
+                 targetType='circles', targetName="",
                  innerFillColor='green', innerBorderColor='black', innerBorderWidth=2, innerRadius=0.0035,
                  fillColor='', borderColor="black", borderWidth=2, outerRadius=0.01,
                  colorSpace="rgb", units='from exp settings',
@@ -52,7 +53,8 @@ class EyetrackerCalibrationRoutine(BaseStandaloneRoutine):
                                      label=_translate("Text Color"))
         # Target Params
         self.order += [
-            "targetStyle",
+            "targetType",
+            "targetName",
             "fillColor",
             "borderColor",
             "innerFillColor",
@@ -63,6 +65,91 @@ class EyetrackerCalibrationRoutine(BaseStandaloneRoutine):
             "outerRadius",
             "innerRadius",
         ]
+
+        self.params['targetType'] = Param(
+            targetType, valType='str', inputType='choice', categ='Target',
+            allowedVals=["circles", "cross", "smiley", "custom"],
+            hint=_translate("What kind of TargetStim should the calibration procedure use?"),
+            label=_translate("Target Type")
+        )
+
+        self.depends.append(
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "== 'custom'",  # val to check for
+             "param": "targetName",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             }
+        )
+
+        self.params['targetName'] = Param(
+            targetName, valType='code', inputType='single', categ='Target',
+            hint=_translate("Specify the name of an already existing TargetStim object"),
+            label=_translate("Target Stimulus")
+        )
+
+        self.depends.extend([
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "innerFillColor",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "innerBorderColor",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "fillColor",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "borderColor",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "colorSpace",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "borderWidth",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "innerBorderWidth",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "outerRadius",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "innerRadius",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+            {"dependsOn": "targetType",  # must be param name
+             "condition": "!= 'custom'",  # val to check for
+             "param": "units",  # param property to alter
+             "true": "show",  # what to do with param if condition is True
+             "false": "hide",  # permitted: hide, show, enable, disable
+             },
+        ])
 
         self.params['innerFillColor'] = Param(innerFillColor,
                                      valType='color', inputType="color", categ='Target',
@@ -229,24 +316,31 @@ class EyetrackerCalibrationRoutine(BaseStandaloneRoutine):
         BaseStandaloneRoutine.writeMainCode(self, buff)
 
         # Make target
-        code = (
-            "# define target for %(name)s\n"
-            "%(name)sTarget = visual.TargetStim(win, \n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(1, relative=True)
-        code = (
-                "name='%(name)sTarget',\n"
-                "radius=%(outerRadius)s, fillColor=%(fillColor)s, borderColor=%(borderColor)s, lineWidth=%(borderWidth)s,\n"
-                "innerRadius=%(innerRadius)s, innerFillColor=%(innerFillColor)s, innerBorderColor=%(innerBorderColor)s, innerLineWidth=%(innerBorderWidth)s,\n"
-                "colorSpace=%(colorSpace)s, units=%(units)s\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-1, relative=True)
-        code = (
-            ")"
-        )
-        buff.writeIndentedLines(code % inits)
+        if self.params['targetType'] != 'custom':
+            code = (
+                "# define target for %(name)s\n"
+                "%(name)sTarget = visual.TargetStim(win, \n"
+            )
+            buff.writeIndentedLines(code % inits)
+            buff.setIndentLevel(1, relative=True)
+            code = (
+                    "name='%(name)sTarget', style=%(targetType)s,\n"
+                    "radius=%(outerRadius)s, fillColor=%(fillColor)s, borderColor=%(borderColor)s, lineWidth=%(borderWidth)s,\n"
+                    "innerRadius=%(innerRadius)s, innerFillColor=%(innerFillColor)s, innerBorderColor=%(innerBorderColor)s, innerLineWidth=%(innerBorderWidth)s,\n"
+                    "colorSpace=%(colorSpace)s, units=%(units)s\n"
+            )
+            buff.writeIndentedLines(code % inits)
+            buff.setIndentLevel(-1, relative=True)
+            code = (
+                ")\n"
+            )
+            buff.writeIndentedLines(code % inits)
+        else:
+            code = (
+                "%(name)sTarget = %(targetName)s\n"
+            )
+            buff.writeIndentedLines(code % inits)
+
         # Make config object
         code = (
             "# define parameters for %(name)s\n"
