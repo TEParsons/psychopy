@@ -937,6 +937,7 @@ class Experiment:
 
         # Get resources for components
         compResources = []
+        constantParams = {}
         handled = False
         for thisEntry in self.flow:
             if thisEntry.getType() == 'Routine':
@@ -955,9 +956,17 @@ class Experiment:
                         # then check if it's a valid path and not yet included
                         if thisFile and thisFile not in compResources:
                             compResources.append(thisFile)
+                        # take note if param is constant and points to a resource
+                        if thisFile and thisParam.updates == "constant":
+                            constantParams[paramName] = thisParam
         if handled:
             # If resources are handled, clear all component resources
             compResources = []
+            # If any params were set to constant, load those on init regardless
+            for paramName, thisParam in constantParams.items():
+                thisFile = getPaths(thisParam.val)
+                if thisFile and thisFile not in compResources:
+                    compResources.append(thisFile)
 
         # Get resources for loops
         loopResources = []
