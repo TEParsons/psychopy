@@ -13,7 +13,7 @@ from .. import dialogs
 from .functions import logInPavlovia
 from psychopy.app.pavlovia_ui.project import syncProject
 from .search import SearchFrame
-from .project import ProjectEditor
+from .project import ProjectEditor, KnownProjectsViewer
 from psychopy.localization import _translate
 from psychopy.projects import pavlovia
 from psychopy.app.pavlovia_ui import sync
@@ -70,9 +70,16 @@ class PavloviaMenu(wx.Menu):
                            _translate("New...\t{}").format(keys['projectsNew']))
         parent.Bind(wx.EVT_MENU, self.onNew, id=self.newBtn.GetId())
 
+        # sync
         self.syncBtn = self.Append(wx.ID_ANY,
                            _translate("Sync\t{}").format(keys['projectsSync']))
         parent.Bind(wx.EVT_MENU, self.onSync, id=self.syncBtn.GetId())
+
+        # known projects
+        self.knownProjBtn = self.Append(wx.ID_ANY, _translate(
+            "Known Projects..."
+        ))
+        parent.Bind(wx.EVT_MENU, self.onKnownProjects, id=self.knownProjBtn.GetId())
 
     def addToSubMenu(self, name, menu, function):
         item = menu.Append(wx.ID_ANY, name)
@@ -136,3 +143,10 @@ class PavloviaMenu(wx.Menu):
                                                     "You need to log in"
                                                     " to create a project"))
             infoDlg.Show()
+
+    def onKnownProjects(self, evt=None):
+        """
+        View list of projects known to PsychoPy
+        """
+        dlg = KnownProjectsViewer(self.parent)
+        dlg.Show()

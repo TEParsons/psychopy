@@ -27,7 +27,9 @@ from wx.lib import scrolledpanel as scrlpanel
 
 from .. import utils
 from ..themes import icons
+from ...preferences.preferences import prefs
 from ...projects.pavlovia import PavloviaProject
+from ...tools import filetools
 
 try:
     import wx.lib.agw.hyperlink as wxhl  # 4.0+
@@ -829,3 +831,51 @@ class ProjectRecreator(wx.Dialog):
                                           "yet implemented")
         else:
             return -1
+
+
+class KnownProjectsViewer(wx.Dialog):
+    """
+    Interface for viewing list of projects currently known to PsychoPy, rather than user having to navigate to hidden
+    folder and interpret a json.
+    """
+    def __init__(self, parent=None):
+        # Load known projects file
+        filename = Path(prefs.paths['userPrefsDir']) / "pavlovia" / "projects.json"
+        self.projects = filetools.KnownProjects(filename)
+        # Create dlg
+        wx.Dialog.__init__(self, size=(720, 480), parent=parent)
+        # Setup sizer
+        self.border = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.border)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.border.Add(self.sizer, proportion=1, border=12, flag=wx.EXPAND | wx.ALL)
+        wrapList = []
+        # Add instructions
+        self.infoTop = wx.StaticText(self, label=_translate(
+            "The following projects are known by PsychoPy to exist on this computer:"
+        ))
+        self.sizer.Add(self.infoTop, border=6, flag=wx.EXPAND | wx.ALL)
+        wrapList.append(self.infoTop)
+        # Add a list ctrl
+        self.list = wx.ListCtrl(self, style=wx.LC_REPORT)
+        self.sizer.Add(self.list, proportion=1, border=6, flag=wx.EXPAND | wx.ALL)
+        # Setup list ctrl
+        self.list.AppendColumn(_translate("Name"), width=200)
+        self.list.AppendColumn(_translate("Local Root"), width=450)
+        # Add projets
+        for proj in self.projects.values():
+            row = [proj['id'], proj['localRoot']]
+            self.list.Append(row)
+        # Add info underneath
+        self.infoBottom = wx.StaticText(self, label=_translate(
+            "If you have a local project which is not in this list, you can let PsychoPy know where it is by finding "
+            "the online project in the Pavlovia Search dialog and setting its \"Local Root\" to the folder the local "
+            "project is stored in."
+        ))
+        self.sizer.Add(self.infoBottom, border=6, flag=wx.EXPAND | wx.ALL)
+        wrapList.append(self.infoBottom)
+
+        # Layout
+        self.sizer.Layout()
+        for item in wrapList:
+            item.Wrap(self.GetSize()[0] - 36)
