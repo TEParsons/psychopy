@@ -1838,12 +1838,7 @@ class DlgNewRoutine(wx.Dialog):
         self.templateCtrl.Bind(wx.EVT_BUTTON, self.showTemplatesContextMenu)
         self.sizer.Add(self.templateCtrl, border=6, flag=wx.ALL | wx.ALIGN_TOP | wx.EXPAND)
         # Buttons
-        self.btnSizer = wx.StdDialogButtonSizer()
-        self.CANCEL = wx.Button(self, wx.ID_CANCEL, "Cancel")
-        self.btnSizer.AddButton(self.CANCEL)
-        self.OK = wx.Button(self, wx.ID_OK, "OK")
-        self.btnSizer.AddButton(self.OK)
-        self.btnSizer.Realize()
+        self.btnSizer = self.CreateButtonSizer(wx.OK | wx.CANCEL)
         self.border.Add(self.btnSizer, border=12, flag=wx.ALL | wx.ALIGN_RIGHT)
 
         self.Fit()
