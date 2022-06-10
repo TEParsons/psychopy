@@ -17,7 +17,7 @@ import ctypes
 import weakref
 import math
 
-from psychopy import core, logging
+from psychopy import core, logging, layout
 from psychopy.clock import Clock, getTime
 from psychopy.tools.attributetools import logAttrib, setAttribute
 from psychopy.tools.filetools import pathToString
@@ -120,6 +120,7 @@ class MovieStim(BaseVisualStim, ColorMixin, ContainerMixin):
         self.pos = pos
         self.ori = ori
         self.size = size
+        self._unsized = size is None
         self.depth = depth
         self.opacity = opacity
         self.anchor = anchor
@@ -196,6 +197,9 @@ class MovieStim(BaseVisualStim, ColorMixin, ContainerMixin):
         """
         self._filename = filename
         self._player.load(self._filename)
+        # Update size default now we have metadata
+        if self._unsized:
+            self.size = layout.Size(self._player.getMetadata().size, 'pix', self.win)
         self._player.start()
         self.updateVideoFrame()  # make sure the first frame is shown
 
