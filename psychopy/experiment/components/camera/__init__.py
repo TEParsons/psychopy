@@ -98,7 +98,7 @@ class CameraComponent(BaseComponent):
                 # On first call, may get a KeyError as some components aren't made yet, in this case just skip
                 return (
                     [None],
-                    ["default"]
+                    ["highest"]
                 )
             # Get list of camera specs
             cams = getCameras()
@@ -148,7 +148,7 @@ class CameraComponent(BaseComponent):
                 # On first call, may get a KeyError as some components aren't made yet, in this case just skip
                 return (
                     [None],
-                    ["default"]
+                    ["highest"]
                 )
             # Get list of camera specs
             cams = getCameras()
