@@ -29,7 +29,7 @@ class CameraComponent(BaseComponent):
             stopType='duration (s)', stopVal='', durationEstim='',
             device="default", mic="default",
             # Hardware
-            resolution="", frameRate="",
+            resolution="(960, 540)", frameRate="30",
             # Data
             saveFile=True,
             outputFileType="mp4", codec="h263",
