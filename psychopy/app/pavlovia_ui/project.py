@@ -641,6 +641,7 @@ class DetailsPanel(wx.Panel):
                 dlg.ShowModal()
             # Set project again to trigger a refresh
             self.project = self.project
+            pavlovia.knownProjects.save()
         if obj == self.description and self.project.editable:
             self.project['description'] = self.description.Value
             self.project.save()
