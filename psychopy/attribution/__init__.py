@@ -12,6 +12,20 @@ def findAuthors(node, context, lastParent):
     if not hasattr(node, "body"):
         return
 
+    if lastParent == "module":
+        # Detect types of module
+        for thisType, path in {
+            "demo": "psychopy/demos",
+            "component": "psychopy/experiment/components",
+            "test": "psychopy/tests",
+        }.items():
+            try:
+                context.relative_to(path)
+            except ValueError:
+                pass
+            else:
+                lastParent = thisType
+
     for subnode in node.body:
         if isinstance(subnode, ast.Assign):
             # If node is an assignment, check for the __author__ tag
