@@ -53,9 +53,9 @@ for file in libroot.rglob("*.py"):
         script = f.read()
     # Mark module if current file is an init file
     if file.stem == "__init__":
-        module = file.parent.relative_to(libroot)
+        module = file.parent.relative_to(libroot.parent)
     else:
-        module = file.relative_to(libroot)
+        module = file.relative_to(libroot.parent)
     # Parse file
     tree = ast.parse(script)
     # Recursively populate `tags` with list of __author__ tags
