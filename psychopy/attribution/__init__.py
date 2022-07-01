@@ -1,7 +1,7 @@
 import ast
 from pathlib import Path
 from .authors import authors
-from ._base import Credit
+from ._base import Credit, Author
 
 tags = []
 
@@ -61,8 +61,17 @@ for file in libroot.rglob("*.py"):
     # Recursively populate `tags` with list of __author__ tags
     findAuthors(tree, context=module, lastParent="module")
 
-for author in authors:
-    for tag in tags:
-        if author == tag["name"]:
-            cred = Credit(tag["name"], context=tag['context'], type=tag['type'])
-            author.credit(cred)
+
+for tag in tags:
+    authorMatch = [auth == tag['name'] for auth in authors]
+    if any(authorMatch):
+        # If author recognised, use it
+        author = authors[authorMatch.index(True)]
+    else:
+        # If unrecognised name, add a new author object
+        names = tag['name'].split(" ")
+        author = Author(forename=names[0], surname=names[-1])
+        authors.append(author)
+    # Credit author
+    cred = Credit(tag["name"], context=tag['context'], type=tag['type'])
+    author.credit(cred)
