@@ -73,5 +73,5 @@ for tag in tags:
         author = Author(forename=names[0], surname=names[-1])
         authors.append(author)
     # Credit author
-    cred = Credit(tag["name"], context=tag['context'], type=tag['type'])
+    cred = Credit(context=tag['context'], type=tag['type'])
     author.credit(cred)

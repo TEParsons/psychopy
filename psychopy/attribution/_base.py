@@ -159,10 +159,9 @@ class Author:
 
 
 class Credit:
-    def __init__(self, name, context, type):
-        self.name = name
+    def __init__(self, context, type):
         self.context = context
         self.type = type
 
     def __repr__(self):
-        return f"<{type(self).__name__}: {self.type}, {self.context} by {self.name}>"
+        return (f"<{self.type.title()}: {self.context}>")
