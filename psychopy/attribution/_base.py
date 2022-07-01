@@ -17,7 +17,7 @@ class Author:
     other : dict
         Any other links or details the author may want included, such as a website link or Twitter username.
     """
-    def __init__(self, surname, forename, middlenames=None, email=None, github=None, orcid=None, other=None):
+    def __init__(self, surname, forename, middlenames=[], email="", github="", orcid="", other=None):
         assert isinstance(surname, str) and isinstance(forename, str), (
             "When crediting an author, surname and forename must be strings."
         )
@@ -36,12 +36,9 @@ class Author:
         # Store email if given
         self.email = email
         # Store ORCiD if given
-        if orcid is None:
-            self.orcid = None
-        else:
-            self.orcid = str(orcid).replace("-", "")
+        self.orcid = str(orcid).replace("-", "")
         # Store GitHub if given
-        self.github = github
+        self.github = str(github).replace("@", "")
         # Store any other given
         self.other = other or {}
 
