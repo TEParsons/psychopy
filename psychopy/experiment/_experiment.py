@@ -35,7 +35,7 @@ from .loops import TrialHandler, LoopInitiator, \
 from .params import _findParam, Param, legacyParams
 from psychopy.experiment.routines._base import Routine, BaseStandaloneRoutine
 from psychopy.experiment.routines import getAllStandaloneRoutines
-from . import utils, py2js
+from . import utils, py2js, branching
 from .components import getComponents, getAllComponents
 
 from psychopy.localization import _translate
@@ -733,6 +733,7 @@ class Experiment:
         # fetch flow settings
         flowNode = root.find('Flow')
         loops = {}
+        forks = {}
         for elementNode in flowNode:
             if elementNode.tag == "LoopInitiator":
                 loopType = elementNode.get('loopType')
@@ -780,6 +781,40 @@ class Experiment:
             elif elementNode.tag == "LoopTerminator":
                 self.flow.append(LoopTerminator(
                     loop=loops[elementNode.get('name')]))
+            elif elementNode.tag == "ForkInitiator":
+                # Create fork
+                forks[elementNode.get("name")] = branching.Fork(
+                    exp=self,
+                    name=elementNode.get("name")
+                )
+                # Create & append fork initiator
+                self.flow.append(
+                    branching.ForkInitiator(forks[elementNode.get("name")])
+                )
+            elif elementNode.tag == "ForkTerminator":
+                self.flow.append(
+                    branching.ForkTerminator(fork=forks[elementNode.get("name")])
+                )
+            elif elementNode.tag == "BranchInitiator":
+                # Create branch
+                branch = branching.Branch(
+                    name=elementNode.get("name"),
+                    fork=forks[elementNode.get("forkName")]
+                )
+                # Get params
+                for paramNode in elementNode:
+                    self._getXMLparam(paramNode=paramNode, params=branch.params)
+                # Create & append branch initiator
+                self.flow.append(
+                    branching.BranchInitiator(branch=branch)
+                )
+            elif elementNode.tag == "BranchTerminator":
+                # Create & append branch terminator
+                self.flow.append(
+                    branching.BranchTerminator(
+                        forks[elementNode.get("forkName")].branches[elementNode.get("name")]
+                    )
+                )
             else:
                 if elementNode.get('name') in self.routines:
                     self.flow.append(self.routines[elementNode.get('name')])

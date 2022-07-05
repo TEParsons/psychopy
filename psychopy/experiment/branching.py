@@ -4,7 +4,7 @@ from xml.etree.ElementTree import Element
 
 
 class Fork:
-    def __init__(self, exp, name, branches, useElse):
+    def __init__(self, exp, name):
         """
         branches : dict {str: code}
             Dict keys should be branch names, dict values should be condition under which to run each branch.
@@ -21,37 +21,21 @@ class Fork:
             label=_translate('Name'),
             hint=_translate("Name of this fork")
         )
-        self.params['branches'] = Param(
-            branches, valType='dict', inputType="dict",
-            label=_translate('Name'),
-            hint=_translate("Name of this fork")
-        )
-        self.params['useElse'] = Param(
-            useElse, valType='bool', inputType="bool",
-            label=_translate('Add "else" branch?'),
-            hint=_translate("Should this fork include a branch for when none of the conditions are met?")
-        )
+        # self.params['branches'] = Param(
+        #     branches, valType='dict', inputType="dict",
+        #     label=_translate('Name'),
+        #     hint=_translate("Name of this fork")
+        # )
+        # self.params['useElse'] = Param(
+        #     useElse, valType='bool', inputType="bool",
+        #     label=_translate('Add "else" branch?'),
+        #     hint=_translate("Should this fork include a branch for when none of the conditions are met?")
+        # )
 
-        # Create children
-        self.initiator = ForkInitiator(self)
-        self.terminator = ForkTerminator(self)
-        # Create branches
-        self.branches = []
-        self.createBranchesFromDict(branches)
-
-    def createBranchesFromDict(self, branches):
-        # Clear any pre-existing branches
-        for branch in self.branches:
-            del branch
-        self.branches = []
-        # Create new branches
-        for branchName, condition in branches.items():
-            branch = Branch(self, name=branchName, condition=condition, endPoints=None)
-            self.branches.append(branch)
-        # Add an else if requested
-        if self.params['useElse']:
-            branch = Branch(self, name="else", condition=None, endPoints=None)
-            self.branches.append(branch)
+        # Prepare for children
+        self.initiator = None
+        self.terminator = None
+        self.branches = {}
 
     @property
     def name(self):
@@ -60,13 +44,11 @@ class Fork:
 
 class ForkInitiator:
     def __init__(self, fork):
+        # Store ref to parent fork
         self.fork = fork
+        # Mark self as fork initiator
+        self.fork.initiator = self
         self.params = {}
-        self.params['name'] = Param(
-            fork.name, valType='code', inputType="single", categ="Basic",
-            label=_translate('Name'),
-            hint=_translate("Name of this branch")
-        )
 
     @property
     def _xml(self):
@@ -88,6 +70,10 @@ class ForkInitiator:
             element.append(paramNode)
         return element
 
+    @property
+    def name(self):
+        return self.fork.name
+
     def writeInitCode(self, buff):
         pass
 
@@ -103,13 +89,12 @@ class ForkInitiator:
 
 class ForkTerminator:
     def __init__(self, fork):
+        # Store ref to fork
         self.fork = fork
+        # Mark self as parent's terminator
+        self.fork.terminator = self
+        # Setup params
         self.params = {}
-        self.params['name'] = Param(
-            fork.name, valType='code', inputType="single", categ="Basic",
-            label=_translate('Name'),
-            hint=_translate("Name of this branch")
-        )
 
     @property
     def _xml(self):
@@ -119,6 +104,10 @@ class ForkTerminator:
 
         return element
 
+    @property
+    def name(self):
+        return self.fork.name
+
     def writeInitCode(self, buff):
         pass
 
@@ -126,14 +115,14 @@ class ForkTerminator:
         code = (
             "# --- End of fork %(name)s --- \n"
         )
-        buff.writeIndentedLines(code % self.params)
+        buff.writeIndentedLines(code % self.fork.params)
 
     def writeExperimentEndCode(self, buff):
         pass
 
 
 class Branch:
-    def __init__(self, fork, name, condition, endPoints):
+    def __init__(self, fork, name, condition="True"):
         """
         fork : Fork
             For which this branch sits within
@@ -146,6 +135,7 @@ class Branch:
         """
         # Store parent
         self.fork = fork
+        self.fork.branches[name] = self
         # Store params
         self.params = {}
         self.params['name'] = Param(
@@ -153,19 +143,24 @@ class Branch:
             label=_translate('Name'),
             hint=_translate("Name of this branch")
         )
+        self.params['forkName'] = Param(
+            fork.name, valType="code", inputType="single",
+            label=_translate("Fork name"),
+            hint=_translate("Name of the fork containing this branch")
+        )
         self.params['condition'] = Param(
             condition, valType="code", inputType="single",
             label=_translate("Condition"),
             hint=_translate("Condition under which to run this branch")
         )
-        self.params['endPoints'] = Param(
-            endPoints, valType='num', inputType="single",
-            label=_translate('End Points'),
-            hint=_translate("The start and end indices of the branch (see flow timeline)")
-        )
-        # Create children
-        self.initiator = BranchInitiator(self, condition=condition)
-        self.terminator = BranchTerminator(self)
+        # self.params['endPoints'] = Param(
+        #     endPoints, valType='num', inputType="single",
+        #     label=_translate('End Points'),
+        #     hint=_translate("The start and end indices of the branch (see flow timeline)")
+        # )
+        # Prepare for children
+        self.initiator = None
+        self.terminator = None
 
     @property
     def name(self):
@@ -173,16 +168,22 @@ class Branch:
 
 
 class BranchInitiator:
-    def __init__(self, branch, condition):
+    def __init__(self, branch):
         self.branch = branch
+        self.branch.initiator = self
+        self.params = {}
 
     @property
     def _xml(self):
         # Make root element
         element = Element("BranchInitiator")
         element.set("name", self.branch.name)
+        element.set("forkName", self.branch.fork.name)
         # Add an element for each parameter
         for key, param in sorted(self.branch.params.items()):
+            # Skip fork name as it's already stored
+            if key == "forkName":
+                continue
             # Create node
             paramNode = Element("Param")
             paramNode.set("name", key)
@@ -196,6 +197,10 @@ class BranchInitiator:
             element.append(paramNode)
         return element
 
+    @property
+    def name(self):
+        return self.branch.name
+
     def writeInitCode(self, buff):
         pass
 
@@ -207,7 +212,7 @@ class BranchInitiator:
             code = (
                 "if %(condition)s:\n"
             )
-        elif self.branch.params['condition'].val is None and fork.branches[-1] == self.branch:
+        elif self.branch.params['condition'].val in ("True", True, "1", 1) and fork.branches[-1] == self.branch:
             # If this is the last branch and we have no condition, use else
             code = (
                 "else:"
@@ -232,6 +237,7 @@ class BranchInitiator:
 class BranchTerminator:
     def __init__(self, branch):
         self.branch = branch
+        self.branch.terminator = self
         self.params = {}
 
     @property
@@ -239,8 +245,13 @@ class BranchTerminator:
         # Make root element
         element = Element("BranchTerminator")
         element.set("name", self.branch.name)
+        element.set("forkName", self.branch.fork.name)
 
         return element
+
+    @property
+    def name(self):
+        return self.branch.name
 
     def writeInitCode(self, buff):
         pass
