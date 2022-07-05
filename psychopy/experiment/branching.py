@@ -81,7 +81,7 @@ class ForkInitiator:
         code = (
             "# --- Start of fork %(name)s --- \n"
         )
-        buff.writeIndentedLines(code % self.params)
+        buff.writeIndentedLines(code % self.fork.params)
 
     def writeExperimentEndCode(self, buff):
         pass
