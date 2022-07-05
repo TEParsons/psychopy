@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from . import Param
 from ..localization import _translate
 from xml.etree.ElementTree import Element
@@ -35,7 +37,7 @@ class Fork:
         # Prepare for children
         self.initiator = None
         self.terminator = None
-        self.branches = {}
+        self.branches = OrderedDict()
 
     @property
     def name(self):
@@ -206,13 +208,14 @@ class BranchInitiator:
 
     def writeMainCode(self, buff):
         fork = self.branch.fork
+        noCondition = self.branch.params['condition'].val in ("True", True, "1", 1)
         # Work out if we're an if, elif or else and write statement
-        if fork.branches[0] == self.branch:
+        if list(fork.branches)[0] == self.branch.name:
             # If this is the first branch, use if
             code = (
                 "if %(condition)s:\n"
             )
-        elif self.branch.params['condition'].val in ("True", True, "1", 1) and fork.branches[-1] == self.branch:
+        elif list(fork.branches)[-1] == self.branch.name and noCondition:
             # If this is the last branch and we have no condition, use else
             code = (
                 "else:"
