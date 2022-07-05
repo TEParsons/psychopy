@@ -1,5 +1,6 @@
 from . import Param
 from ..localization import _translate
+from xml.etree.ElementTree import Element
 
 
 class Fork:
@@ -67,6 +68,26 @@ class ForkInitiator:
             hint=_translate("Name of this branch")
         )
 
+    @property
+    def _xml(self):
+        # Make root element
+        element = Element("ForkInitiator")
+        element.set("name", self.fork.name)
+        # Add an element for each parameter
+        for key, param in sorted(self.fork.params.items()):
+            # Create node
+            paramNode = Element("Param")
+            paramNode.set("name", key)
+            # Assign values
+            if hasattr(param, 'updates'):
+                paramNode.set('updates', "{}".format(param.updates))
+            if hasattr(param, 'val'):
+                paramNode.set('val', u"{}".format(param.val).replace("\n", "&#10;"))
+            if hasattr(param, 'valType'):
+                paramNode.set('valType', param.valType)
+            element.append(paramNode)
+        return element
+
     def writeInitCode(self, buff):
         pass
 
@@ -89,6 +110,14 @@ class ForkTerminator:
             label=_translate('Name'),
             hint=_translate("Name of this branch")
         )
+
+    @property
+    def _xml(self):
+        # Make root element
+        element = Element("ForkTerminator")
+        element.set("name", self.fork.name)
+
+        return element
 
     def writeInitCode(self, buff):
         pass
@@ -124,6 +153,11 @@ class Branch:
             label=_translate('Name'),
             hint=_translate("Name of this branch")
         )
+        self.params['condition'] = Param(
+            condition, valType="code", inputType="single",
+            label=_translate("Condition"),
+            hint=_translate("Condition under which to run this branch")
+        )
         self.params['endPoints'] = Param(
             endPoints, valType='num', inputType="single",
             label=_translate('End Points'),
@@ -141,17 +175,26 @@ class Branch:
 class BranchInitiator:
     def __init__(self, branch, condition):
         self.branch = branch
-        self.params = {}
-        self.params['name'] = Param(
-            branch.name, valType='code', inputType="single", categ="Basic",
-            label=_translate('Name'),
-            hint=_translate("Name of this branch")
-        )
-        self.params['condition'] = Param(
-            condition, valType="code", inputType="single",
-            label=_translate("Condition"),
-            hint=_translate("Condition under which to run this branch")
-        )
+
+    @property
+    def _xml(self):
+        # Make root element
+        element = Element("BranchInitiator")
+        element.set("name", self.branch.name)
+        # Add an element for each parameter
+        for key, param in sorted(self.branch.params.items()):
+            # Create node
+            paramNode = Element("Param")
+            paramNode.set("name", key)
+            # Assign values
+            if hasattr(param, 'updates'):
+                paramNode.set('updates', "{}".format(param.updates))
+            if hasattr(param, 'val'):
+                paramNode.set('val', u"{}".format(param.val).replace("\n", "&#10;"))
+            if hasattr(param, 'valType'):
+                paramNode.set('valType', param.valType)
+            element.append(paramNode)
+        return element
 
     def writeInitCode(self, buff):
         pass
@@ -164,7 +207,7 @@ class BranchInitiator:
             code = (
                 "if %(condition)s:\n"
             )
-        elif self.params['condition'].val is None and fork.branches[-1] == self.branch:
+        elif self.branch.params['condition'].val is None and fork.branches[-1] == self.branch:
             # If this is the last branch and we have no condition, use else
             code = (
                 "else:"
@@ -174,13 +217,13 @@ class BranchInitiator:
             code = (
                 "elif %(condition)s:\n"
             )
-        buff.writeIndentedLines(code % self.params)
+        buff.writeIndentedLines(code % self.branch.params)
         buff.setIndentLevel(+1, relative=True)
         # Add comment marker
         code = (
             f"# --- Start {fork.params['name']} branch %(name)s ---"
         )
-        buff.writeIndentedLines(code % self.params)
+        buff.writeIndentedLines(code % self.branch.params)
 
     def writeExperimentEndCode(self, buff):
         pass
@@ -190,6 +233,14 @@ class BranchTerminator:
     def __init__(self, branch):
         self.branch = branch
         self.params = {}
+
+    @property
+    def _xml(self):
+        # Make root element
+        element = Element("BranchTerminator")
+        element.set("name", self.branch.name)
+
+        return element
 
     def writeInitCode(self, buff):
         pass
