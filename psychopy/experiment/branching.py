@@ -30,6 +30,11 @@ class Fork:
             label=_translate('Add "else" branch?'),
             hint=_translate("Should this fork include a branch for when none of the conditions are met?")
         )
+
+        # Create children
+        self.initiator = ForkInitiator(self)
+        self.terminator = ForkTerminator(self)
+        # Create branches
         self.branches = []
         self.createBranchesFromDict(branches)
 
@@ -51,6 +56,17 @@ class Fork:
     def name(self):
         return self.params['name'].val
 
+
+class ForkInitiator:
+    def __init__(self, fork):
+        self.fork = fork
+        self.params = {}
+        self.params['name'] = Param(
+            fork.name, valType='code', inputType="single", categ="Basic",
+            label=_translate('Name'),
+            hint=_translate("Name of this branch")
+        )
+
     def writeInitCode(self, buff):
         pass
 
@@ -60,7 +76,24 @@ class Fork:
         )
         buff.writeIndentedLines(code % self.params)
 
-    def writeEndCode(self, buff):
+    def writeExperimentEndCode(self, buff):
+        pass
+
+
+class ForkTerminator:
+    def __init__(self, fork):
+        self.fork = fork
+        self.params = {}
+        self.params['name'] = Param(
+            fork.name, valType='code', inputType="single", categ="Basic",
+            label=_translate('Name'),
+            hint=_translate("Name of this branch")
+        )
+
+    def writeInitCode(self, buff):
+        pass
+
+    def writeMainCode(self, buff):
         code = (
             "# --- End of fork %(name)s --- \n"
         )
