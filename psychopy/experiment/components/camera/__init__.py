@@ -3,6 +3,7 @@
 
 from pathlib import Path
 from psychopy.experiment.components import BaseComponent, Param, _translate, getInitVals
+from psychopy.tools.hardwaretools import cameratools
 from psychopy import prefs
 
 mics = ["default"]
@@ -55,11 +56,7 @@ class CameraComponent(BaseComponent):
         self.exp.requireImport(importName="microphone", importFrom="psychopy.sound")
 
         # Get list of camera specs
-        try:
-            from psychopy.hardware.camera import getCameraDescriptions
-            cams = getCameraDescriptions(collapse=True)
-        except:
-            cams = []
+        cams = cameratools.getCameraDescriptions(collapse=True)
 
         # Basic
         msg = _translate("What device would you like to use to record video? This will only affect local "
