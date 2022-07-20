@@ -17,6 +17,42 @@ __all__ = ["prettyname"]
 valid_proj_name = re.compile(r'(\w|-)+')
 
 
+def containsUnescaped(string, target):
+    """
+    Search for an unescaped character in a given string.
+
+    string : str
+        String to be searched in
+    target : str
+        Character to be searched for
+    """
+    # Count matches for target character
+    all = string.count(target)
+    # Count matches for escaped character
+    escaped = string.count(r"\\" + target)
+    # If more matches for all than escaped, then some must be unescaped
+    return all > escaped
+
+
+def replaceUnescaped(string, target, repl):
+    """
+    Replace only unescaped instances of a character in a given string.
+
+    string : str
+        String to be replaced in
+    target : str
+        Character to be replaced
+    repl : str
+        String to replace character with
+    """
+    # Construct regex to search for unescaped char
+    reg = r"(?<!\\)" + re.escape(target)
+    # Safe replace with regex
+    string = re.sub(reg, repl, string)
+
+    return string
+
+
 def prettyname(name, wrap=False):
     """Convert a camelCase, TitleCase or underscore_delineated title to Full Title Case"""
     # Replace _ with space
