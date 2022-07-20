@@ -24,11 +24,11 @@ if not haveQt:
 elif haveQt == 'PyQt5':
     from PyQt5 import QtWidgets
     from PyQt5 import QtGui
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import Qt, QRegExp
 else:
     from PyQt4 import QtGui  
     QtWidgets = QtGui  # in qt4 these were all in one package
-    from PyQt4.QtCore import Qt
+    from PyQt4.QtCore import Qt, QRegExp
 
 from psychopy import logging
 import numpy as np
@@ -36,6 +36,7 @@ import os
 import sys
 import json
 from psychopy.localization import _translate
+from psychopy.tools import stringtools
 
 OK = QtWidgets.QDialogButtonBox.Ok
 
@@ -151,7 +152,7 @@ class Dlg(QtWidgets.QDialog):
         return textLabel
 
     def addField(self, label='', initial='', color='', choices=None, tip='',
-                 enabled=True):
+                 enabled=True, required=False):
         """Adds a (labelled) input field to the dialogue box,
         optional text color and tooltip.
 
@@ -188,6 +189,10 @@ class Dlg(QtWidgets.QDialog):
         elif not choices:
             self.data.append(initial)
             inputBox = QtWidgets.QLineEdit(str(initial), parent=self)
+            if required:
+                inputBox.setValidator(
+                    QtGui.QRegExpValidator(QRegExp(".+"), inputBox)
+                )
 
             def handleLineEditChange(new_text):
                 ix = self.inputFields.index(inputBox)
@@ -281,6 +286,12 @@ class Dlg(QtWidgets.QDialog):
         """
         return self.addField(label, initial, color, choices, tip,
                              enabled=False)
+
+    def addRequiredField(self, label='', initial='', color='', choices=None):
+        """Adds a field to the dialog box (like addField) but the field must be filled
+        out before the dialog box can be accepted.
+        """
+        return self.addField(label=label, initial=initial, color=color, choices=choices, enabled=True, required=True)
 
     def display(self):
         """Presents the dialog and waits for the user to press OK or CANCEL.

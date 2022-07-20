@@ -15,6 +15,8 @@ import os
 from psychopy.localization import _translate
 from pkg_resources import parse_version
 
+from psychopy.tools import stringtools
+
 OK = wx.ID_OK
 
 thisVer = parse_version(wx.__version__)
@@ -99,7 +101,7 @@ class Dlg(wx.Dialog):
             myTxt.SetForegroundColour(color)
         self.sizer.Add(myTxt, 1, wx.ALIGN_CENTER)
 
-    def addField(self, label='', initial='', color='', choices=None, tip=''):
+    def addField(self, label='', initial='', color='', choices=None, tip='', required=True):
         """Adds a (labelled) input field to the dialogue box, optional text
         color and tooltip. Returns a handle to the field (but not to the
         label). If choices is a list or tuple, it will create a dropdown
@@ -152,6 +154,8 @@ class Dlg(wx.Dialog):
 
         container.Add(inputBox, 1, wx.ALIGN_CENTER_VERTICAL)
         self.sizer.Add(container, 1, wx.ALIGN_CENTER)
+        if required:
+            inputBox.SetValidator(wx.DefaultValidator)
 
         self.inputFields.append(inputBox)  # store this to get data back on OK
         return inputBox
@@ -165,6 +169,12 @@ class Dlg(wx.Dialog):
         # wx disables tooltips too; we pass them in anyway
         thisField.Disable()
         return thisField
+
+    def addRequiredField(self, label='', initial='', color='', choices=None):
+        """Adds a field to the dialog box (like addField) but the field must be filled
+        out before the dialog box can be accepted.
+        """
+        return self.addField(label=label, initial=initial, color=color, choices=choices, required=True)
 
     def display(self):
         """Presents the dialog and waits for the user to press OK or CANCEL.
