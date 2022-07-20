@@ -505,6 +505,12 @@ class DlgFromDict(Dlg):
                 except ValueError:
                     self.dictionary[thisKey] = self.data[n]
 
+                # Remove asterisk
+                if stringtools.containsUnescaped(thisKey, "*"):
+                    cleanKey = stringtools.replaceUnescaped(thisKey, "*", "")
+                    self.dictionary[cleanKey] = self.dictionary[thisKey]
+                    del self.dictionary[thisKey]
+
 
 def fileSaveDlg(initFilePath="", initFileName="",
                 prompt=_translate("Select file to save"),

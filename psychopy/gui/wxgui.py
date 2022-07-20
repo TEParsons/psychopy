@@ -335,6 +335,11 @@ class DlgFromDict(Dlg):
         if self.OK:
             for n, thisKey in enumerate(self._keys):
                 self.dictionary[thisKey] = self.data[n]
+                # Remove asterisk
+                if stringtools.containsUnescaped(thisKey, "*"):
+                    cleanKey = stringtools.replaceUnescaped(thisKey, "*", "")
+                    self.dictionary[cleanKey] = self.dictionary[thisKey]
+                    del self.dictionary[thisKey]
 
 
 def fileSaveDlg(initFilePath="", initFileName="",
