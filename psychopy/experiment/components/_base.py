@@ -705,6 +705,28 @@ class BaseComponent:
             # Otherwise, we are not in a loop, so loop handler is just experiment handler
             return "thisExp"
 
+    @property
+    def forceEnd(self):
+        """
+        Can this component force the end of a routine?
+        """
+        # Start off assuming this component
+        forceEnd = False
+        # Look for True values from force end tickbox
+        if 'forceEndRoutine' in self.params:
+            if self.params['forceEndRoutine'].val:
+                forceEnd = True
+        # check True/False on ForceEndRoutineOnPress
+        if 'forceEndRoutineOnPress' in self.params:
+            if self.params['forceEndRoutineOnPress'].val in ['any click', 'correct click', 'valid click']:
+                forceEnd = True
+        # check True aliases on EndRoutineOn
+        if 'endRoutineOn' in self.params:
+            if self.params['endRoutineOn'].val in ['look at', 'look away']:
+                forceEnd = True
+
+        return forceEnd
+
 
 class BaseVisualComponent(BaseComponent):
     """Base class for most visual stimuli
