@@ -44,7 +44,7 @@ class _FrameMixin:
         return self.frame.app
 
 
-class _ValidatorMixin:
+class _ValidatorMixin(_FrameMixin):
     def validate(self, evt=None):
         """Redirect validate calls to global validate method, assigning
         appropriate `valType`.
@@ -376,6 +376,7 @@ class FileCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
         self._szr.Add(self.findBtn)
         # Configure validation
         self.Bind(wx.EVT_TEXT, self.validate)
+        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.validate)
         self.validate()
 
     def findFile(self, evt):
@@ -457,15 +458,8 @@ class ExperimentControl(FileCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
     def __init__(self, parent,
                  param, fieldName="",
                  size=(-1, 24)):
-        FileCtrl.__init__(self, parent, "str",
-                          val=param.val, fieldName=fieldName,
-                          size=size)
         self.parent = parent
         self.param = param
-        # Store reference to param containing experiment info details
-        self.expInfoParam = param.expInfoParam
-        # Rebind file ctrl
-        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.onSetExperiment)
         # Create open button
         self.openBtn = wx.Button(parent, -1, size=wx.Size(24, 24))
         self.openBtn.SetBitmap(
@@ -474,6 +468,11 @@ class ExperimentControl(FileCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
         self.openBtn.SetToolTip(_translate("Open experiment ..."))
         self.openBtn.Bind(wx.EVT_BUTTON, self.openExperiment)
         self.openBtn.Enable(Path(param.val).is_file())
+        # Create file ctrl
+        FileCtrl.__init__(self, parent, "file",
+                          val=param.val, fieldName=fieldName,
+                          size=size)
+        # Add open button
         self._szr.Add(self.openBtn, border=3, flag=wx.EXPAND | wx.LEFT)
 
     @property
@@ -482,40 +481,20 @@ class ExperimentControl(FileCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
         if (self.rootDir / file).is_file():
             return str(self.rootDir / file)
         elif file.is_file():
-            return file.absolute()
+            return str(file.absolute())
+        else:
+            return self.GetValue()
+
+    def getValue(self):
+        return self.absPath
 
     def openExperiment(self, evt=None):
         self.app.newBuilderFrame(fileName=self.absPath)
 
-    def onSetExperiment(self, event):
-        self.experiment = event.GetPath()
-
-    @property
-    def experiment(self):
-        if hasattr(self, "_experiment"):
-            return self._experiment
-
-    @experiment.setter
-    def experiment(self, filename):
-        self.openBtn.Enable()
-        if isinstance(filename, Experiment):
-            # If given an already loaded Experiment object, use it
-            experiment = filename
-        else:
-            # Otherwise, load experiment
-            experiment = Experiment()
-            try:
-                experiment.loadFromXML(self.absPath)
-            except FileNotFoundError:
-                # If experiment can't load, make blank
-                experiment.settings.params['Experiment info'].val = "{}"
-                self.openBtn.Disable()
-                pass
-        self._experiment = experiment
-        # Get expInfo from settings
-        expInfo = experiment.settings.getInfo()
-        # Replace expInfo param with values from file
-        self.expInfoParam.val = expInfo
+    def validate(self, event=None):
+        FileCtrl.validate(self, event)
+        file = Path(self.absPath)
+        self.openBtn.Enable(file.is_file() and file.suffix == ".psyexp")
 
 
 class TableCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
@@ -701,9 +680,8 @@ def validate(obj, valType):
     if valType == "file":
         val = Path(str(val))
         if not val.is_absolute():
-            frame = obj.GetTopLevelParent().frame
             # If not an absolute path, append to current directory
-            val = Path(frame.filename).parent / val
+            val = Path(obj.frame.filename).parent / val
         if not val.is_file():
             # Is value a valid filepath?
             valid = False

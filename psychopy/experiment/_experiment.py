@@ -213,8 +213,18 @@ class Experiment:
         # then check the contents 1-by-1 from the Flow
         self.flow.integrityCheck()
 
-    def writeScript(self, expPath=None, target="PsychoPy", modular=True):
+    def writeScript(self, expPath=None, target="PsychoPy", modular=True, subexp=False):
         """Write a PsychoPy script for the experiment
+
+        expPath : str
+            Path of the file to be written to
+        target : str
+            Are we writing to PsychoPy or PsychoJS?
+        modular : bool
+            Should JS code be modular?
+        subexp : bool
+            Are we writing as a subexperiment? If True, then skip experiment initialisation and just run the flow as if
+            win, expInfo and standard import statements are already written
         """
         # self.integrityCheck()
 
@@ -254,30 +264,31 @@ class Experiment:
                             alert(alertCode, strFields={'comp': type(component).__name__})
 
         if target == "PsychoPy":
-            self_copy.settings.writeInitCode(script, self_copy.psychopyVersion,
-                                             localDateTime)
+            if not subexp:
+                self_copy.settings.writeInitCode(script, self_copy.psychopyVersion, localDateTime)
 
-            # Write "run once" code sections
-            for entry in self_copy.flow:
-                # NB each entry is a routine or LoopInitiator/Terminator
-                self_copy._currentRoutine = entry
-                if hasattr(entry, 'writeRunOnceInitCode'):
-                    entry.writeRunOnceInitCode(script)
-                if hasattr(entry, 'writePreCode'):
-                    entry.writePreCode(script)
-            script.write("\n\n")
+                # Write "run once" code sections
+                for entry in self_copy.flow:
+                    # NB each entry is a routine or LoopInitiator/Terminator
+                    self_copy._currentRoutine = entry
+                    if hasattr(entry, 'writeRunOnceInitCode'):
+                        entry.writeRunOnceInitCode(script)
+                    if hasattr(entry, 'writePreCode'):
+                        entry.writePreCode(script)
+                script.write("\n\n")
 
-            # present info, make logfile
-            self_copy.settings.writeStartCode(script, self_copy.psychopyVersion)
-            # writes any components with a writeStartCode()
-            self_copy.flow.writeStartCode(script)
-            self_copy.settings.writeWindowCode(script)  # create our visual.Window()
-            self_copy.settings.writeIohubCode(script)
-            # for JS the routine begin/frame/end code are funcs so write here
+                # present info, make logfile
+                self_copy.settings.writeStartCode(script, self_copy.psychopyVersion)
+                # writes any components with a writeStartCode()
+                self_copy.flow.writeStartCode(script)
+                self_copy.settings.writeWindowCode(script)  # create our visual.Window()
+                self_copy.settings.writeIohubCode(script)
+                # for JS the routine begin/frame/end code are funcs so write here
 
             # write the rest of the code for the components
             self_copy.flow.writeBody(script)
-            self_copy.settings.writeEndCode(script)  # close log file
+            if not subexp:
+                self_copy.settings.writeEndCode(script)  # close log file
             script = script.getvalue()
 
         elif target == "PsychoJS":

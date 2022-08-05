@@ -254,6 +254,8 @@ class ParamCtrls():
         """
         if ctrl is None:
             return None
+        elif hasattr(ctrl, "getValue"):
+            return ctrl.getValue()
         elif hasattr(ctrl, 'GetText'):
             return ctrl.GetText()
         elif hasattr(ctrl, 'GetValue'):  # e.g. TextCtrl
@@ -367,7 +369,9 @@ class ParamCtrls():
         changes value
         :return:
         """
-        if isinstance(self.valueCtrl, wx.TextCtrl):
+        if isinstance(self.valueCtrl, paramCtrls.FileCtrl):
+            self.valueCtrl.Bind(wx.EVT_FILEPICKER_CHANGED, callbackFunction)
+        elif isinstance(self.valueCtrl, wx.TextCtrl):
             self.valueCtrl.Bind(wx.EVT_KEY_UP, callbackFunction)
         elif isinstance(self.valueCtrl, CodeBox):
             self.valueCtrl.Bind(wx.stc.EVT_STC_CHANGE, callbackFunction)
