@@ -35,6 +35,13 @@ class _FrameMixin:
         else:
             return topParent
 
+    @property
+    def app(self):
+        """
+        Reference to current app instance
+        """
+        return self.frame.app
+
 
 class _ValidatorMixin:
     def validate(self, evt=None):
@@ -391,7 +398,6 @@ class FileListCtrl(wx.ListBox, _ValidatorMixin, _HideMixin, _FileMixin):
         wx.ListBox.__init__(self)
         self.valType = valType
         parent.Bind(wx.EVT_DROP_FILES, self.addItem)
-        self.app = parent.app
         if type(choices) == str:
             choices = data.utils.listFromString(choices)
         self.Create(id=wx.ID_ANY, parent=parent, choices=choices, size=size, style=wx.LB_EXTENDED | wx.LB_HSCROLL)
