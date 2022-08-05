@@ -157,6 +157,10 @@ class ParamCtrls():
             self.valueCtrl = paramCtrls.FileListCtrl(parent,
                                                      choices=param.val, valType=param.valType,
                                                      size=wx.Size(self.valueWidth, 100), pathtype="rel")
+        elif param.inputType == 'experiment':
+            self.valueCtrl = paramCtrls.ExperimentControl(parent,
+                                                          param=param,
+                                                          fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         elif param.inputType == 'table':
             self.valueCtrl = paramCtrls.TableCtrl(parent, val=param.val, valType=param.valType,
                                                   fieldName=fieldName, size=wx.Size(self.valueWidth, 24))

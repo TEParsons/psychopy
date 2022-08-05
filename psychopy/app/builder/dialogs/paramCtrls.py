@@ -14,6 +14,7 @@ import wx
 from psychopy.app.colorpicker import PsychoColorPicker
 from psychopy.app.dialogs import ListWidget
 from psychopy.colors import Color
+from psychopy.experiment import Experiment, Param
 from psychopy.localization import _translate
 from psychopy import data, prefs, experiment
 import re
@@ -450,6 +451,71 @@ class FileListCtrl(wx.ListBox, _ValidatorMixin, _HideMixin, _FileMixin):
 
     def GetValue(self):
         return self.Items
+
+
+class ExperimentControl(FileCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
+    def __init__(self, parent,
+                 param, fieldName="",
+                 size=(-1, 24)):
+        FileCtrl.__init__(self, parent, "str",
+                          val=param.val, fieldName=fieldName,
+                          size=size)
+        self.parent = parent
+        self.param = param
+        # Store reference to param containing experiment info details
+        self.expInfoParam = param.expInfoParam
+        # Rebind file ctrl
+        self.Bind(wx.EVT_FILEPICKER_CHANGED, self.onSetExperiment)
+        # Create open button
+        self.openBtn = wx.Button(parent, -1, size=wx.Size(24, 24))
+        self.openBtn.SetBitmap(
+            icons.ButtonIcon(stem="psyexp", size=16).bitmap
+        )
+        self.openBtn.SetToolTip(_translate("Open experiment ..."))
+        self.openBtn.Bind(wx.EVT_BUTTON, self.openExperiment)
+        self.openBtn.Enable(Path(param.val).is_file())
+        self._szr.Add(self.openBtn, border=3, flag=wx.EXPAND | wx.LEFT)
+
+    @property
+    def absPath(self):
+        file = Path(self.GetValue())
+        if (self.rootDir / file).is_file():
+            return str(self.rootDir / file)
+        elif file.is_file():
+            return file.absolute()
+
+    def openExperiment(self, evt=None):
+        self.app.newBuilderFrame(fileName=self.absPath)
+
+    def onSetExperiment(self, event):
+        self.experiment = event.GetPath()
+
+    @property
+    def experiment(self):
+        if hasattr(self, "_experiment"):
+            return self._experiment
+
+    @experiment.setter
+    def experiment(self, filename):
+        self.openBtn.Enable()
+        if isinstance(filename, Experiment):
+            # If given an already loaded Experiment object, use it
+            experiment = filename
+        else:
+            # Otherwise, load experiment
+            experiment = Experiment()
+            try:
+                experiment.loadFromXML(self.absPath)
+            except FileNotFoundError:
+                # If experiment can't load, make blank
+                experiment.settings.params['Experiment info'].val = "{}"
+                self.openBtn.Disable()
+                pass
+        self._experiment = experiment
+        # Get expInfo from settings
+        expInfo = experiment.settings.getInfo()
+        # Replace expInfo param with values from file
+        self.expInfoParam.val = expInfo
 
 
 class TableCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
