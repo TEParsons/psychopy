@@ -136,56 +136,56 @@ def test_dollar_sign_syntax():
     cases = [
         # Valid dollar and redundant dollar
         {'val': f"$hello $there",
-         'ans': f"hello {_d}there",
-         'valid': False},
+         'ans': f"hello there",
+         'code': True},
         # Valid dollar and scaped dollar
         {'val': f"$hello \$there",
-         'ans': f"hello {_sl}{_sl}{_d}there",
-         'valid': False},
+         'ans': f"hello {_d}there",
+         'code': True},
         # Just redundant dollar
         {'val': f"hello $there",
-         'ans': f"hello {_d}there",
-         'valid': False},
+         'ans': f"hello there",
+         'code': True},
         # Just escaped dollar
         {'val': f"\$hello there",
-         'ans': f"{_sl}{_sl}{_d}hello there",
-         'valid': True},
+         'ans': f"{_d}hello there",
+         'code': False},
         # Dollar in comment
         {'val': f"#$hello there",
          'ans': f"#{_d}hello there",
-         'valid': False},
+         'code': False},
         # Comment after dollar
         {'val': f"$#hello there",
          'ans': f"#hello there",
-         'valid': True},
+         'code': True},
         # Dollar and comment
         {'val': f"$hello #there",
          'ans': f"hello #there",
-         'valid': True},
+         'code': True},
         # Valid dollar and redundtant dollar in comment
         {'val': f"$hello #$there",
          'ans': f"hello #{_d}there",
-         'valid': True},
+         'code': True},
         # Valid dollar and escaped dollar in escaped d quotes
         {'val': f"$hello \"\$there\"",
-         'ans': f"hello {_q}{_sl}{_sl}{_d}there{_q}",
-         'valid': True},
+         'ans': f"hello {_q}{_d}there{_q}",
+         'code': True},
         # Valid dollar and escaped dollar in escaped s quotes
         {'val': f"$hello \'\$there\'",
-         'ans': f"hello {_q}{_sl}{_sl}{_d}there{_q}",
-         'valid': True},
+         'ans': f"hello {_q}{_d}there{_q}",
+         'code': True},
     ]
     # Run dollar syntax on each case
     for case in cases:
         # Make str param from val
         param = Param(case['val'], "str")
         # Run dollar syntax method
-        valid, ans = param.dollarSyntax()
+        codeWanted, ans = param.dollarSyntax()
         # Is the output correct?
         assert re.fullmatch(case['ans'], ans), (
             f"Dollar syntax for {repr(param)} should return `{case['ans']}`, but instead returns `{ans}`"
         )
-        assert valid == case['valid'], (
-            f"Dollar syntax function should consider validity of {repr(param)} to be {case['valid']}, but instead "
-            f"received {valid}"
+        assert codeWanted == case['code'], (
+            f"Dollar syntax function should consider validity of {repr(param)} to be {case['code']}, but instead "
+            f"received {codeWanted}"
         )

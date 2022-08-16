@@ -14,6 +14,7 @@ import wx
 from psychopy.app.colorpicker import PsychoColorPicker
 from psychopy.app.dialogs import ListWidget
 from psychopy.colors import Color
+from psychopy.experiment.params import dollarSyntax
 from psychopy.localization import _translate
 from psychopy import data, prefs, experiment
 import re
@@ -549,9 +550,7 @@ class ColorCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
 def validate(obj, valType):
     val = str(obj.GetValue())
     valid = True
-    if val.startswith("$"):
-        # If indicated as code, treat as code
-        valType = "code"
+    val, valType, codeWanted = dollarSyntax(val, valType)
     # Validate string
     if valType == "str":
         if re.findall(r"(?<!\\)\"", val):
