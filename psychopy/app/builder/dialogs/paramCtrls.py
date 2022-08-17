@@ -310,12 +310,18 @@ class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
 
 class MultiChoiceCtrl(wx.CheckListBox, _ValidatorMixin, _HideMixin):
     def __init__(self, parent, valType,
-                 vals="", choices=[], fieldName="",
+                 vals="", choices=[], labels=[], fieldName="",
                  size=wx.Size(-1, -1)):
         wx.CheckListBox.__init__(self)
-        self.Create(parent, id=wx.ID_ANY, size=size, choices=choices, name=fieldName, style=wx.LB_MULTIPLE)
+        self.Create(parent, id=wx.ID_ANY, size=size, choices=labels, name=fieldName, style=wx.LB_MULTIPLE)
         self.valType = valType
         self._choices = choices
+        self._labels = {}
+        for i, value in enumerate(self._choices):
+            if i < len(labels):
+                self._labels[value] = labels[i]
+            else:
+                self._labels[value] = value
         # Make initial selection
         if isinstance(vals, str):
             # Convert to list if needed
@@ -329,11 +335,12 @@ class MultiChoiceCtrl(wx.CheckListBox, _ValidatorMixin, _HideMixin):
         for s in strings:
             if s not in self._choices:
                 self._choices.append(s)
-                self.SetItems(self._choices)
-        wx.CheckListBox.SetCheckedStrings(self, strings)
+                self._labels[s] = s
+                self.SetItems([self._labels[c] for c in self._choices])
+        wx.CheckListBox.SetCheckedStrings(self, [self._labels[c] for c in strings])
 
     def GetValue(self, evt=None):
-        return self.GetCheckedStrings()
+        return [self._choices[i] for i in self.GetCheckedItems()]
 
 
 class FileCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
