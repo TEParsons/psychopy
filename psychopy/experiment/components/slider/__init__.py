@@ -206,7 +206,7 @@ class SliderComponent(BaseVisualComponent):
 
         self.params['styleTweaks'] = Param(
                 styleTweaks, valType='list', inputType="multiChoice", categ='Appearance',
-                updates='constant', allowedVals=knownStyleTweaks,
+                updates='constant', allowedVals=list(knownStyleTweaks), allowedLabels=list(knownStyleTweaks.values()),
                 hint=_translate(
                         "Tweaks to change the appearance of the slider beyond its style."),
                 label=_translate('Style Tweaks'))

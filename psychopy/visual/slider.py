@@ -915,8 +915,8 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
 
     knownStyles = ['slider', 'rating', 'radio', 'scrollbar']
     legacyStyles = []
-    knownStyleTweaks = ['labels45', 'triangleMarker']
-    legacyStyleTweaks = ['whiteOnBlack']
+    knownStyleTweaks = {'labels45': "Rotate labels 45º", 'triangleMarker': "Triangular marker"}
+    legacyStyleTweaks = {'whiteOnBlack': "White on black"}
 
     @property
     def style(self):
@@ -954,7 +954,7 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
                 if val in self.knownStyles + self.legacyStyles:
                     style = val
                 # Apply any tweaks
-                if val in self.knownStyleTweaks + self.legacyStyleTweaks:
+                if val in list(self.knownStyleTweaks) + list(self.legacyStyleTweaks):
                     self.styleTweaks += val
 
         if style == 'rating' or style is None:
@@ -1033,7 +1033,7 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
             self._tickSizeMultiplier = (0, 0)
 
         # Legacy: If given a tweak, apply it as a tweak rather than a style
-        if style in self.knownStyleTweaks + self.legacyStyleTweaks:
+        if style in list(self.knownStyleTweaks) + list(self.legacyStyleTweaks):
             self.styleTweaks.append(style)
 
         # Refresh style tweaks (as these override some aspects of style)
