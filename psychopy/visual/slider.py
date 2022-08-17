@@ -23,6 +23,7 @@ from .circle import Circle
 from .shape import ShapeStim
 from . import TextBox2
 from ..tools.attributetools import logAttrib, setAttribute, attributeSetter
+from ..tools.paramtools import sliderStyleOptions
 from ..constants import FINISHED, STARTED, NOT_STARTED
 
 # Set to True to make borders visible for debugging
@@ -913,10 +914,10 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
         if hasattr(self, "tickLines"):
             self.tickLines.colors = self._borderColor.copy()
 
-    knownStyles = ['slider', 'rating', 'radio', 'scrollbar']
-    legacyStyles = []
-    knownStyleTweaks = {'labels45': "Rotate labels 45º", 'triangleMarker': "Triangular marker"}
-    legacyStyleTweaks = {'whiteOnBlack': "White on black"}
+    knownStyles = sliderStyleOptions.knownStyles
+    legacyStyles = sliderStyleOptions.legacyStyles
+    knownStyleTweaks = sliderStyleOptions.knownStyleTweaks
+    legacyStyleTweaks = sliderStyleOptions.legacyStyleTweaks
 
     @property
     def style(self):

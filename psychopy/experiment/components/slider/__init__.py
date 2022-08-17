@@ -15,6 +15,7 @@ from psychopy.data import utils
 from psychopy.localization import _localized as __localized
 _localized = __localized.copy()
 import copy
+from psychopy.tools.paramtools import sliderStyleOptions
 
 __author__ = 'Jon Peirce'
 
@@ -27,11 +28,6 @@ _localized.update({'categoryChoices': _translate('Category choices'),
                    'storeRating': _translate('Store rating'),
                    'storeRatingTime': _translate('Store rating time'),
                    'readOnly': _translate('readOnly')})
-
-knownStyles = slider.Slider.knownStyles
-legacyStyles = slider.Slider.legacyStyles
-knownStyleTweaks = slider.Slider.knownStyleTweaks
-legacyStyleTweaks = slider.Slider.legacyStyleTweaks
 
 
 # ticks = (1, 2, 3, 4, 5),
@@ -199,17 +195,19 @@ class SliderComponent(BaseVisualComponent):
 
         self.params['styles'] = Param(
                 style, valType='str', inputType="choice", categ='Basic',
-                updates='constant', allowedVals=knownStyles,
+                updates='constant', allowedVals=list(sliderStyleOptions.knownStyles),
                 hint=_translate(
                         "Discrete styles to control the overall appearance of the slider."),
                 label=_translate('Styles'))
 
         self.params['styleTweaks'] = Param(
-                styleTweaks, valType='list', inputType="multiChoice", categ='Appearance',
-                updates='constant', allowedVals=list(knownStyleTweaks), allowedLabels=list(knownStyleTweaks.values()),
-                hint=_translate(
-                        "Tweaks to change the appearance of the slider beyond its style."),
-                label=_translate('Style Tweaks'))
+            styleTweaks, valType='list', inputType="multiChoice", categ='Appearance',
+            updates='constant',
+            allowedVals=list(sliderStyleOptions.knownStyleTweaks),
+            allowedLabels=list(sliderStyleOptions.knownStyleTweaks.values()),
+            hint=_translate(
+                "Tweaks to change the appearance of the slider beyond its style."),
+            label=_translate('Style Tweaks'))
 
         # data params
         self.params['storeRating'] = Param(
