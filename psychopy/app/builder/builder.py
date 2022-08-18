@@ -1232,11 +1232,11 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
             return -1
         origName = self.app.copiedRoutine.name
         defaultName = self.exp.namespace.makeValid(origName)
-        msg = _translate('New name for copy of "%(copied)s"?  [%(default)s]')
-        vals = {'copied': origName, 'default': defaultName}
-        message = msg % vals
-        dlg = wx.TextEntryDialog(self, message=message,
-                                 caption=_translate('Paste Routine'))
+        dlg = wx.TextEntryDialog(
+            self,
+            message=_translate("New name for copy of \"%s\"?") % origName,
+            caption=_translate("Paste Component"),
+            value=defaultName)
         if dlg.ShowModal() == wx.ID_OK:
             routineName = dlg.GetValue()
             if not routineName:
@@ -2159,11 +2159,11 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         exp = self.frame.exp
         origName = component.params['name'].val
         defaultName = exp.namespace.makeValid(origName)
-        msg = _translate('New name for copy of "%(copied)s"?  [%(default)s]')
-        vals = {'copied': origName, 'default': defaultName}
-        message = msg % vals
-        dlg = wx.TextEntryDialog(self, message=message,
-                                 caption=_translate('Paste Component'))
+        dlg = wx.TextEntryDialog(
+            self,
+            message=_translate("New name for copy of \"%s\"?") % origName,
+            caption=_translate("Paste Component"),
+            value=defaultName)
         if dlg.ShowModal() == wx.ID_OK:
             # Get new name
             newName = dlg.GetValue()
