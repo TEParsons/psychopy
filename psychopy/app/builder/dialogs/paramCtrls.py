@@ -265,7 +265,18 @@ class IntCtrl(wx.SpinCtrl, _ValidatorMixin, _HideMixin):
         validate(self, "int")
 
 
-BoolCtrl = wx.CheckBox
+class BoolCtrl(wx.CheckBox):
+    def __init__(self, parent,
+                 name="",
+                 size=wx.Size(-1, -1)):
+        # Initialise
+        wx.CheckBox.__init__(self, parent, name=name, size=size)
+        # Bind to ENTER
+        self.Bind(wx.EVT_KEY_DOWN, self.onToggle)
+
+    def onToggle(self, evt):
+        if evt.GetUnicodeKey() in (wx.WXK_SPACE, wx.WXK_NUMPAD_SPACE):
+            self.SetValue(not self.IsChecked())
 
 
 class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
