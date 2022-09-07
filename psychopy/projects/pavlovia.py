@@ -767,6 +767,40 @@ class PavloviaProject(dict):
             }
             knownProjects.save()
 
+    @property
+    def experiments(self):
+        """
+        .psyexp files in the local folder for this project
+        """
+        root = pathlib.Path(self.localRoot)
+        exps = root.glob("*.psyexp")
+        return list(exps)
+
+    @property
+    def pyScripts(self):
+        """
+        .py files in the local folder for this project
+        """
+        root = pathlib.Path(self.localRoot)
+        scripts = root.glob("*.py")
+        return list(scripts)
+
+    @property
+    def jsScripts(self):
+        """
+        .js files in the local folder for this project
+        """
+        root = pathlib.Path(self.localRoot)
+        scripts = root.glob("*.js")
+        return list(scripts)
+
+    @property
+    def scripts(self):
+        """
+        .py and .js files in the local folder for this project
+        """
+        return self.pyScripts + self.jsScripts
+
     def sync(self, infoStream=None):
         """Performs a pull-and-push operation on the remote
 

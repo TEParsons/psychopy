@@ -226,6 +226,7 @@ class DetailsPanel(wx.Panel):
                           style=style)
         self.SetBackgroundColour("white")
         self.parent = parent
+        self.app = parent.app
         self._updateQueue = []
         # Setup sizer
         self.contentBox = wx.BoxSizer()
@@ -343,6 +344,35 @@ class DetailsPanel(wx.Panel):
             "Folder in which local files are stored for this project. Changes to files in this folder will be tracked "
             "and applied to the project when you 'sync', so make sure the only files in this folder are relevant!"
         ))
+
+        self.openBtns = {}
+        # Button to open experiment
+        self.openBtns['psyexp'] = wx.Button(self, size=(24, -1))
+        self.openBtns['psyexp'].SetBitmap(icons.ButtonIcon(stem="psyexp", size=16).bitmap)
+        self.rootSizer.Add(self.openBtns['psyexp'], border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM)
+        self.openBtns['psyexp'].SetToolTipString(_translate(
+            "Open experiment(s) in Builder."
+        ))
+        self.openBtns['psyexp'].Bind(wx.EVT_BUTTON, self.openExperiment)
+        self.openBtns['psyexp'].Hide()
+        # Button to open py script
+        self.openBtns['py'] = wx.Button(self, size=(24, -1))
+        self.openBtns['py'].SetBitmap(icons.ButtonIcon(stem="coderpython", size=16).bitmap)
+        self.rootSizer.Add(self.openBtns['py'], border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM)
+        self.openBtns['py'].SetToolTipString(_translate(
+            "Open Python script(s) in Coder."
+        ))
+        self.openBtns['py'].Bind(wx.EVT_BUTTON, self.openPyScript)
+        self.openBtns['py'].Hide()
+        # Button to open in Builder
+        self.openBtns['js'] = wx.Button(self, size=(24, -1))
+        self.openBtns['js'].SetBitmap(icons.ButtonIcon(stem="coderjs", size=16).bitmap)
+        self.rootSizer.Add(self.openBtns['js'], border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM)
+        self.openBtns['js'].SetToolTipString(_translate(
+            "Open JS script(s) in Coder."
+        ))
+        self.openBtns['js'].Bind(wx.EVT_BUTTON, self.openJsScript)
+        self.openBtns['js'].Hide()
         # Sep
         self.sizer.Add(wx.StaticLine(self, -1), border=6, flag=wx.EXPAND | wx.ALL)
         # Description
@@ -614,7 +644,45 @@ class DetailsPanel(wx.Panel):
         self.queueUpdate(evt)
         # todo: Refresh stars count
 
+    def openExperiment(self, evt=None):
+        """
+        Open experiments (psyexp files) from current project
+        """
+        for file in self.project.experiments:
+            self.app.newBuilderFrame(fileName=str(file))
+
+    def openPyScript(self, evt=None):
+        """
+        Open Python scripts from current project
+        """
+        self.app.showCoder()
+        for file in self.project.pyScripts:
+            self.app.coder.fileOpen(filename=str(file))
+
+    def openJsScript(self, evt=None):
+        """
+        Open JS scripts from current project
+        """
+        self.app.showCoder()
+        for file in self.project.jsScripts:
+            self.app.coder.fileOpen(filename=str(file))
+
+    def enableOpenButtons(self, evt=None):
+        # Enable/disable open button according to local root
+        if self.project is None or self.project.localRoot in (None, "", Path("")):
+            self.openBtns['psyexp'].Hide()
+            self.openBtns['py'].Hide()
+            self.openBtns['js'].Hide()
+        else:
+            self.openBtns['psyexp'].Show(bool(self.project.experiments))
+            self.openBtns['py'].Show(bool(self.project.pyScripts))
+            self.openBtns['js'].Show(bool(self.project.jsScripts))
+
+        self.Layout()
+
     def queueUpdate(self, evt=None):
+        # Enable/disable open buttons
+        self.enableOpenButtons()
         # Skip if no project
         if self.project is None or evt is None:
             return
@@ -691,7 +759,6 @@ class DetailsPanel(wx.Panel):
             wx.MessageDialog(self, message=_translate(
                 "Project info has changed, update online before closing?"
             ), style=wx.YES_NO | wx.CANCEL)
-
 
 
 class ProjectFrame(wx.Dialog):
