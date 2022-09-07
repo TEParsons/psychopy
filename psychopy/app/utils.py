@@ -754,6 +754,9 @@ class FileCtrl(wx.TextCtrl):
         self.fileBtn = wx.Button(self, size=(16, 16), style=wx.BORDER_NONE)
         self.fileBtn.SetBackgroundColour(self.GetBackgroundColour())
         self.fileBtn.SetBitmap(icons.ButtonIcon(stem="folder", size=16).bitmap)
+        self.fileBtn.SetToolTipString(_translate(
+            "Open browse dialog to search for {}."
+        ).format("folder" if dlgtype == "dir" else "file"))
         self.sizer.Add(self.fileBtn, border=4, flag=wx.ALL)
         # Bind browse function
         self.fileBtn.Bind(wx.EVT_BUTTON, self.browse)
