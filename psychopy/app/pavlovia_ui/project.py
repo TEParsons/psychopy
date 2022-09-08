@@ -553,6 +553,14 @@ class DetailsPanel(wx.Panel):
         dlg.ShowModal()
         self.project = dlg.project
 
+        # Do first push if we have a local root
+        if Path(self.project.localRoot).is_dir():
+            dlg = wx.MessageDialog(None, message=_translate(
+                "Do first sync with local folder?"
+            ), style=wx.YES_NO)
+            if dlg.ShowModal() == wx.ID_YES:
+                self.sync()
+
     def sync(self, evt=None):
         # If not synced locally, choose a folder
         if not self.localRoot.GetValue():
