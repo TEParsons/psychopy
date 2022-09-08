@@ -749,7 +749,10 @@ def syncProject(parent, project, file="", closeFrameWhenDone=False):
         else:
             # If they cancel out of login prompt, cancel sync
             return
-    # If not in a project, make one
+    # If not in a project, see if the current file is
+    if project is None:
+        project = pavlovia.getProject(file)
+    # If still not in a project, make one
     if project is None:
         msgDlg = wx.MessageDialog(parent,
                                message=_translate("This file doesn't belong to any existing project."),
