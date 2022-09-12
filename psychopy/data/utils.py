@@ -260,6 +260,8 @@ def importConditions(fileName, returnFieldNames=False, selection=""):
         unnamed = trialsArr.columns.to_series().str.contains('^Unnamed: ')
         trialsArr = trialsArr.loc[:, ~unnamed]  # clear unnamed cols
         logging.debug(u"Clearing unnamed columns from {}".format(fileName))
+        trialsArr = trialsArr.dropna(how="all")
+        logging.debug(u"Clearing blank rows from {}".format(fileName))
         trialList, fieldNames = pandasToDictList(trialsArr)
 
         return trialList, fieldNames
@@ -345,72 +347,76 @@ def importConditions(fileName, returnFieldNames=False, selection=""):
             trialList, fieldNames = _attemptImport(fileName=fileName)
 
     elif fileName.endswith(('.xlsx','.xlsm')):  # no xlsread so use openpyxl
-        if not haveOpenpyxl:
-            raise ImportError('openpyxl or xlrd is required for loading excel '
-                              'files, but neither was found.')
-
-        # data_only was added in 1.8
-        if parse_version(openpyxl.__version__) < parse_version('1.8'):
-            wb = load_workbook(filename=fileName)
-        else:
-            wb = load_workbook(filename=fileName, data_only=True)
-        ws = wb.worksheets[0]
-
-        logging.debug(u"Read excel file with openpyxl: {}".format(fileName))
+        # Attempt to use pandas for xlsx and xlsm files
         try:
-            # in new openpyxl (2.3.4+) get_highest_xx is deprecated
-            nCols = ws.max_column
-            nRows = ws.max_row
-        except Exception:
-            # version openpyxl 1.5.8 (in Standalone 1.80) needs this
-            nCols = ws.get_highest_column()
-            nRows = ws.get_highest_row()
+            trialList, fieldNames = _attemptImport(fileName=fileName)
+        except exceptions.ConditionsImportError as e:
+            if not haveOpenpyxl:
+                raise ImportError('openpyxl or xlrd is required for loading excel '
+                                  'files, but neither was found.')
 
-        # get parameter names from the first row header
-        fieldNames = []
-        rangeCols = list(range(nCols))
-        for colN in range(nCols):
-            if parse_version(openpyxl.__version__) < parse_version('2.0'):
-                fieldName = ws.cell(_getExcelCellName(col=colN, row=0)).value
+            # data_only was added in 1.8
+            if parse_version(openpyxl.__version__) < parse_version('1.8'):
+                wb = load_workbook(filename=fileName)
             else:
-                # From 2.0, cells are referenced with 1-indexing: A1 == cell(row=1, column=1)
-                fieldName = ws.cell(row=1, column=colN + 1).value
-            if fieldName:
-                # If column is named, add its name to fieldNames
-                fieldNames.append(fieldName)
-            else:
-                # Otherwise, ignore the column
-                rangeCols.remove(colN)
-        _assertValidVarNames(fieldNames, fileName)
+                wb = load_workbook(filename=fileName, data_only=True)
+            ws = wb.worksheets[0]
 
-        # loop trialTypes
-        trialList = []
-        for rowN in range(1, nRows):  # skip header first row
-            thisTrial = {}
-            for colN in rangeCols:
+            logging.debug(u"Read excel file with openpyxl: {}".format(fileName))
+            try:
+                # in new openpyxl (2.3.4+) get_highest_xx is deprecated
+                nCols = ws.max_column
+                nRows = ws.max_row
+            except Exception:
+                # version openpyxl 1.5.8 (in Standalone 1.80) needs this
+                nCols = ws.get_highest_column()
+                nRows = ws.get_highest_row()
+
+            # get parameter names from the first row header
+            fieldNames = []
+            rangeCols = list(range(nCols))
+            for colN in range(nCols):
                 if parse_version(openpyxl.__version__) < parse_version('2.0'):
-                    val = ws.cell(_getExcelCellName(col=colN, row=0)).value
+                    fieldName = ws.cell(_getExcelCellName(col=colN, row=0)).value
                 else:
                     # From 2.0, cells are referenced with 1-indexing: A1 == cell(row=1, column=1)
-                    val = ws.cell(row=rowN + 1, column=colN + 1).value
-                # if it looks like a list or tuple, convert it
-                if (isinstance(val, str) and
-                        (val.startswith('[') and val.endswith(']') or
-                                 val.startswith('(') and val.endswith(')'))):
-                    val = eval(val)
-                # if it has any line breaks correct them
-                if isinstance(val, str):
-                    val = val.replace('\\n', '\n')
-                # Convert from eu style decimals: replace , with . and try to make it a float
-                if isinstance(val, str):
-                    tryVal = val.replace(",", ".")
-                    try:
-                        val = float(tryVal)
-                    except ValueError:
-                        pass
-                fieldName = fieldNames[colN]
-                thisTrial[fieldName] = val
-            trialList.append(thisTrial)
+                    fieldName = ws.cell(row=1, column=colN + 1).value
+                if fieldName:
+                    # If column is named, add its name to fieldNames
+                    fieldNames.append(fieldName)
+                else:
+                    # Otherwise, ignore the column
+                    rangeCols.remove(colN)
+            _assertValidVarNames(fieldNames, fileName)
+
+            # loop trialTypes
+            trialList = []
+            for rowN in range(1, nRows):  # skip header first row
+                thisTrial = {}
+                for colN in rangeCols:
+                    if parse_version(openpyxl.__version__) < parse_version('2.0'):
+                        val = ws.cell(_getExcelCellName(col=colN, row=0)).value
+                    else:
+                        # From 2.0, cells are referenced with 1-indexing: A1 == cell(row=1, column=1)
+                        val = ws.cell(row=rowN + 1, column=colN + 1).value
+                    # if it looks like a list or tuple, convert it
+                    if (isinstance(val, str) and
+                            (val.startswith('[') and val.endswith(']') or
+                                     val.startswith('(') and val.endswith(')'))):
+                        val = eval(val)
+                    # if it has any line breaks correct them
+                    if isinstance(val, str):
+                        val = val.replace('\\n', '\n')
+                    # Convert from eu style decimals: replace , with . and try to make it a float
+                    if isinstance(val, str):
+                        tryVal = val.replace(",", ".")
+                        try:
+                            val = float(tryVal)
+                        except ValueError:
+                            pass
+                    fieldName = fieldNames[colN]
+                    thisTrial[fieldName] = val
+                trialList.append(thisTrial)
 
     elif fileName.endswith('.pkl'):
         f = open(fileName, 'rb')
