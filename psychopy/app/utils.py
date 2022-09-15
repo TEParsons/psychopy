@@ -1048,6 +1048,89 @@ class ToggleButtonArray(wx.Window, handlers.ThemeMixin):
             btn.OnHover()
 
 
+class FontManagerDialog(wx.Dialog):
+    class FontsPanel(wx.Panel):
+        def __init__(self, parent,
+                     label="",
+                     fontList=None):
+            # Alias None
+            if fontList is None:
+                fontList = []
+            # Initialise
+            wx.Panel.__init__(self, parent)
+            # Setup sizers
+            self.border = wx.BoxSizer(wx.VERTICAL)
+            self.SetSizer(self.border)
+            self.sizer = wx.BoxSizer(wx.VERTICAL)
+            self.border.Add(self.sizer, border=6, proportion=1, flag=wx.EXPAND | wx.ALL)
+            # Add body
+            self.label = wx.StaticText(self, label=label)
+            self.label.Wrap(250)
+            self.sizer.Add(self.label, border=6, flag=wx.EXPAND | wx.ALL)
+            # Add list control
+            self.ctrl = wx.ListCtrl(self, size=(250, -1), style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL)
+            self.ctrl.AppendColumn("Font", width=250)
+            for fontName in fontList:
+                self.ctrl.Append([fontName])
+            self.sizer.Add(self.ctrl, proportion=1, border=6, flag=wx.ALL)
+
+            self.Layout()
+
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent,
+                           title=_translate("Fonts..."),
+                           size=(620, 480),
+                           style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        # Setup sizers
+        self.border = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.border)
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.border.Add(self.sizer, border=12, proportion=1, flag=wx.EXPAND | wx.ALL)
+        # List ctrl of fonts
+        self.fontLists = wx.Notebook(self)
+        self.sizer.Add(self.fontLists, border=6, flag=wx.EXPAND | wx.ALL)
+        self.sources = {}
+        # Web safe fonts
+        self.sources['websafe'] = self.FontsPanel(
+            self.fontLists,
+            label=_translate(
+                "The following fonts are considered 'web safe', meaning that almost all browsers will know how to "
+                "present them. Using one of these fonts is the safest way to make sure your text looks consistent "
+                "across platforms."
+            ),
+            fontList=[
+                "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New",
+                "Brush Script MT"
+            ]
+        )
+        self.fontLists.AddPage(self.sources['websafe'], text=_translate("Web Safe"))
+        self.sources['websafe'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
+        # Preview box
+        self.preview = wx.TextCtrl(
+            self,
+            value=_translate("Write any text here to see it in the selected font"),
+            size=(256, -1),
+            style=wx.TE_MULTILINE)
+        self.sizer.Add(self.preview, proportion=1, border=6, flag=wx.EXPAND | wx.ALL)
+        # Make buttons
+        self.btns = self.CreateStdDialogButtonSizer(flags=wx.OK | wx.CANCEL | wx.HELP)
+        self.border.Add(self.btns, border=6, flag=wx.EXPAND | wx.ALL)
+
+    def onSelect(self, evt=None):
+        fontName = evt.GetItem().GetText()
+        # If they selected a font, style the preview
+        fontObj = self.preview.GetFont()
+        fontObj.SetFaceName(fontName)
+        self.preview.SetFont(fontObj)
+        # Do usual selection
+        evt.Skip()
+
+    def getValue(self):
+        page = self.fontLists.GetCurrentPage()
+        i = page.ctrl.GetFocusedItem()
+        return page.ctrl.GetItemText(i)
+
+
 def sanitize(inStr):
     """
     Process a string to remove any sensitive information, i.e. OAUTH keys
