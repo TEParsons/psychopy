@@ -1236,34 +1236,55 @@ def getNameWithNamespace(p):
     """
     Return None or the root path of the repository
     """
-    # Work out cwd
-    if not haveGit:
-        raise exceptions.DependencyError(
-                "gitpython and a git installation required for getGitRoot()")
+    def fromLocalRepo(p):
+        # Work out cwd
+        if not haveGit:
+            raise exceptions.DependencyError(
+                    "gitpython and a git installation required for getGitRoot()")
 
-    p = pathlib.Path(p).absolute()
-    if not p.is_dir():
-        p = p.parent  # given a file instead of folder?
-    # Open git process
-    proc = subprocess.Popen('git config --get remote.origin.url',
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            cwd=str(p), shell=True,
-                            universal_newlines=True)  # newlines forces stdout to unicode
-    stdout, stderr = proc.communicate()
-    # Find a gitlab url in the response
-    url = re.match("https:\/\/gitlab\.pavlovia\.org\/\w*\/\w*\.git", stdout)
-    if url:
-        # Get contents of url from response
-        url = url.string[url.pos:url.endpos]
-        # Get namespace/name string from url
-        path = url
-        path = re.sub("\.git[.\n]*", "", path)
-        path = re.sub("[.\n]*https:\/\/gitlab\.pavlovia\.org\/", "", path)
+        p = pathlib.Path(p).absolute()
+        if not p.is_dir():
+            p = p.parent  # given a file instead of folder?
+        # Open git process
+        proc = subprocess.Popen('git config --get remote.origin.url',
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                cwd=str(p), shell=True,
+                                universal_newlines=True)  # newlines forces stdout to unicode
+        stdout, stderr = proc.communicate()
+        # Find a gitlab url in the response
+        url = re.match("https:\/\/gitlab\.pavlovia\.org\/\w*\/\w*\.git", stdout)
+        if url:
+            # Get contents of url from response
+            url = url.string[url.pos:url.endpos]
+            # Get namespace/name string from url
+            path = url
+            path = re.sub("\.git[.\n]*", "", path)
+            path = re.sub("[.\n]*https:\/\/gitlab\.pavlovia\.org\/", "", path)
+            return path
+        else:
+            return None
+
+    def fromKnownProjects(p):
+        match = knownProjects.findByLocalRoot(p)
+        # If multiple projects found, just take the first
+        if isinstance(match, (list, tuple)):
+            match = match[0]
+        # If none found, return None
+        if match is None:
+            return None
+        # Get path from project
+        return match['id']
+
+    # Look for a local repo to see if the namespace/name ref is stored there
+    path = fromLocalRepo(p)
+    if path is not None:
         return path
-    else:
-        return None
 
+    # If not found, look for project in knownProjects dict whose local root matches the given folder
+    path = fromKnownProjects(p)
+    if path is not None:
+        return path
 
 def getProject(filename):
     """Will try to find (locally synced) pavlovia Project for the filename
