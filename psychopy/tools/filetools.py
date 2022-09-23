@@ -12,6 +12,8 @@ import shutil
 import sys
 import atexit
 import codecs
+from pathlib import Path
+
 import numpy as np
 import json
 import json_tricks
@@ -279,6 +281,30 @@ class KnownProjects(DictStorage):
         for projname in toPurge:
             del self[projname]
         DictStorage.save(self, filename)
+
+    def findByLocalRoot(self, folder):
+        """
+        Return any project whose local root matches the given directory
+        """
+        if folder is None:
+            return
+        # Pathify folder
+        folder = Path(folder)
+        # Blank array to store matches
+        matches = []
+        for proj in self.values():
+            # Check each known project to see if its local root is target folder or is parent of target folder
+            target = Path(proj['localRoot'])
+            if folder == target or target in folder.parents:
+                # If found, append to matches
+                matches.append(proj)
+        # Strip extraneous layer if only one match or no matches
+        if len(matches) == 0:
+            return None
+        if len(matches) == 1:
+            return matches[0]
+        # Return matches
+        return matches
 
 
 def pathToString(filepath):
