@@ -51,10 +51,11 @@ urlencode = parse.quote
 # TODO: test what happens if we have a network but pavlovia times out
 
 pavloviaPrefsDir = os.path.join(prefs.paths['userPrefsDir'], 'pavlovia')
-rootURL = "https://gitlab.pavlovia.org"
+target = "pavlovia"
+rootURL = f"https://gitlab.{target}.org"
 client_id = '4bb79f0356a566cd7b49e3130c714d9140f1d3de4ff27c7583fb34fbfac604e0'
 scopes = []
-redirect_url = 'https://gitlab.pavlovia.org/'
+redirect_url = f"https://gitlab.{target}.org/"
 
 knownUsers = DictStorage(
         filename=os.path.join(pavloviaPrefsDir, 'users.json'))
@@ -79,9 +80,10 @@ OK = 1
 
 def getAuthURL():
     state = str(uuid4())  # create a private "state" based on uuid
-    auth_url = ('https://gitlab.pavlovia.org/oauth/authorize?client_id={}'
-                '&redirect_uri={}&response_type=token&state={}'
-                .format(client_id, redirect_url, state))
+    auth_url = (
+        "https://gitlab.{}.org/oauth/authorize?client_id={}"
+        "&redirect_uri={}&response_type=token&state={}"
+    ).format(target, client_id, redirect_url, state)
     return auth_url, state
 
 
@@ -144,7 +146,7 @@ class User(dict):
         if isinstance(id, (float, int, str)):
             # If given a number or string, treat it as a user ID / username
             self.info = self.session.session.get(
-                "https://pavlovia.org/api/v2/designers/" + str(id)
+                f"https://{target}.org/api/v2/designers/" + str(id)
             ).json()['designer']
             # Make sure self.info has necessary keys
             assert 'gitlabId' in self.info, _translate(
@@ -513,18 +515,18 @@ class PavloviaSearch(pandas.DataFrame):
         if mine:
             # Display experiments by current user
             data = session.session.get(
-                f"https://pavlovia.org/api/v2/designers/{session.userID}/experiments?search={term}{filterBy}",
+                f"https://{target}.org/api/v2/designers/{session.userID}/experiments?search={term}{filterBy}",
                 timeout=10
             ).json()
         elif term or filterBy:
             data = session.session.get(
-                f"https://pavlovia.org/api/v2/experiments?search={term}{filterBy}",
+                f"https://{target}.org/api/v2/experiments?search={term}{filterBy}",
                 timeout=10
             ).json()
         else:
             # Display demos for blank search
             data = session.session.get(
-                "https://pavlovia.org/api/v2/experiments?search=demos&designer=demos",
+                "https://{target}.org/api/v2/experiments?search=demos&designer=demos",
                 timeout=10
             ).json()
         # Construct dataframe
@@ -629,7 +631,7 @@ class PavloviaProject(dict):
         # for a new project it may take time for Pavlovia to register the new ID so try for a while
         while self._info is None and (time.time() - start) < 30:
             requestVal = self.session.session.get(
-                f"https://pavlovia.org/api/v2/experiments/{self.project.id}",
+                f"https://{target}.org/api/v2/experiments/{self.project.id}",
             ).json()
             self._info = requestVal['experiment']
         if self._info is None:
@@ -762,8 +764,8 @@ class PavloviaProject(dict):
                 'id': self['path_with_namespace'],
                 'idNumber': self.id,
                 'localRoot': str(value),
-                'remoteHTTPS': f"https://gitlab.pavlovia.org/{self['path_with_namespace']}.git",
-                'remoteSSH': f"git@gitlab.pavlovia.org:{self['path_with_namespace']}.git"
+                'remoteHTTPS': f"https://gitlab.{target}.org/{self['path_with_namespace']}.git",
+                'remoteSSH': f"git@gitlab.{target}.org:{self['path_with_namespace']}.git"
             }
             knownProjects.save()
 
@@ -838,7 +840,7 @@ class PavloviaProject(dict):
             if ("The project you were looking for could not be found" in
                     traceback.format_exc()):
                     # pointing to a project at pavlovia but it doesn't exist
-                    logging.warning("Project not found on gitlab.pavlovia.org")
+                    logging.warning(f"Project not found on gitlab.{target}.org")
                     return MISSING_REMOTE
             else:
                 raise e
@@ -870,7 +872,7 @@ class PavloviaProject(dict):
             if ("The project you were looking for could not be found" in
                     traceback.format_exc()):
                     # pointing to a project at pavlovia but it doesn't exist
-                    logging.warning("Project not found on gitlab.pavlovia.org")
+                    logging.warning(f"Project not found on gitlab.{target}.org")
                     return MISSING_REMOTE
             else:
                 raise e
@@ -921,7 +923,7 @@ class PavloviaProject(dict):
     def remoteWithToken(self):
         """The remote for git sync using an oauth token (always as a bytes obj)
         """
-        return f"https://oauth2:{self.session.token}@gitlab.pavlovia.org/{self['path_with_namespace']}"
+        return f"https://oauth2:{self.session.token}@gitlab.{target}.org/{self['path_with_namespace']}"
 
     def writeGitIgnore(self):
         """Check that a .gitignore file exists and add it if not"""
@@ -1150,7 +1152,7 @@ class PavloviaProject(dict):
 
     @pavloviaStatus.setter
     def pavloviaStatus(self, newStatus):
-        url = 'https://pavlovia.org/server?command=update_project'
+        url = f"https://{target}.org/server?command=update_project"
         data = {'projectId': self.id, 'projectStatus': 'ACTIVATED'}
         resp = requests.put(url, data)
         if resp.status_code == 200:
@@ -1300,7 +1302,7 @@ def getProject(filename):
         thisId = knownProjects[path]['idNumber']
         # Check that project still exists on Pavlovia
         requestVal = session.session.get(
-            f"https://pavlovia.org/api/v2/experiments/{thisId}",
+            f"https://{target}.org/api/v2/experiments/{thisId}",
         ).json()
         if requestVal['experiment'] is None:
             # If project has been deleted, return None
@@ -1318,11 +1320,11 @@ def getProject(filename):
         localRepo = git.Repo(gitRoot)
         for remote in localRepo.remotes:
             for url in remote.urls:
-                if "gitlab.pavlovia.org" in url:
+                if f"gitlab.{target}.org" in url:
                     # Get namespace from url
                     # could be 'https://gitlab.pavlovia.org/NameSpace/Name.git'
                     # or may be 'git@gitlab.pavlovia.org:NameSpace/Name.git'
-                    namespaceName = url.split('gitlab.pavlovia.org')[1]
+                    namespaceName = url.split(f"gitlab.{target}.org")[1]
                     # remove the first char if it's : or /
                     if namespaceName[0] in ['/', ':']:
                         namespaceName = namespaceName[1:]
@@ -1358,7 +1360,7 @@ def getProject(filename):
                     if pavSession.user:
                         # If we are now logged in, get project id via session
                         requestVal = pavSession.session.get(
-                            f"https://pavlovia.org/api/v2/experiments/{namespaceName}",
+                            f"https://{target}.org/api/v2/experiments/{namespaceName}",
                         ).json()
                         expInfo = requestVal['experiment']
                         if expInfo is not None:

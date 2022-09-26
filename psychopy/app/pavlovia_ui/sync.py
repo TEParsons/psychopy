@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 from psychopy.localization import _translate
 from ...tools.stringtools import valid_proj_name
+from psychopy.projects.pavlovia import target as pavTarget
 
 
 class SyncDialog(wx.Dialog):
@@ -99,7 +100,7 @@ class CreateDlg(wx.Dialog):
         self.nameSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sizer.Add(self.nameSizer, border=3, flag=wx.ALL | wx.EXPAND)
         # URL prefix
-        self.nameRootLbl = wx.StaticText(self, label="pavlovia.org /")
+        self.nameRootLbl = wx.StaticText(self, label=f"{pavTarget}.org /")
         self.nameSizer.Add(self.nameRootLbl, border=3, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         # Namespace ctrl
         self.namespaceCtrl = wx.Choice(self, choices=[user['username']] + user.session.listUserGroups(namesOnly=True))

@@ -264,8 +264,8 @@ class DetailsPanel(wx.Panel):
         self.titleSizer.Add(self.author, border=6, flag=wx.LEFT | wx.RIGHT)
         # Pavlovia link
         self.link = wxhl.HyperLinkCtrl(self, -1,
-                                       label="https://pavlovia.org/",
-                                       URL="https://pavlovia.org/",
+                                       label=f"https://{pavlovia.target}.org/",
+                                       URL=f"https://{pavlovia.target}.org/",
                                        )
         self.link.SetBackgroundColour("white")
         self.titleSizer.Add(self.link, border=6, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM)
@@ -426,7 +426,7 @@ class DetailsPanel(wx.Panel):
             self.author.Disable()
             # Link
             self.link.SetLabel("---/---")
-            self.link.SetURL("https://pavlovia.org/")
+            self.link.SetURL(f"https://{pavlovia.target}.org/")
             self.link.Disable()
             # Star button
             self.starBtn.Disable()
@@ -489,7 +489,7 @@ class DetailsPanel(wx.Panel):
             self.author.Enable()
             # Link
             self.link.SetLabel(project['path_with_namespace'])
-            self.link.SetURL("https://pavlovia.org/" + project['path_with_namespace'])
+            self.link.SetURL(f"https://{pavlovia.target}.org/" + project['path_with_namespace'])
             self.link.Enable()
             # Star button
             self.starBtn.value = project.starred
@@ -593,7 +593,7 @@ class DetailsPanel(wx.Panel):
             if dlg.ShowModal() == wx.ID_YES:
                 # If yes, show forked project
                 projData = requests.get(
-                    f"https://pavlovia.org/api/v2/experiments/{self.project.session.user['username']}/{self.project.info['pathWithNamespace'].split('/')[1]}"
+                    f"https://{pavlovia.target}.org/api/v2/experiments/{self.project.session.user['username']}/{self.project.info['pathWithNamespace'].split('/')[1]}"
                 ).json()
                 self.project = PavloviaProject(projData['experiment']['gitlabId'])
                 return
@@ -678,13 +678,13 @@ class DetailsPanel(wx.Panel):
             success = self.project.save()
         if obj == self.status and self.project.editable:
             retval = self.session.session.put(
-                f"https://pavlovia.org/api/v2/experiments/{self.project.id}",
+                f"https://{pavlovia.target}.org/api/v2/experiments/{self.project.id}",
                 json={'status2': self.status.GetStringSelection().upper()}
             )
             success = True
         if obj == self.tags and self.project.editable:
             retval = self.session.session.put(
-                f"https://pavlovia.org/api/v2/experiments/{self.project.id}",
+                f"https://{pavlovia.target}.org/api/v2/experiments/{self.project.id}",
                 json={"keywords": self.tags.GetValue()}
             )
             success = True
