@@ -1077,6 +1077,8 @@ class FontManagerDialog(wx.Dialog):
             self.Layout()
 
     def __init__(self, parent):
+        from psychopy.visual.textbox2 import fontmanager
+        import freetype as ft
         wx.Dialog.__init__(self, parent,
                            title=_translate("Fonts..."),
                            size=(620, 480),
@@ -1105,6 +1107,43 @@ class FontManagerDialog(wx.Dialog):
         )
         self.fontLists.AddPage(self.sources['websafe'], text=_translate("Web Safe"))
         self.sources['websafe'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
+        # System fonts
+        systemFontFiles = fontmanager.getSystemFonts()
+        systemFontFaces = []
+        for filePath in systemFontFiles:
+            face = ft.Face(str(filePath))
+            systemFontFaces.append(
+                face.family_name.decode("utf-8")
+            )
+        self.sources['system'] = self.FontsPanel(
+            self.fontLists,
+            label=_translate(
+                "The following fonts are installed on this computer. This means these will present as expected when "
+                "running on this computer, but results may vary on other devices."
+            ),
+            fontList=systemFontFaces
+        )
+        self.fontLists.AddPage(self.sources['system'], text=_translate("System"))
+        self.sources['system'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
+        # User fonts
+        userFontFiles = fontmanager.getUserFonts()
+        userFontFaces = []
+        for filePath in userFontFiles:
+            face = ft.Face(str(filePath))
+            userFontFaces.append(
+                face.family_name.decode("utf-8")
+            )
+        self.sources['user'] = self.FontsPanel(
+            self.fontLists,
+            label=_translate(
+                "The following fonts are saved to the 'fonts' folder in your PsychoPy user folder. This means these "
+                "will present as expected when running locally on this computer or any which has these fonts saved, "
+                "but results may vary when running online or on other devices."
+            ),
+            fontList=userFontFaces
+        )
+        self.fontLists.AddPage(self.sources['user'], text=_translate("User"))
+        self.sources['user'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
         # Preview box
         self.preview = wx.TextCtrl(
             self,
