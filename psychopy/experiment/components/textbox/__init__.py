@@ -89,7 +89,7 @@ class TextboxComponent(BaseVisualComponent):
             canBePath=False,
             label=_localized['text'])
         self.params['font'] = Param(
-            font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
+            font, valType='str', inputType="font", allowedTypes=[], categ='Formatting',
             updates='constant', allowedUpdates=_allow3[:],  # copy the list
             hint=_translate("The font name (e.g. Comic Sans)"),
             label=_localized['font'])

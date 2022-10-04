@@ -22,6 +22,7 @@ from pathlib import Path
 
 from . import CodeBox
 from ..localizedStrings import _localizedDialogs as _localized
+from ... import utils
 from ...coder import BaseCodeEditor
 from ...themes import icons, handlers
 
@@ -184,6 +185,35 @@ class MultiLineCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
         SingleLineCtrl.__init__(self, parent, valType,
                                 val=val, fieldName=fieldName,
                                 size=size, style=wx.TE_MULTILINE)
+
+
+class FontCtrl(wx.Panel, _HideMixin):
+    def __init__(self, parent,
+                 val="", fieldName=""):
+        wx.Panel.__init__(self, parent)
+        # Setup sizer
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.SetSizer(self.sizer)
+        # Add value ctrl
+        self.ctrl = wx.TextCtrl(self, value=val)
+        self.sizer.Add(self.ctrl, proportion=1, flag=wx.EXPAND)
+        # Space
+        self.sizer.AddSpacer(6)
+        # Add button to open font manager dlg
+        self.mgrBtn = wx.Button(self, size=(24, 24))
+        self.mgrBtn.Bind(wx.EVT_BUTTON, self.onFontManager)
+        self.sizer.Add(self.mgrBtn, flag=wx.EXPAND)
+
+    def getValue(self, evt=None):
+        return self.ctrl.GetValue()
+
+    def setValue(self, value):
+        self.ctrl.SetValue(value)
+
+    def onFontManager(self, evt=None):
+        dlg = utils.FontManagerDialog(self)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.ctrl.SetValue(dlg.getValue())
 
 
 class CodeCtrl(BaseCodeEditor, handlers.ThemeMixin, _ValidatorMixin):

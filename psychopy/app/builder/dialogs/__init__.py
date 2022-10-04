@@ -131,6 +131,9 @@ class ParamCtrls():
             # Set focus if field is text of a Textbox or Text component
             if fieldName == 'text':
                 self.valueCtrl.SetFocus()
+        elif param.inputType == 'font':
+            self.valueCtrl = paramCtrls.FontCtrl(parent,
+                                                 val=str(param.val), fieldName=fieldName)
         elif param.inputType == 'spin':
             # Create single line string control
             self.valueCtrl = paramCtrls.SingleLineCtrl(parent,
