@@ -641,6 +641,88 @@ class TextureGlyph:
             return 0
 
 
+def getFontsInFolders(folders, recursive=True):
+    """
+    Look for font files in the given folders.
+
+    Parameters
+    ----------
+    folders : list
+        List of folders to search in
+    recursive : bool
+        Search recursively through subfolders
+
+    Returns
+    -------
+    list of pathlib.Path objects
+    """
+    # Blank output to store found fonts in
+    fontPaths = []
+    # For each folder...
+    for thisFolder in folders:
+        thisFolder = Path(thisFolder)
+        try:
+            for thisExt in supportedExtensions:
+                # Look for files matching supported extensions in this folder
+                if recursive:
+                    fontPaths.extend(thisFolder.rglob("*.{}".format(thisExt)))
+                else:
+                    fontPaths.extend(thisFolder.glob("*.{}".format(thisExt)))
+        except PermissionError:
+            logging.warning(f"The fonts folder '{thisFolder}' exists but the current user doesn't have read "
+                            "access to it. Fonts from that folder won't be available to TextBox")
+
+    return fontPaths
+
+
+def getSystemFonts():
+    """
+    Search for font files installed on local system
+
+    Returns
+    -------
+    list of pathlib.Path objects
+    """
+
+    # Work out search paths from OS
+    searchPaths = []
+    if searchPaths is None or len(searchPaths) == 0:
+        if sys.platform == 'win32':
+            # on Windows, just leave it to matplotlib as below
+            pass
+        elif sys.platform == 'darwin':
+            # on mac matplotlib doesn't include 'ttc' files (which are fine)
+            searchPaths = _OSXFontDirectories
+        elif sys.platform.startswith('linux'):
+            searchPaths = _X11FontDirectories
+    # Do search
+    fontPaths = getFontsInFolders(searchPaths, recursive=True)
+
+    # if we failed let matplotlib have a go
+    if not fontPaths:
+        from matplotlib import font_manager
+        fontPaths = font_manager.findSystemFonts()
+
+    return fontPaths
+
+
+def getUserFonts():
+    """
+    Search for font files installed to user's font folder
+
+    Returns
+    -------
+    list of pathlib.Path objects
+    """
+    searchPaths = [
+        Path(prefs.paths['fonts']),
+        Path(prefs.paths['resources']) / "fonts"
+    ]
+    fontPaths = getFontsInFolders(searchPaths, recursive=True)
+
+    return fontPaths
+
+
 def findFontFiles(folders=(), recursive=True):
     """Search for font files in the folder (or system folders)
 
@@ -653,42 +735,10 @@ def findFontFiles(folders=(), recursive=True):
     -------
     list of pathlib.Path objects
     """
-    searchPaths = folders
-    if searchPaths is None or len(searchPaths)==0:
-        if sys.platform == 'win32':
-            searchPaths = []  # just leave it to matplotlib as below
-        elif sys.platform == 'darwin':
-            # on mac matplotlib doesn't include 'ttc' files (which are fine)
-            searchPaths = _OSXFontDirectories
-        elif sys.platform.startswith('linux'):
-            searchPaths = _X11FontDirectories
-    # search those folders
-    fontPaths = []
-    for thisFolder in searchPaths:
-        thisFolder = Path(thisFolder)
-        try:
-            for thisExt in supportedExtensions:
-                if recursive:
-                    fontPaths.extend(thisFolder.rglob("*.{}".format(thisExt)))
-                else:
-                    fontPaths.extend(thisFolder.glob("*.{}".format(thisExt)))
-        except PermissionError:
-            logging.warning(f"The fonts folder '{thisFolder}' exists but the current user doesn't have read "
-                            "access to it. Fonts from that folder won't be available to TextBox")
+    systemFonts = getSystemFonts()
+    userFonts = getUserFonts()
 
-    # if we failed let matplotlib have a go
-    if not fontPaths:
-        from matplotlib import font_manager
-        fontPaths = font_manager.findSystemFonts()
-
-    # search resources folder and user's own fonts folder
-    for thisFolder in [Path(prefs.paths['fonts']), Path(prefs.paths['resources']) / "fonts"]:
-        for thisExt in supportedExtensions:
-            if recursive:
-                fontPaths.extend(thisFolder.rglob("*.{}".format(thisExt)))
-            else:
-                fontPaths.extend(thisFolder.glob("*.{}".format(thisExt)))
-    return fontPaths
+    return systemFonts + userFonts
 
 
 class FontManager():
@@ -919,7 +969,7 @@ class FontManager():
         the script, so any extra font paths need to be added each time the
         script starts.
         """
-        fontPaths = findFontFiles([fontDir], recursive=recursive)
+        fontPaths = getFontsInFolders([fontDir], recursive=recursive)
         return self.addFontFiles(fontPaths)
 
     # Class methods for FontManager below this comment should not need to be
