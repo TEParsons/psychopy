@@ -201,9 +201,11 @@ class ComponentIcon(BaseIcon):
             matches[appendix] = match
         # Choose / resize file according to retina
         if retStr in matches:
-            file = matches[retStr]
+            file = str(matches[retStr])
+        elif len(matches):
+            file = str(list(matches.values())[0])
         else:
-            file = list(matches.values())[0]
+            file = resources / theme.icons / "invalid_img.png"
         img = wx.Image(str(file))
         # Use appropriate sized bitmap
         bmp = wx.Bitmap(img)
