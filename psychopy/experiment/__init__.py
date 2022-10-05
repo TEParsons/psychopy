@@ -32,7 +32,7 @@ def getAllElements(fetchIcons=True):
     comps = getAllComponents(fetchIcons=fetchIcons)
     rts = getAllStandaloneRoutines(fetchIcons=fetchIcons)
 
-    return comps | rts
+    return comps.update(rts)
 
 
 def getAllCategories():
