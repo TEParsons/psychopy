@@ -32,6 +32,16 @@ unitTypes = [
     'height'
 ]
 
+# known shorthand for unit spaces (e.g. "1px" becomes 1 in pix units)
+shorthand = {
+    "px": "pix",
+    "cm": "cm",
+    "pt": "pt",
+    "h": "height",
+    "n": "norm",
+    "d": "deg"
+}
+
 # anchor offsets and names
 _anchorAliases = {
     'top': -0.5,
@@ -138,6 +148,13 @@ class Vector:
         """
         # Assume valid until shown otherwise
         self.valid = True
+
+        # Identify units shorthand
+        if isinstance(value, str):
+            impliedValue, impliedUnits = interpretShorthand(value)
+            if impliedUnits is not None:
+                value = impliedValue
+                units = impliedUnits
 
         # Check units are valid
         if units not in unitTypes:
@@ -904,6 +921,53 @@ class Vertices:
     @height.setter
     def height(self, value):
         self.setas(value, 'height')
+
+
+def interpretShorthand(value):
+    """
+    Infer from a shorthand string (e.g. "1px", "0.5h", etc.) what value and unit space
+    are indicated.
+
+    Parameters
+    ----------
+    value : str
+        Single value followed by any of the shorthand strings specified in layout.shorthand
+
+    Returns
+    -------
+    value : any
+        Value from input string
+    units : str
+        Unit space indicated by shorthand in string
+    """
+    # Stringify value
+    value = str(value)
+
+    units = None
+    for key in shorthand:
+        # Try each shorthand key
+        if value.endswith(key):
+            # If shorthand found, get corresponding units str
+            units = shorthand[key]
+            # Remove shorthand from value
+            value = value[:-len(key)]
+
+    # Un-stringify value
+    if value.isnumeric():
+        # Identify integers
+        value = int(value)
+    elif "." in value:
+        # Identify floats
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+    elif value in ("None", "none"):
+        # Identify None
+        value = None
+
+    return value, units
+
 
 
 if __name__ == "__main__":
