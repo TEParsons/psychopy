@@ -10,6 +10,39 @@ class TestVector:
         self.win.close()
         del self.win
 
+    def test_shorthand(self):
+        """
+        Test that units shorthand functions as intended
+        """
+        cases = [
+            # Basic test for each shorthand
+            {"inval": "1px", "inunits": "pix", "outval": 1, "outunits": "pix"},
+            {"inval": "1cm", "inunits": "cm", "outval": 1, "outunits": "cm"},
+            {"inval": "1h", "inunits": "height", "outval": 1, "outunits": "height"},
+            {"inval": "1n", "inunits": "norm", "outval": 1, "outunits": "norm"},
+            {"inval": "1d", "inunits": "deg", "outval": 1, "outunits": "deg"},
+            # Value types
+            {"inval": "1.5px", "inunits": "pix", "outval": 1.5, "outunits": "pix"},
+            {"inval": "Nonepx", "inunits": "pix", "outval": None, "outunits": "pix"},
+            # Cross-unit override
+            {"inval": "Nonepx", "inunits": "norm", "outval": None, "outunits": "pix"},
+            {"inval": "Nonen", "inunits": "pix", "outval": None, "outunits": "norm"},
+        ]
+
+        for case in cases:
+            # Check pure shorthand parsing function
+            val, units = layout.interpretShorthand(case['inval'])
+            assert val == case['outval'], (
+                f"{case['inval']} should give {case['outval']}, but instead gave {val}.")
+            assert units == case['outunits'], (
+                f"{case['inval']} should give units {case['outunits']}, but instead gave {units}.")
+            # Create Vector object from given string and units
+            actual = layout.Vector(case['inval'], units=case['inunits'], win=self.win)
+            # Create target vector
+            target = layout.Vector(case['outval'], units=case['outunits'], win=self.win)
+            # Check vector objects are the same value
+            assert actual == target
+
     def test_values(self):
         """
         Check that Vector objects with various values return as intended in a variety of unit spaces.
