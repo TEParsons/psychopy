@@ -69,7 +69,7 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
             exp, parentName="specimen", name="playMusic",
             beginExp=(
                 f"music = sound.Sound(\"{manifest['music'][0]}\", secs=-1, stereo=True, hamming=True,name='music')\n"
-                f"music.play(repetitions=2)"
+                f"music.play(loops=2)"
             )
         )
         rt.addComponent(comp)
