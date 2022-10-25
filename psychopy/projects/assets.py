@@ -11,7 +11,7 @@ import pandas as pd
 from numpy import random
 
 
-def generateSpecimen(root, colorIcons=True):
+def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="white"):
     """
     Create a specimen psyexp file for an asset pack using assets defined in `assets/manifest.csv`.
 
@@ -21,16 +21,21 @@ def generateSpecimen(root, colorIcons=True):
         Root folder of this asset pack - i.e. the folder above `assets` where the specimen file will be stored.
     colorIcons : bool
         If True, icons from the `icons` column of the manifest will be recolored in the specimen.
+    interpolate : str
+        How to resize images - "linear" is blurry but generally better looking, "nearest" preserves pixel
+        definition but can look blocky.
+    textColor : color
+        Color of the text in the specimen
     """
     # Pathify root
     root = Path(root)
 
     # Check that necessary files and folders exist
     assetsFolder = root / "assets"
-    assert assetsFolder.is_dir()
+    assert assetsFolder.is_dir(), f"Assets folder does not exist, should be: {assetsFolder}"
     possibleManifests = assetsFolder.glob("manifest.*")
     manifestFile = list(possibleManifests)[0]
-    assert manifestFile.is_file()
+    assert manifestFile.is_file(), f"Manifest file does not exist, should be: {root / 'manifest.csv'}"
 
     # Read manifest
     if manifestFile.suffix == ".csv":
@@ -61,8 +66,9 @@ def generateSpecimen(root, colorIcons=True):
         comp = TextboxComponent(
             exp, parentName="specimen", name=makeValidVarName(font),
             startVal=0, stopVal=1,
+            color=textColor,
             text=font, font=font, letterHeight=0.1, alignment="center left",
-            pos=(-0.9, tbY), size=(0.5, 0.2), anchor="top left"
+            pos=(-0.9, tbY), size=(0.9, 0.2), anchor="top left"
         )
         rt.addComponent(comp)
         # Calculate next position
@@ -109,7 +115,8 @@ def generateSpecimen(root, colorIcons=True):
             comp = ImageComponent(
                 exp, parentName="specimen", name=f"icon{row[0]}{col[0]}",
                 startVal=0, stopVal=1,
-                pos=pos, size=(None, 0.3), anchor="top right"
+                interpolate=interpolate,
+                pos=pos, size=(None, 0.25), anchor="top right"
             )
             rt.addComponent(comp)
             # Add icons to animation spreadsheet
@@ -133,7 +140,8 @@ def generateSpecimen(root, colorIcons=True):
         comp = ImageComponent(
             exp, parentName="specimen", name=f"image{imgNum}",
             startVal=0, stopVal=1,
-            pos=(imX, -0.9), size=(None, 0.5), anchor="bottom right"
+            interpolate=interpolate,
+            pos=(imX, -0.9), size=(0.4, None), anchor="bottom right"
         )
         rt.addComponent(comp)
         # Add icons to animation spreadsheet
