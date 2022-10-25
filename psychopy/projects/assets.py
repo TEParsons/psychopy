@@ -5,6 +5,8 @@ from psychopy.experiment.routines import Routine
 from psychopy.experiment.components.textbox import TextboxComponent
 from psychopy.experiment.components.polygon import PolygonComponent
 from psychopy.experiment.components.image import ImageComponent
+from psychopy.experiment.components.sound import SoundComponent
+from psychopy.experiment.components.code import CodeComponent
 
 from pathlib import Path
 import pandas as pd
@@ -53,11 +55,24 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
     exp.settings.params['Units'].val = "norm"
     exp.settings.params['Full-screen window'].val = False
     exp.settings.params['Window size (pixels)'].val = [720, 720]
-    exp.settings.params['backgroundImg'].val = manifest['backgrounds'][0]
-    exp.settings.params['backgroundFit'].val = 'cover'
     rt = Routine(name="specimen", exp=exp)
     exp.addRoutine("specimen", rt)
     exp.flow.addRoutine(rt, pos=0)
+
+    # Add background image
+    exp.settings.params['backgroundImg'].val = manifest['backgrounds'][0]
+    exp.settings.params['backgroundFit'].val = 'cover'
+
+    # Add background music
+    if len(manifest['music']):
+        comp = CodeComponent(
+            exp, parentName="specimen", name="playMusic",
+            beginExp=(
+                f"music = sound.Sound(\"{manifest['music'][0]}\", secs=-1, stereo=True, hamming=True,name='music')\n"
+                f"music.play(repetitions=2)"
+            )
+        )
+        rt.addComponent(comp)
 
     # Make textboxes
     tbY = 0.9
