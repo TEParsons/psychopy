@@ -6,6 +6,7 @@ from psychopy.experiment.components.textbox import TextboxComponent
 from psychopy.experiment.components.polygon import PolygonComponent
 from psychopy.experiment.components.image import ImageComponent
 from psychopy.experiment.components.sound import SoundComponent
+from psychopy.experiment.components.button import ButtonComponent
 from psychopy.experiment.components.code import CodeComponent
 
 from pathlib import Path
@@ -31,7 +32,10 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
     """
     # Pathify root
     root = Path(root)
-
+    
+    # Specify how long each frame will take
+    frameDur = 2
+    
     # Check that necessary files and folders exist
     assetsFolder = root / "assets"
     assert assetsFolder.is_dir(), f"Assets folder does not exist, should be: {assetsFolder}"
@@ -64,7 +68,7 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
     exp.settings.params['backgroundFit'].val = 'cover'
 
     # Add background music
-    if len(manifest['music']):
+    if manifest['music'][0] is not None:
         comp = CodeComponent(
             exp, parentName="specimen", name="playMusic",
             beginExp=(
@@ -80,7 +84,7 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
         # Create textbox component
         comp = TextboxComponent(
             exp, parentName="specimen", name=makeValidVarName(font),
-            startVal=0, stopVal=1,
+            startVal=0, stopVal=frameDur,
             color=textColor,
             text=font, font=font, letterHeight=0.1, alignment="center left",
             pos=(-0.9, tbY), size=(0.9, 0.2), anchor="top left"
@@ -95,7 +99,7 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
         # Create polygon component
         comp = PolygonComponent(
             exp, parentName="specimen", name=f"color{i}",
-            startVal=0, stopVal=1,
+            startVal=0, stopVal=frameDur,
             fillColor=color, lineColor=None,
             pos=(csX, -0.9), size=(0.1, 0.1), anchor="bottom left",
             shape="rectangle"
@@ -129,7 +133,7 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
             # Create image component
             comp = ImageComponent(
                 exp, parentName="specimen", name=f"icon{row[0]}{col[0]}",
-                startVal=0, stopVal=1,
+                startVal=0, stopVal=frameDur,
                 interpolate=interpolate,
                 pos=pos, size=(None, 0.25), anchor="top right"
             )
@@ -154,7 +158,7 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
         # Create image component
         comp = ImageComponent(
             exp, parentName="specimen", name=f"image{imgNum}",
-            startVal=0, stopVal=1,
+            startVal=0, stopVal=frameDur,
             interpolate=interpolate,
             pos=(imX, -0.9), size=(0.4, None), anchor="bottom right"
         )
@@ -167,6 +171,32 @@ def generateSpecimen(root, colorIcons=True, interpolate="linear", textColor="whi
         comp.params['image'].updates = f"set every repeat"
         # Calculate next position
         imX -= 0.5
+
+    # Create buttons to play sounds
+    sndY = tbY - 0.2
+    for soundNo, sound in enumerate(manifest['sounds']):
+        soundVarName = f"sound{soundNo}"
+        comp = CodeComponent(
+            exp, parentName="specimen", name=soundVarName,
+            beginExp=(
+                f"{soundVarName} = sound.Sound(\"{sound}\", secs=-1, stereo=True, hamming=True,name='{soundVarName}')"
+            )
+        )
+        rt.addComponent(comp)
+        comp = ButtonComponent(
+            exp, parentName="specimen", name=soundVarName + "Btn",
+            startVal=0, stopVal=frameDur,
+            pos=(-0.9, sndY), size=(0.5, 0.1), anchor="center left",
+            text=f"Sound {soundNo}", font=random.choice(manifest['fonts']), color=textColor, fillColor="", borderColor=textColor, borderWidth=2,
+            callback=(
+                f"{soundVarName}.play()"
+            ), forceEndRoutine=False,
+        )
+        sndY -= 0.15
+        # Stop making sounds if there's too many to fit
+        if sndY <= -0.8:
+            break
+        rt.addComponent(comp)
 
     # Save animation spreadsheet
     animation.to_csv(str(root / "animation.csv"))
