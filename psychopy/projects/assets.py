@@ -11,7 +11,7 @@ import pandas as pd
 from numpy import random
 
 
-def compileAssetPack(root, colorIcons=True):
+def generateSpecimen(root, colorIcons=True):
     """
     Create a specimen psyexp file for an asset pack using assets defined in `assets/manifest.csv`.
 
