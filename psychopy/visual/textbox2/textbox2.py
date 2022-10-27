@@ -12,23 +12,19 @@ some more added:
 
     - fast like TextBox (TextStim is pyglet-based and slow)
     - provides for fonts that aren't monospaced (unlike TextBox)
-    - adds additional options to use <b>bold<\b>, <i>italic<\i>, <c=#ffffff>color</c> tags in text
+    - adds additional options to use <b>bold<\b> and <i>italic<\i> tags in text
 
 """
-from ast import literal_eval
-
 import numpy as np
 from arabic_reshaper import ArabicReshaper
 from pyglet import gl
 from bidi import algorithm as bidi
-import re
 
 from ..aperture import Aperture
 from ..basevisual import BaseVisualStim, ColorMixin, ContainerMixin, WindowMixin
 from psychopy.tools.attributetools import attributeSetter, setAttribute
 from psychopy.tools.arraytools import val2array
 from psychopy.tools.monitorunittools import convertToPix
-from psychopy.colors import Color
 from .fontmanager import FontManager, GLFont
 from .. import shaders
 from ..rect import Rect
@@ -43,16 +39,14 @@ rgbShader = None
 alphaShader = None
 showWhiteSpace = False
 
+NONE=0
+ITALIC=1
+BOLD=2
+
 codes = {'BOLD_START': u'\uE100',
          'BOLD_END': u'\uE101',
          'ITAL_START': u'\uE102',
-         'ITAL_END': u'\uE103',
-         'COLOR_START': u'\uE104',
-         'COLOR_END': u'\uE105'}
-
-# Compile regex pattern for color matching once
-re_color_pattern = re.compile('<c=[^>]*>')
-_colorCache = {}
+         'ITAL_END': u'\uE103'}
 
 wordBreaks = " -\n"  # what about ",."?
 
@@ -595,84 +589,63 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
     @property
     def text(self):
-        return self._styles.formatted_text
+        lastFormatter = NONE
+        formatted_text = ''
+        styles = self._styles
+        for i, c in enumerate(self._text):
+            if styles[i] == ITALIC and lastFormatter != styles[i]:
+                formatted_text+='<i>%s'%(c)
+            elif styles[i] == BOLD and lastFormatter != styles[i]:
+                formatted_text+='<b>%s'%(c)
+            
+            elif styles[i] != ITALIC and lastFormatter == ITALIC:
+                formatted_text+='</i>%s'%(c)
+            elif styles[i] != BOLD and lastFormatter == BOLD:
+                formatted_text+='</b>%s'%(c)
+            else:
+                formatted_text+=c
+            lastFormatter = styles[i]
+        return formatted_text
     
     @text.setter
     def text(self, text):
         # Convert to string
         text = str(text)
-        original_text = text
         # Substitute HTML tags
         text = text.replace('<i>', codes['ITAL_START'])
         text = text.replace('</i>', codes['ITAL_END'])
         text = text.replace('<b>', codes['BOLD_START'])
-        text = text.replace('</b>', codes['BOLD_END'])
-        text = text.replace('</c>', codes['COLOR_END'])
-
-        # Handle starting color tag
-        colorMatches = re.findall(re_color_pattern, text)
-        # Only execute if color codes are found to save a regex call
-        if len(colorMatches) > 0:
-            text = re.sub(re_color_pattern, codes['COLOR_START'], text)
-        # Interpret colors from tags
-        color_values = []
-        for match in colorMatches:
-            # Strip C tag
-            matchKey = match.replace("<c=", "").replace(">", "")
-            # Convert to arrays as needed
-            try:
-                matchVal = literal_eval(matchKey)
-            except (ValueError, SyntaxError):
-                # If eval fails, use value as is
-                matchVal = matchKey
-            # Retrieve/cache color
-            if matchKey not in _colorCache:
-                _colorCache[matchKey] = Color(matchVal, self.colorSpace)
-                if not _colorCache[matchKey].valid:
-                    raise ValueError(f"Could not interpret color value for `{matchKey}` in textbox.")
-            color_values.append(_colorCache[matchKey].render('rgba1'))
-
+        text = text.replace('</b>', codes['BOLD_END'])      
         visible_text = ''.join([c for c in text if c not in codes.values()])
-        self._styles = Style(len(visible_text))
-        self._styles.formatted_text = original_text
+        self._styles = [0,]*len(visible_text)
         self._text = visible_text
         if self._needsArabic and hasattr(self, "arabicReshaper"):
             self._text = self.arabicReshaper.reshape(self._text)
         if self._needsBidi:
             self._text = bidi.get_display(self._text)
-        
-        color_iter = 0       # iterator for color_values list
-        current_color = [()] # keeps track of color style(s)
-        is_bold = False
-        is_italic = False
+
+        current_style=0
         ci = 0
         for c in text:
             if c == codes['ITAL_START']:
-                is_italic = True
+                current_style += ITALIC
             elif c == codes['BOLD_START']:
-                is_bold = True
-            elif c == codes['COLOR_START']:
-                current_color.append(color_values[color_iter])
-                color_iter += 1
-            elif c == codes['ITAL_END']:
-                is_italic = False
+                current_style += BOLD
             elif c == codes['BOLD_END']:
-                is_bold = False
-            elif c == codes['COLOR_END']:
-                current_color.pop()
+                current_style -= BOLD
+            elif c == codes['ITAL_END']:
+                current_style -= ITALIC
             else:
-                self._styles.c[ci] = current_color[-1]
-                self._styles.i[ci] = is_italic
-                self._styles.b[ci] = is_bold
-                ci += 1
-
+                self._styles[ci]=current_style
+                ci+=1
+                
         self._layout()
 
     def addCharAtCaret(self, char):
         """Allows a character to be added programmatically at the current caret"""
         txt = self._text
         txt = txt[:self.caret.index] + char + txt[self.caret.index:]
-        cstyle = Style(1)
+        cstyle = NONE
         if len(self._styles) and self.caret.index <= len(self._styles):
             cstyle = self._styles[self.caret.index-1]
         self._styles.insert(self.caret.index, cstyle)
@@ -717,7 +690,6 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self._colors = np.zeros((len(visible_text) * 4, 4), dtype=np.double)
         self._texcoords = np.zeros((len(visible_text) * 4, 2), dtype=np.double)
         self._glIndices = np.zeros((len(visible_text) * 4), dtype=int)
-        self._renderChars = []
 
         # the following are used internally for layout
         self._lineNs = np.zeros(len(visible_text), dtype=int)
@@ -745,11 +717,12 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
             for i, charcode in enumerate(self._text):
                 printable = True  # unless we decide otherwise
                 # handle formatting codes
-                fakeItalic = 0.0
-                fakeBold = 0.0
-                if self._styles.i[i]:
+                if self._styles[i] == NONE:
+                    fakeItalic = 0.0
+                    fakeBold = 0.0
+                elif self._styles[i] == ITALIC:
                     fakeItalic = 0.1 * font.size
-                if self._styles.b[i]:
+                elif self._styles[i] == BOLD:
                     fakeBold = 0.3 * font.size
 
                 # handle newline
@@ -800,12 +773,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
                 vertices[i * 4:i * 4 + 4] = theseVertices
                 self._texcoords[i * 4:i * 4 + 4] = texcoords
-                # handle character color
-                rgb_ = self._styles.c[i]
-                if len(rgb_) > 0:
-                    self._colors[i*4 : i*4+4, :4] = rgb_ # set custom color
-                else:
-                    self._colors[i*4 : i*4+4, :4] = rgb # set default color
+                self._colors[i*4 : i*4+4, :4] = rgb
                 self._lineNs[i] = lineN
                 current[0] = current[0] + glyph.advance[0] + fakeBold / 2
                 current[1] = current[1] + glyph.advance[1]
@@ -830,22 +798,9 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
                     charsThisLine += 1
 
                 # end line with auto-wrap on space
-                if current[0] >= lineMax and wordLen > 0:
+                if current[0] >= lineMax and wordLen > 0 and wordsThisLine > 1:
                     # move the current word to next line
                     lineBreakPt = vertices[(i - wordLen + 1) * 4, 0]
-                    if wordsThisLine <= 1:
-                        # if whole line is just 1 word, wrap regardless of presence of wordbreak
-                        wordLen = 0
-                        charsThisLine += 1
-                        wordsThisLine += 1
-                        # add hyphen
-                        self._renderChars.append({
-                            "i": i,
-                            "current": (current[0], current[1]),
-                            "glyph": font["-"]
-                        })
-                        # store linebreak point
-                        lineBreakPt = current[0]
                     wordWidth = current[0] - lineBreakPt
                     # shift all chars of the word left by wordStartX
                     vertices[(i - wordLen + 1) * 4: (i + 1) * 4, 0] -= lineBreakPt
@@ -891,11 +846,12 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
                 for i, charcode in enumerate(text_seg[this_seg]):
                     printable = True  # unless we decide otherwise
                     # handle formatting codes
-                    fakeItalic = 0.0
-                    fakeBold = 0.0
-                    if self._styles.i[i]:
+                    if styles_seg[this_seg][i] == NONE:
+                        fakeItalic = 0.0
+                        fakeBold = 0.0
+                    elif styles_seg[this_seg][i] == ITALIC:
                         fakeItalic = 0.1 * font.size
-                    if self._styles.b[i]:
+                    elif styles_seg[this_seg][i] == ITALIC:
                         fakeBold = 0.3 * font.size
 
                     # handle newline
@@ -984,12 +940,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
 
                         vertices[i * 4:i * 4 + 4] = theseVertices
                         self._texcoords[i * 4:i * 4 + 4] = texcoords
-                        # handle character color
-                        rgb_ = self._styles.c[i]
-                        if len(rgb_) > 0:
-                            self._colors[i*4 : i*4+4, :4] = rgb_ # set custom color
-                        else:
-                            self._colors[i*4 : i*4+4, :4] = rgb # set default color
+                        self._colors[i*4 : i*4+4, :4] = rgb
                         self._lineNs[i] = lineN
 
                         current[0] = current[0] + charwidth_list[i]
@@ -1016,17 +967,6 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         else:
             raise ValueError("Unknown lineBreaking option ({}) is"
                 "specified.".format(self._lineBreaking))
-
-        # Add render-only characters
-        for rend in self._renderChars:
-            vertices = self._addRenderOnlyChar(
-                i=rend['i'],
-                x=rend['current'][0],
-                y=rend['current'][1],
-                vertices=vertices,
-                glyph=rend['glyph'],
-                alphaCorrection=alphaCorrection
-            )
 
         # Apply vertical alignment
         if self.alignment[1] in ("bottom", "center"):
@@ -1152,7 +1092,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         self.shader.bind()
         self.shader.setInt('texture', 0)
         self.shader.setFloat('pixel', [1.0 / 512, 1.0 / 512])
-        nVerts = (len(self._text) + len(self._renderChars)) * 4
+        nVerts = len(self._text)*4
 
         gl.glDrawArrays(gl.GL_QUADS, 0, nVerts)
         self.shader.unbind()
@@ -1184,6 +1124,7 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
         """Resets the TextBox2 to a blank string"""
         # Clear contents
         self.text = ""
+
 
     def contains(self, x, y=None, units=None, tight=False):
         """Returns True if a point x,y is inside the stimulus' border.
@@ -1233,52 +1174,6 @@ class TextBox2(BaseVisualStim, ContainerMixin, ColorMixin):
             return self.boundingBox.overlaps(polygon)
         else:
             return self.box.overlaps(polygon)
-
-    def _addRenderOnlyChar(self, i, x, y, vertices, glyph, alphaCorrection=1):
-        """
-        Add a character at index i which is drawn but not actually part of the text
-        """
-        i4 = i * 4
-        # Get coordinates of glyph texture
-        self._texcoords = np.vstack([
-            self._texcoords[:i4],
-            [glyph.texcoords[0], glyph.texcoords[1]],
-            [glyph.texcoords[0], glyph.texcoords[3]],
-            [glyph.texcoords[2], glyph.texcoords[3]],
-            [glyph.texcoords[2], glyph.texcoords[1]],
-            self._texcoords[i4:]
-        ])
-        # Get coords of box corners
-        top = y + glyph.offset[1]
-        bot = top - glyph.size[1]
-        mid = x + glyph.offset[0] + glyph.size[0] * alphaCorrection / 2
-        left = mid - glyph.size[0] * alphaCorrection / 2
-        right = mid + glyph.size[0] * alphaCorrection / 2
-        vertices = np.vstack([
-            vertices[:i4],
-            [left, top],
-            [left, bot],
-            [right, bot],
-            [right, top],
-            vertices[i4:]
-        ])
-        # Make same colour as other text
-        self._colors = np.vstack([
-            self._colors[:i4],
-            self._foreColor.render('rgba1'),
-            self._foreColor.render('rgba1'),
-            self._foreColor.render('rgba1'),
-            self._foreColor.render('rgba1'),
-            self._colors[i4:]
-        ])
-        # Extend line numbers array
-        self._lineNs = np.hstack([
-            self._lineNs[:i],
-            self._lineNs[i-1],
-            self._lineNs[i:]
-        ])
-
-        return vertices
 
     def _updateVertices(self):
         """Sets Stim.verticesPix and ._borderPix from pos, size, ori,
@@ -1593,49 +1488,3 @@ class Caret(ColorMixin):
             [x, bottom],
             [x, top]
         ])
-
-class Style:
-    # Define a simple Style class for storing information in text().
-    # Additional features exist to maintain extant edit/caret syntax
-    def __init__(self, text_length, i=None, b=None, c=None):
-        self.len = text_length
-        self.i = i
-        self.b = b
-        self.c = c
-        if i == None:
-            self.i = [False]*text_length
-        if b == None:
-            self.b = [False]*text_length
-        if c == None:
-            self.c = [()]*text_length
-        self.formatted_text = ''
-
-    def __len__(self):
-        return self.len
-
-    def __getitem__(self, i):
-        # Return a new Style object with data from current index
-        if isinstance(i, int):
-            s = Style(1, [self.i[i]], [self.b[i]], [self.c[i]])
-        else:
-            s = Style(len(self.i[i]), self.i[i], self.b[i], self.c[i])
-        return s
-
-    def __add__(self, c):
-        s = self.copy()
-        s.insert(len(s), c)
-        return s
-
-    def copy(self):
-        s = Style(self.len, self.i.copy(), self.b.copy(), self.c.copy())
-        s.formatted_text = self.formatted_text
-        return s
-
-    def insert(self, i, style):
-        # in-place, like list
-        if not isinstance(style, Style):
-            raise TypeError('Inserted object must be Style.')
-        self.i[i:i] = style.i
-        self.b[i:i] = style.b
-        self.c[i:i] = style.c
-        self.len += len(style)

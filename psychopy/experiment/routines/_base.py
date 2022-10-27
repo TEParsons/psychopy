@@ -31,7 +31,6 @@ class BaseStandaloneRoutine:
         self.params = {}
         self.name = name
         self.exp = exp
-        self.url = ""
         self.type = 'StandaloneRoutine'
         self.depends = []  # allows params to turn each other off/on
         self.order = ['stopVal', 'stopType', 'name']

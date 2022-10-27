@@ -704,9 +704,7 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
                   'R': 'R',
                   'JavaScript': 'cpp',
                   'JSON': 'json',
-                  'Markdown': 'markdown',
-                  'Plain Text': 'null',
-                  }
+                  'Plain Text': 'null'}
         self.setLexer(lexers[self.getFileType()])
 
     def getFileType(self):
@@ -742,8 +740,6 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
             return 'JavaScript'
         elif filen.endswith('.json'):  # JSON
             return 'JSON'
-        elif filen.endswith('.md'):  # Markdown
-            return 'Markdown'
         else:
             return 'Plain Text'  # default, null lexer used
 
