@@ -403,8 +403,10 @@ class MarkdownCtrl(wx.Panel, handlers.ThemeMixin):
         self.rawTextCtrl.Show(edit)
         self.htmlPreview.Show(not edit)
 
+        # Layout and style
         self._applyAppTheme()
         self.Layout()
+        self.rawTextCtrl.SetScrollWidth(self.rawTextCtrl.GetSize()[1])
 
     def render(self, evt=None):
         # Render HTML
