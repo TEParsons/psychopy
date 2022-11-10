@@ -15,7 +15,7 @@ from psychopy.localization import _localized as __localized
 _localized = __localized.copy()
 
 # only use _localized values for label values, nothing functional:
-_localized.update({'callback': _translate("Callback Function"),
+_localized.update({'callback': _translate("Callback function"),
                    'forceEndRoutine': _translate('Force end of Routine'),
                    'text': _translate('Button text'),
                    'font': _translate('Font'),
@@ -24,9 +24,9 @@ _localized.update({'callback': _translate("Callback Function"),
                    'italic': _translate('Italic'),
                    'padding': _translate('Padding'),
                    'anchor': _translate('Anchor'),
-                   'fillColor': _translate('Fill Colour'),
-                   'borderColor': _translate('Border Colour'),
-                   'borderWidth': _translate('Border Width'),
+                   'fillColor': _translate('Fill colour'),
+                   'borderColor': _translate('Border colour'),
+                   'borderWidth': _translate('Border width'),
                    'oncePerClick': _translate('Run once per click'),
                    'save': _translate("Record clicks"),
                    'timeRelativeTo': _translate("Time relative to")

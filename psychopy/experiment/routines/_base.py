@@ -41,7 +41,7 @@ class BaseStandaloneRoutine:
         self.params['name'] = Param(name,
                                     valType='code', inputType="single", categ='Basic',
                                     hint=msg,
-                                    label=_translate('name'))
+                                    label=_translate('Name'))
 
         self.params['stopVal'] = Param(stopVal,
             valType='num', inputType="single", categ='Basic',
@@ -54,7 +54,7 @@ class BaseStandaloneRoutine:
             valType='str', inputType="choice", categ='Basic',
             allowedVals=['duration (s)', 'duration (frames)', 'condition'],
             hint=msg, direct=False,
-            label=_translate('Stop Type...'))
+            label=_translate('Stop type...'))
 
         # Testing
         msg = _translate("Disable this routine")

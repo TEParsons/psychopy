@@ -13,10 +13,10 @@ from psychopy.localization import _localized as __localized
 _localized = __localized.copy()
 
 # only use _localized values for label values, nothing functional:
-_localized.update({'lineWidth': _translate('Brush Size'),
-                   'lineColor': _translate('Brush Color'),
-                   'lineColorSpace': _translate('Brush Color Space'),
-                   'buttonRequired':_translate('Press Button')})
+_localized.update({'lineWidth': _translate('Brush size'),
+                   'lineColor': _translate('Brush color'),
+                   'lineColorSpace': _translate('Brush color space'),
+                   'buttonRequired':_translate('Press button')})
 
 class BrushComponent(BaseVisualComponent):
     """A class for drawing freehand responses"""

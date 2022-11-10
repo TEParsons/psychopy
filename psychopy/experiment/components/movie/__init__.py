@@ -15,7 +15,7 @@ _localized = __localized.copy()
 # only use _localized values for label values, nothing functional:
 _localized.update({'movie': _translate('Movie file'),
                    'forceEndRoutine': _translate('Force end of Routine'),
-                   'backend': _translate('backend'),
+                   'backend': _translate('Backend'),
                    'No audio': _translate('No audio')})
 
 if _localized['backend'] == 'backend': # this is the only non-capitals label

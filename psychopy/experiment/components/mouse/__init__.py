@@ -121,7 +121,7 @@ class MouseComponent(BaseComponent):
             storeCorrect, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
             updates='constant',
             hint=msg,
-            label=_translate('storeCorrect'))
+            label=_translate('Store correct'))
 
         self.depends += [  # allows params to turn each other off/on
             {"dependsOn": "storeCorrect",  # must be param name
@@ -139,7 +139,7 @@ class MouseComponent(BaseComponent):
             correctAns, valType='list', inputType="single", allowedTypes=[], categ='Data',
             updates='constant',
             hint=msg, direct=False,
-            label=_translate('correctAns'))
+            label=_translate('Correct answer'))
 
     @property
     def _clickableParamsList(self):

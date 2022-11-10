@@ -21,14 +21,14 @@ _localized.update({'text': _translate('Text'),
                    'languageStyle': _translate('Language style'),
                    'bold': _translate('Bold'),
                    'italic': _translate('Italic'),
-                   'lineSpacing': _translate('Line Spacing'),
+                   'lineSpacing': _translate('Line spacing'),
                    'padding': _translate('Padding'),
                    'anchor': _translate('Anchor'),
-                   'fillColor': _translate('Fill Colour'),
-                   'borderColor': _translate('Border Colour'),
-                   'borderWidth': _translate('Border Width'),
+                   'fillColor': _translate('Fill colour'),
+                   'borderColor': _translate('Border colour'),
+                   'borderWidth': _translate('Border width'),
                    'editable': _translate('Editable?'),
-                   'autoLog': _translate('Auto Log')
+                   'autoLog': _translate('Auto log')
                    })
 
 
@@ -81,7 +81,7 @@ class TextboxComponent(BaseVisualComponent):
         self.order.insert(self.order.index("units"), "padding") # Add "padding" just before spatial units
         # params
         _allow3 = ['constant', 'set every repeat', 'set every frame']  # list
-        self.params['color'].label = _translate("Text Color")
+        self.params['color'].label = _translate("Text color")
 
         self.params['text'] = Param(
             text, valType='str', inputType="multi", allowedTypes=[], categ='Basic',
@@ -102,7 +102,7 @@ class TextboxComponent(BaseVisualComponent):
             placeholder, valType='str', inputType="single", categ='Basic',
             updates='constant', allowedUpdates=_allow3[:],
             hint=_translate("Placeholder text to show when there is no text contents."),
-            label=_translate("Placeholder Text"))
+            label=_translate("Placeholder text"))
         self.params['font'] = Param(
             font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
             updates='constant', allowedUpdates=_allow3[:],  # copy the list

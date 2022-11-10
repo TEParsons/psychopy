@@ -12,19 +12,19 @@ from psychopy import prefs
 from psychopy.experiment.components import BaseComponent, Param, _translate
 from psychopy.alerts import alerttools
 
-_localized = {'Code Type': _translate('Code Type'),
-              'Before Experiment': _translate('Before Experiment'),
-              'Begin Experiment': _translate('Begin Experiment'),
+_localized = {'Code Type': _translate('Code type'),
+              'Before Experiment': _translate('Before experiment'),
+              'Begin Experiment': _translate('Begin experiment'),
               'Begin Routine': _translate('Begin Routine'),
-              'Each Frame': _translate('Each Frame'),
-              'End Routine': _translate('End Routine'),
-              'End Experiment': _translate('End Experiment'),
-              'Before JS Experiment': _translate('Before JS Experiment'),
-              'Begin JS Experiment': _translate('Begin JS Experiment'),
+              'Each Frame': _translate('Each frame'),
+              'End Routine': _translate('End routine'),
+              'End Experiment': _translate('End experiment'),
+              'Before JS Experiment': _translate('Before JS experiment'),
+              'Begin JS Experiment': _translate('Begin JS experiment'),
               'Begin JS Routine': _translate('Begin JS Routine'),
-              'Each JS Frame': _translate('Each JS Frame'),
-              'End JS Routine': _translate('End JS Routine'),
-              'End JS Experiment': _translate('End JS Experiment'),
+              'Each JS Frame': _translate('Each JS frame'),
+              'End JS Routine': _translate('End JS routine'),
+              'End JS Experiment': _translate('End JS experiment'),
               }
 
 

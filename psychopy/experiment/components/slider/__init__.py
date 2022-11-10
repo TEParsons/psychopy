@@ -26,7 +26,7 @@ _localized.update({'categoryChoices': _translate('Category choices'),
                    'storeHistory': _translate('Store history'),
                    'storeRating': _translate('Store rating'),
                    'storeRatingTime': _translate('Store rating time'),
-                   'readOnly': _translate('readOnly')})
+                   'readOnly': _translate('Read only')})
 
 knownStyles = slider.Slider.knownStyles
 legacyStyles = slider.Slider.legacyStyles
@@ -128,7 +128,7 @@ class SliderComponent(BaseVisualComponent):
         self.params['initVal'] = Param(
             initVal, valType='code', inputType="single", categ='Basic',
             hint=_translate("Value of the slider befre any response, leave blank to hide the marker until clicked on"),
-            label=_translate("Starting Value")
+            label=_translate("Starting value")
         )
         self.params['granularity'] = Param(
                 granularity, valType='num', inputType="single", allowedTypes=[], categ='Basic',

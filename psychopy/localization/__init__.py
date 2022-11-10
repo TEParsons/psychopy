@@ -153,21 +153,21 @@ del(__builtins__['_'])
 _localized = {
     # for BaseComponent:
     'name': _translate('Name'),  # fieldName: display label
-    'startType': _translate('start type'),
-    'stopType': _translate('stop type'),
+    'startType': _translate('Start type'),
+    'stopType': _translate('Stop type'),
     'startVal': _translate('Start'),
     'stopVal': _translate('Stop'),
     'startEstim': _translate('Expected start (s)'),
     'durationEstim': _translate('Expected duration (s)'),
 
     # for BaseVisualComponent:
-    'units': _translate('Spatial Units'),
-    'color': _translate('Foreground Color'),
-    'colorSpace': _translate('Color Space'),
-    'fillColor': _translate('Fill Color'),
-    'fillColorSpace': _translate('Fill Color Space'),
-    'borderColor': _translate('Border Color'),
-    'borderColorSpace': _translate('Border Color Space'),
+    'units': _translate('Spatial units'),
+    'color': _translate('Foreground color'),
+    'colorSpace': _translate('Color space'),
+    'fillColor': _translate('Fill color'),
+    'fillColorSpace': _translate('Fill color space'),
+    'borderColor': _translate('Border color'),
+    'borderColorSpace': _translate('Border color space'),
     'contrast': _translate('Contrast'),
     'opacity': _translate('Opacity'),
     'pos': _translate('Position [x,y]'),
@@ -178,22 +178,22 @@ _localized = {
     'Name': _translate('Name'),
     'nReps': _translate('nReps'),
     'conditions': _translate('Conditions'),  # not the same
-    'conditionsFile':_translate('conditionsFile'),
-    'endPoints': _translate('endPoints'),
+    'conditionsFile':_translate('Conditions file'),
+    'endPoints': _translate('End points'),
     'Selected rows': _translate('Selected rows'),
-    'loopType': _translate('loopType'),
-    'random seed': _translate('random seed'),
+    'loopType': _translate('Loop type'),
+    'random seed': _translate('Random seed'),
     'Is trials': _translate('Is trials'),
-    'min value': _translate('min value'),
+    'min value': _translate('Min value'),
     'N reversals': _translate('N reversals'),
-    'start value': _translate('start value'),
+    'start value': _translate('Start value'),
     'N up': _translate('N up'),
-    'max value': _translate('max value'),
+    'max value': _translate('Max value'),
     'N down': _translate('N down'),
-    'step type': _translate('step type'),
-    'step sizes': _translate('step sizes'),
-    'stairType': _translate('stairType'),
-    'switchMethod': _translate('switchMethod')
+    'step type': _translate('Step type'),
+    'step sizes': _translate('Step sizes'),
+    'stairType': _translate('Stair type'),
+    'switchMethod': _translate('Switch method')
 }
 
 

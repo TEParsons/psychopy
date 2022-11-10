@@ -12,7 +12,7 @@ _localized = __localized.copy()
 
 # only use _localized values for label values, nothing functional:
 _localized.update({'carrier': _translate('Carrier texture'),
-                   'ori': _translate('Carrier Orientation'),
+                   'ori': _translate('Carrier orientation'),
                    'mask': _translate('Mask'),
                    'sf': _translate('Carrier spatial frequency'),
                    'phase': _translate('Carrier phase (in cycles)'),

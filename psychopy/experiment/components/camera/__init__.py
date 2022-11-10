@@ -69,7 +69,7 @@ class CameraComponent(BaseComponent):
             allowedVals=["default"] + cams,
             allowedLabels=["default"] + cams,
             hint=msg,
-            label=_translate("Video Device")
+            label=_translate("Video device")
         )
 
         msg = _translate("What device would you like to use to record audio? This will only affect local "
@@ -79,7 +79,7 @@ class CameraComponent(BaseComponent):
             allowedVals=list(range(len(mics))),
             allowedLabels=[d.title() for d in list(mics)],
             hint=msg,
-            label=_translate("Audio Device")
+            label=_translate("Audio device")
         )
 
 
@@ -104,7 +104,7 @@ class CameraComponent(BaseComponent):
         self.params['saveFile'] = Param(
             saveFile, valType='bool', inputType="bool", categ="Data",
             hint=msg,
-            label=_translate("Save File?")
+            label=_translate("Save file?")
         )
 
         # msg = _translate("What kind of video codec should the output file be encoded as?")
@@ -112,7 +112,7 @@ class CameraComponent(BaseComponent):
         #     codec, valType='str', inputType="choice", categ="Data",
         #     allowedVals=['a64multi', 'a64multi5', 'alias_pix', 'amv', 'apng', 'asv1', 'asv2', 'avrp', 'avui', 'ayuv', 'bmp', 'cinepak', 'cljr', 'dnxhd', 'dpx', 'dvvideo', 'ffv1', 'ffvhuff', 'fits', 'flashsv', 'flashsv2', 'flv', 'gif', 'h261', 'h263', 'h263_v4l2m2m', 'h263p', 'h264_nvenc', 'h264_omx', 'h264_v4l2m2m', 'h264_vaapi', 'hap', 'hevc_nvenc', 'hevc_v4l2m2m', 'hevc_vaapi', 'huffyuv', 'jpeg2000', 'jpegls', 'libaom-av1', 'libopenjpeg', 'libtheora', 'libvpx', 'libvpx-vp9', 'libwebp', 'libwebp_anim', 'libx264', 'libx264rgb', 'libx265', 'libxvid', 'ljpeg', 'magicyuv', 'mjpeg', 'mjpeg_vaapi', 'mpeg1video', 'mpeg2_vaapi', 'mpeg2video', 'mpeg4', 'mpeg4_v4l2m2m', 'msmpeg4', 'msmpeg4v2', 'msvideo1', 'nvenc', 'nvenc_h264', 'nvenc_hevc', 'pam', 'pbm', 'pcx', 'pgm', 'pgmyuv', 'png', 'ppm', 'prores', 'prores_aw', 'prores_ks', 'qtrle', 'r10k', 'r210', 'rawvideo', 'roqvideo', 'rv10', 'rv20', 'sgi', 'snow', 'sunrast', 'svq1', 'targa', 'tiff', 'utvideo', 'v210', 'v308', 'v408', 'v410', 'vc2', 'vp8_v4l2m2m', 'vp8_vaapi', 'vp9_vaapi', 'wmv1', 'wmv2', 'wrapped_avframe', 'xbm', 'xface', 'xwd', 'y41p', 'yuv4', 'zlib', 'zmbv'],
         #     hint=msg,
-        #     label=_translate("Output Codec")
+        #     label=_translate("Output codec")
         # )
         #
         # self.depends.append({
@@ -128,7 +128,7 @@ class CameraComponent(BaseComponent):
         #     outputFileType, valType='code', inputType="choice", categ="Data",
         #     allowedVals=["mp4", "mov", "mpeg", "mkv"],
         #     hint=msg,
-        #     label=_translate("Output File Extension")
+        #     label=_translate("Output file extension")
         # )
         #
         # self.depends.append({

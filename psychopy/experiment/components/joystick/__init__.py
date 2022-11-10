@@ -20,7 +20,7 @@ _localized.update({'saveJoystickState': _translate('Save joystick state'),
                    'Clickable stimuli': _translate('Clickable stimuli'),
                    'Store params for clicked': _translate('Store params for clicked'),
                    'deviceNumber': _translate('Device number'),
-                   'allowedButtons': _translate('Allowed Buttons')})
+                   'allowedButtons': _translate('Allowed buttons')})
 
 
 class JoystickComponent(BaseComponent):

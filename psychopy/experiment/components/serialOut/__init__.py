@@ -12,7 +12,7 @@ _localized = __localized.copy()
 
 # only use _localized values for label values, nothing functional:
 _localized.update({'address': _translate('Port address'),
-                   'register': _translate('U3 Register'),
+                   'register': _translate('U3 register'),
                    'startData': _translate("Start data"),
                    'stopData': _translate("Stop data"),
                    'syncScreenRefresh': _translate('Sync to screen')})

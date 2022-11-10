@@ -85,7 +85,7 @@ class PanoramaComponent(BaseVisualComponent):
                 "Mouse", "Drag", "Keyboard (Arrow Keys)", "Keyboard (WASD)", "Keyboard (Custom keys)", "Custom"],
             updates="constant",
             hint=msg,
-            label=_translate("Position Control")
+            label=_translate("Position control")
         )
         
         self.depends.append(
@@ -184,7 +184,7 @@ class PanoramaComponent(BaseVisualComponent):
         self.params['posSensitivity'] = Param(
             posSensitivity, valType='code', inputType="single", categ="Basic",
             hint=msg,
-            label=_translate("Movement Sensitivity")
+            label=_translate("Movement sensitivity")
         )
 
         # Zoom controls
@@ -200,11 +200,11 @@ class PanoramaComponent(BaseVisualComponent):
                 "Mouse Wheel", "Mouse Wheel (Inverted)", "Keyboard (Arrow Keys)", "Keyboard (+-)", "Keyboard (Custom keys)", "Custom"],
             updates="constant",
             hint=msg,
-            label=_translate("Zoom Control")
+            label=_translate("Zoom control")
         )
 
         keys = {'inKey': inKey, 'outKey': outKey}
-        labels = {'inKey': _translate("Zoom In"), 'outKey': _translate("Zoom Out")}
+        labels = {'inKey': _translate("Zoom in"), 'outKey': _translate("Zoom out")}
         for key, val in keys.items():
             # Only show key controls if zoom type is custom keys
             self.depends.append(
@@ -261,7 +261,7 @@ class PanoramaComponent(BaseVisualComponent):
         self.params['zoomSensitivity'] = Param(
             zoomSensitivity, valType='code', inputType="single", categ="Basic",
             hint=msg,
-            label=_translate("Zoom Sensitivity")
+            label=_translate("Zoom sensitivity")
         )
 
 

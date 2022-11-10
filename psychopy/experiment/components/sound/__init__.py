@@ -16,7 +16,7 @@ _localized = __localized.copy()
 # only use _localized values for label values, nothing functional:
 _localized.update({'sound': _translate('Sound'),
                    'volume': _translate('Volume'),
-                   'syncScreenRefresh': _translate('Sync Start With Screen')})
+                   'syncScreenRefresh': _translate('Sync start with screen')})
 
 
 class SoundComponent(BaseComponent):
