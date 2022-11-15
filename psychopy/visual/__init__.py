@@ -96,6 +96,7 @@ from psychopy.visual.circle import Circle
 # stimuli derived from TextBox
 from psychopy.visual.textbox import TextBox
 from psychopy.visual.animation import FrameAnimation
+from psychopy.visual.sprite import SpriteStim
 from psychopy.visual.dropdown import DropDownCtrl
 
 # rift support 

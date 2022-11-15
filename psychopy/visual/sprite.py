@@ -60,6 +60,8 @@ class SpriteStim(visual.ImageStim):
                                      cycles=cycles,
                                      bg=bg)
         # Set starting cycle
+        if startCycle is None:
+            startCycle = list(self.sheet.cycles)[0]
         self.cycle = startCycle
         # Set frame rate
         self.fps = fps
