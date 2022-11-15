@@ -570,7 +570,7 @@ class PavloviaProject(dict):
     """
 
     def __init__(self, id, localRoot=None):
-        if not isinstance(id, int):
+        if not isinstance(id, (int, str)):
             # If given a dict from Pavlovia rather than an ID, store it rather than requesting again
             self._info = dict(id)
             if 'gitlabId' in self._info:
@@ -1127,7 +1127,20 @@ class PavloviaProject(dict):
 
     def save(self):
         """Saves the metadata to gitlab.pavlovia.org"""
-        self.project.save()
+        try:
+            self.project.save()
+            return True
+        except gitlab.GitlabUpdateError as err:
+            msgRoot = "Could not sync project.\n\n"
+            if err.response_code == 400:
+                # Error: Avatar is too big
+                msg = msgRoot + _translate("Avatar is too big, should be at most 200 KB.")
+                dlg = wx.MessageDialog(None, msg, style=wx.ICON_ERROR)
+                dlg.ShowModal()
+                # Reset avatar
+                self['avatar_url'] = ""
+            return False
+
         # note that saving info locally about known projects is done
         # by the knownProjects DictStorage class
 
@@ -1284,7 +1297,7 @@ def getProject(filename):
                     except requests.exceptions.ConnectionError:
                         break
 
-        thisId = knownProjects[path]['idNumber']
+        thisId = knownProjects[path]['id']
         # Check that project still exists on Pavlovia
         requestVal = session.session.get(
             f"https://pavlovia.org/api/v2/experiments/{thisId}",
