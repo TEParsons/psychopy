@@ -6,7 +6,7 @@ from psychopy.localization import _translate
 from pathlib import Path
 
 
-class AnimationComponent(BaseVisualComponent):
+class FrameAnimationComponent(BaseVisualComponent):
     categories = ['Stimuli']
     targets = ['PsychoPy', 'PsychoJS']
     iconFile = Path(__file__).parent / 'animation.png'
