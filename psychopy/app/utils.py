@@ -407,6 +407,8 @@ class MarkdownCtrl(wx.Panel, handlers.ThemeMixin):
             edit = evt.EventObject.Value
         # Render html
         self.render()
+        # Layout editor
+        self.rawTextCtrl.SetScrollWidth(self.GetSize()[0])
 
         # Show opposite control
         self.rawTextCtrl.Show(edit)
