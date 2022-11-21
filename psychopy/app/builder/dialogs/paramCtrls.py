@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 import wx
+import wx.stc
 
 from psychopy.app.colorpicker import PsychoColorPicker
 from psychopy.app.dialogs import ListWidget
@@ -19,8 +20,10 @@ from psychopy import data, prefs, experiment
 import re
 from pathlib import Path
 
+from . import CodeBox
 from ..localizedStrings import _localizedDialogs as _localized
-from ...themes import icons
+from ...coder import BaseCodeEditor
+from ...themes import icons, handlers
 
 
 class _ValidatorMixin:
@@ -163,7 +166,7 @@ class SingleLineCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
         # Add self to sizer
         self._szr.Add(self, proportion=1, border=5, flag=wx.EXPAND)
         # Bind to validation
-        self.Bind(wx.EVT_CHAR, self.validate)
+        self.Bind(wx.EVT_TEXT, self.validate)
         self.validate()
 
     def Show(self, value=True):
@@ -181,6 +184,29 @@ class MultiLineCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
         SingleLineCtrl.__init__(self, parent, valType,
                                 val=val, fieldName=fieldName,
                                 size=size, style=wx.TE_MULTILINE)
+
+
+class CodeCtrl(BaseCodeEditor, handlers.ThemeMixin, _ValidatorMixin):
+    def __init__(self, parent, valType,
+                 val="", fieldName="",
+                 size=wx.Size(-1, 144)):
+        BaseCodeEditor.__init__(self, parent,
+                                ID=wx.ID_ANY, pos=wx.DefaultPosition, size=size,
+                                style=0)
+        self.valType = valType
+        self.val = val
+        self.fieldName = fieldName
+        self.params = fieldName
+        # Setup lexer to style text
+        self.SetLexer(wx.stc.STC_LEX_PYTHON)
+        self._applyAppTheme()
+        # Hide margin
+        self.SetMarginWidth(0, 0)
+        # Setup auto indent behaviour as in Code component
+        self.Bind(wx.EVT_KEY_DOWN, self.onKey)
+
+    def onKey(self, evt=None):
+        CodeBox.OnKeyPressed(self, evt)
 
 
 class InvalidCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
@@ -284,9 +310,9 @@ class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
             else:
                 self._labels[value] = value
         # Translate labels
-        for k in self._labels.keys():
-            if k in _localized:
-                self._labels[k] = _localized[k]
+        for v, l in self._labels.items():
+            if l in _localized:
+                self._labels[v] = _localized[l]
         # Create choice ctrl from labels
         wx.Choice.__init__(self)
         self.Create(parent, -1, size=size, choices=[self._labels[c] for c in self._choices], name=fieldName)
@@ -294,9 +320,18 @@ class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
         self.SetStringSelection(val)
 
     def SetStringSelection(self, string):
+        strChoices = [str(choice) for choice in self._choices]
         if string not in self._choices:
-            self._choices.append(string)
-            self._labels[string] = string
+            if string in strChoices:
+                # If string is a stringified version of a value in choices, stringify the value in choices
+                i = strChoices.index(string)
+                self._labels[string] = self._labels.pop(self._choices[i])
+                self._choices[i] = string
+            else:
+                # Otherwise it is a genuinely new value, so add it to options
+                self._choices.append(string)
+                self._labels[string] = string
+            # Refresh items
             self.SetItems(
                 [self._labels[c] for c in self._choices]
             )
@@ -348,8 +383,8 @@ class FileCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
         self._szr = wx.BoxSizer(wx.HORIZONTAL)
         self._szr.Add(self, border=5, proportion=1, flag=wx.EXPAND | wx.RIGHT)
         # Add button to browse for file
-        fldr = icons.ButtonIcon(stem="folder", size=16).bitmap
-        self.findBtn = wx.BitmapButton(parent, -1, size=wx.Size(24, 24), bitmap=fldr)
+        fldr = icons.ButtonIcon(stem="folder", size=16, theme="light").bitmap
+        self.findBtn = wx.BitmapButton(parent, -1, bitmap=fldr, style=wx.BU_EXACTFIT)
         self.findBtn.SetToolTip(_translate("Specify file ..."))
         self.findBtn.Bind(wx.EVT_BUTTON, self.findFile)
         self._szr.Add(self.findBtn)
@@ -437,14 +472,14 @@ class TableCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
         self._szr = wx.BoxSizer(wx.HORIZONTAL)
         self._szr.Add(self, proportion=1, border=5, flag=wx.EXPAND | wx.RIGHT)
         # Add button to browse for file
-        fldr = icons.ButtonIcon(stem="folder", size=16).bitmap
-        self.findBtn = wx.BitmapButton(parent, -1, size=wx.Size(24,24), bitmap=fldr)
+        fldr = icons.ButtonIcon(stem="folder", size=16, theme="light").bitmap
+        self.findBtn = wx.BitmapButton(parent, -1, bitmap=fldr, style=wx.BU_EXACTFIT)
         self.findBtn.SetToolTip(_translate("Specify file ..."))
         self.findBtn.Bind(wx.EVT_BUTTON, self.findFile)
         self._szr.Add(self.findBtn)
         # Add button to open in Excel
-        xl = icons.ButtonIcon(stem="filecsv", size=16).bitmap
-        self.xlBtn = wx.BitmapButton(parent, -1, size=wx.Size(24,24), bitmap=xl)
+        xl = icons.ButtonIcon(stem="filecsv", size=16, theme="light").bitmap
+        self.xlBtn = wx.BitmapButton(parent, -1, bitmap=xl, style=wx.BU_EXACTFIT)
         self.xlBtn.SetToolTip(_translate("Open/create in your default table editor"))
         self.xlBtn.Bind(wx.EVT_BUTTON, self.openExcel)
         self._szr.Add(self.xlBtn)
@@ -531,8 +566,8 @@ class ColorCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
         # Add ctrl to sizer
         self._szr.Add(self, proportion=1, border=5, flag=wx.EXPAND | wx.RIGHT)
         # Add button to activate color picker
-        fldr = icons.ButtonIcon(stem="color", size=16).bitmap
-        self.pickerBtn = wx.BitmapButton(parent, -1, size=wx.Size(24,24), bitmap=fldr)
+        fldr = icons.ButtonIcon(stem="color", size=16, theme="light").bitmap
+        self.pickerBtn = wx.BitmapButton(parent, -1, bitmap=fldr, style=wx.BU_EXACTFIT)
         self.pickerBtn.SetToolTip(_translate("Specify color ..."))
         self.pickerBtn.Bind(wx.EVT_BUTTON, self.colorPicker)
         self._szr.Add(self.pickerBtn)
