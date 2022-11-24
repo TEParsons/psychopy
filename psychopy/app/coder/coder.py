@@ -3030,9 +3030,10 @@ class CoderToolbar(BasePsychopyToolbar):
 
     def enableSave(self, enable=True):
         """
-        Enable or disable the save button.
+        Enable or disable the save buttons.
         """
         self.EnableTool(self.buttons['filesave'].GetId(), enable)
+        self.EnableTool(self.buttons['filesaveas'].GetId(), enable)
 
     def disableSave(self):
         """
