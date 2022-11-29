@@ -1,10 +1,10 @@
 import numpy
-import wx
+from wx import Colour as Color
 
 
-class BaseColor(wx.Colour):
+class BaseColor(Color):
     """
-    Essentially a wx.Colour with some extra features for convenience
+    Essentially a Color with some extra features for convenience
     """
     def __add__(self, other):
         # Get own RGB value
@@ -13,8 +13,8 @@ class BaseColor(wx.Colour):
         adj = self._getAdj(other)
         # Do addition
         result = numpy.clip(rgb + adj, 0, 255)
-        # Create new wx.Colour object from result
-        return wx.Colour(result[0], result[1], result[2], self.Alpha())
+        # Create new Color object from result
+        return Color(result[0], result[1], result[2], self.Alpha())
 
     def __sub__(self, other):
         # Get own RGB value
@@ -23,8 +23,8 @@ class BaseColor(wx.Colour):
         adj = self._getAdj(other)
         # Do subtraction
         result = numpy.clip(rgb - adj, 0, 255)
-        # Create new wx.Colour object from result
-        return wx.Colour(result[0], result[1], result[2], self.Alpha())
+        # Create new Color object from result
+        return Color(result[0], result[1], result[2], self.Alpha())
 
     def __mul__(self, other):
         assert isinstance(other, (int, float)), (
@@ -34,15 +34,15 @@ class BaseColor(wx.Colour):
         if isinstance(other, float):
             other = round(other * 255)
         # Set alpha
-        return wx.Colour(self.Red(), self.Green(), self.Blue(), alpha=other)
+        return Color(self.Red(), self.Green(), self.Blue(), alpha=other)
 
     @staticmethod
     def _getAdj(other):
         """
         Get the adjustment indicated by another object given to this as an operator for __add__ or __sub__
         """
-        # If other is also a wx.Colour, adjustment is its RGBA value
-        if isinstance(other, wx.Colour):
+        # If other is also a Color, adjustment is its RGBA value
+        if isinstance(other, Color):
             adj = numpy.array([other.Red(), other.Green(), other.Blue()])
         # If other is an int, adjustment is itself*15
         elif isinstance(other, int):
