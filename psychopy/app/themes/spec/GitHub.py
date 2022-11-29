@@ -1,58 +1,55 @@
-{
+GitHub = {
   "app": "light",
   "icons": "light",
-  "info": "Psychopy Light with more minimal code colours",
+  "info": "Light theme modelled after the styling used by GitHub",
   "code": {
     "base": {
-      "fg": "#030308",
+      "fg": "#333333",
       "bg": "#FFFFFF",
       "font": "JetBrains Mono"
     },
     "margin": {
       "fg": "",
-      "bg": "#FFFFFF",
+      "bg": "#eeeeee",
       "font": ""
     },
     "caret": {
-      "fg": "#F46E75",
-      "bg": "#F2F2F2",
+      "fg": "",
+      "bg": "",
       "font": ""
     },
     "select": {
       "fg": "#FFFFFF",
-      "bg": "#75757D",
+      "bg": "#969896",
       "font": ""
     },
     "indent": {
-      "fg": "#F2F2F2",
-      "bg": "#F2F2F2",
+      "fg": "#969896",
+      "bg": "",
       "font": ""
     },
     "brace": {
       "fg": "",
-      "bg": "#F2F2F2",
+      "bg": "",
       "font": ""
     },
     "operator": {
-      "fg": "",
+      "fg": "#A71D5D",
       "bg": "",
       "font": ""
     },
     "keyword": {
-      "fg": "#F2545B",
+      "fg": "#a71d5d",
       "bg": "",
       "font": ""
     },
     "keyword2": {
-      "fg": "",
+      "fg": "#0086B3",
       "bg": "",
-      "font": [
-        "italic",
-        "bold"
-      ]
+      "font": ""
     },
     "controlchar": {
-      "fg": "#F2545B",
+      "fg": "#63a35c",
       "bg": "",
       "font": ""
     },
@@ -62,92 +59,96 @@
       "font": ""
     },
     "num": {
-      "fg": "#F2545B",
+      "fg": "#0086B3",
       "bg": "",
       "font": ""
     },
     "char": {
-      "fg": "#F2545B",
+      "fg": "#032f62",
       "bg": "",
       "font": ""
     },
     "str": {
-      "fg": "#F2545B",
+      "fg": "#032f62",
       "bg": "",
       "font": ""
     },
     "openstr": {
-      "fg": "#F2545B",
-      "bg": "#F2F2F2",
+      "fg": "#032f62",
+      "bg": "#969896",
       "font": ""
     },
     "infix": {
-      "fg": "#F2545B",
+      "fg": "",
       "bg": "",
       "font": ""
     },
     "openinfix": {
-      "fg": "#F2545B",
-      "bg": "#F2F2F2",
+      "fg": "",
+      "bg": "",
       "font": ""
     },
     "decorator": {
-      "fg": "#F2545B",
+      "fg": "#0086B3",
       "bg": "",
-      "font": "bold"
+      "font": ""
     },
     "class": {
-      "fg": "",
+      "fg": "#795da3",
       "bg": "",
       "font": ""
     },
     "def": {
-      "fg": "",
+      "fg": "#795da3",
       "bg": "",
       "font": ""
     },
     "comment": {
-      "fg": "#66666E",
+      "fg": "#969896",
       "bg": "",
       "font": ""
     },
     "commentblock": {
-      "fg": "#66666E",
-      "bg": "#F2F2F2",
+      "fg": "#969896",
+      "bg": "",
       "font": ""
     },
     "commentkw": {
-      "fg": "#66666E",
+      "fg": "#969896",
       "bg": "",
       "font": ""
     },
     "commenterror": {
-      "fg": "#66666E",
+      "fg": "#969896",
       "bg": "",
       "font": ""
     },
     "documentation": {
-      "fg": "#66666E",
+      "fg": "",
       "bg": "",
       "font": "italic"
     },
     "documentation2": {
-      "fg": "#66666E",
+      "fg": "",
       "bg": "",
       "font": "italic"
     },
     "whitespace": {
-      "fg": "#F2F2F2",
+      "fg": "",
       "bg": "",
       "font": ""
     },
     "python": {
+
     },
     "c++": {
+
     },
     "r": {
+
     },
     "json": {
+
     }
   }
 }

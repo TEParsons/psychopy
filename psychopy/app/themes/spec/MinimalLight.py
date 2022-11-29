@@ -1,37 +1,37 @@
-{
-  "app": "dark",
-  "icons": "classic",
-  "info": "A dark version of Psychopy's pre-2020.2 look",
+MinimalLight = {
+  "app": "light",
+  "icons": "light",
+  "info": "Psychopy Light with more minimal code colours",
   "code": {
     "base": {
-      "fg": "#FFFFFF",
-      "bg": "#75757D",
-      "font": ["Consolas", "Monaco", "Lucida Console"]
+      "fg": "#030308",
+      "bg": "#FFFFFF",
+      "font": "JetBrains Mono"
     },
     "margin": {
-      "fg": "#000000",
-      "bg": "#CDCDCD",
+      "fg": "",
+      "bg": "#FFFFFF",
       "font": ""
     },
     "caret": {
-      "fg": "",
-      "bg": "",
-      "font": "bold"
+      "fg": "#F46E75",
+      "bg": "#F2F2F2",
+      "font": ""
     },
     "select": {
       "fg": "#FFFFFF",
-      "bg": "#CDCDCD",
+      "bg": "#75757D",
       "font": ""
     },
     "indent": {
-      "fg": "#CDCDCD",
-      "bg": "",
+      "fg": "#F2F2F2",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "brace": {
       "fg": "",
-      "bg": "",
-      "font": "bold"
+      "bg": "#F2F2F2",
+      "font": ""
     },
     "operator": {
       "fg": "",
@@ -39,17 +39,20 @@
       "font": ""
     },
     "keyword": {
-      "fg": "#AAAAFF",
+      "fg": "#F2545B",
       "bg": "",
-      "font": "bold"
+      "font": ""
     },
     "keyword2": {
       "fg": "",
       "bg": "",
-      "font": ""
+      "font": [
+        "italic",
+        "bold"
+      ]
     },
     "controlchar": {
-      "fg": "",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
@@ -59,39 +62,39 @@
       "font": ""
     },
     "num": {
-      "fg": "",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "char": {
-      "fg": "#CC66FF",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "str": {
-      "fg": "#CC66FF",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "openstr": {
-      "fg": "#CC66FF",
-      "bg": "",
-      "font": "bold"
+      "fg": "#F2545B",
+      "bg": "#F2F2F2",
+      "font": ""
     },
     "infix": {
-      "fg": "",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "openinfix": {
-      "fg": "",
-      "bg": "",
+      "fg": "#F2545B",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "decorator": {
-      "fg": "#CC66FF",
+      "fg": "#F2545B",
       "bg": "",
-      "font": ""
+      "font": "bold"
     },
     "class": {
       "fg": "",
@@ -104,51 +107,47 @@
       "font": ""
     },
     "comment": {
-      "fg": "#00FF00",
+      "fg": "#66666E",
       "bg": "",
       "font": ""
     },
     "commentblock": {
-      "fg": "#00FF00",
-      "bg": "",
+      "fg": "#66666E",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "commentkw": {
-      "fg": "#00FF00",
+      "fg": "#66666E",
       "bg": "",
       "font": ""
     },
     "commenterror": {
-      "fg": "#00FF00",
+      "fg": "#66666E",
       "bg": "",
       "font": ""
     },
     "documentation": {
-      "fg": "#CDCDCD",
+      "fg": "#66666E",
       "bg": "",
-      "font": ""
+      "font": "italic"
     },
     "documentation2": {
-      "fg": "#CDCDCD",
+      "fg": "#66666E",
       "bg": "",
       "font": "italic"
     },
     "whitespace": {
-      "fg": "#CDCDCD",
+      "fg": "#F2F2F2",
       "bg": "",
-      "font": "italic"
+      "font": ""
     },
     "python": {
-
     },
     "c++": {
-
     },
     "r": {
-
     },
     "json": {
-
     }
   }
 }

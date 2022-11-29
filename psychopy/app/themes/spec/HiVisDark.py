@@ -1,37 +1,37 @@
-{
-  "app": "light",
-  "icons": "classic",
-  "info": "Psychopy's pre-2020.2 look",
+HiVisDark = {
+  "app": "contrast_black",
+  "icons": "dark",
+  "info": "High-contrast dark theme for maximum visibility",
   "code": {
     "base": {
-      "fg": "#000000",
-      "bg": "#FFFFFF",
-      "font": ["Consolas", "Monaco", "Lucida Console"]
+      "fg": "#F2F2F2",
+      "bg": "#000000",
+      "font": "JetBrains Mono"
     },
     "margin": {
-      "fg": "",
-      "bg": "#CDCDCD",
+      "fg": "#F2F2F2",
+      "bg": "#000000",
       "font": ""
     },
     "caret": {
-      "fg": "",
-      "bg": "",
-      "font": "bold"
+      "fg": "#F46E75",
+      "bg": "#000000",
+      "font": ""
     },
     "select": {
-      "fg": "#FFFFFF",
-      "bg": "#CDCDCD",
+      "fg": "",
+      "bg": "#7C7C86",
       "font": ""
     },
     "indent": {
-      "fg": "#CDCDCD",
-      "bg": "",
+      "fg": "#7C7C86",
+      "bg": "#7C7C86",
       "font": ""
     },
     "brace": {
       "fg": "",
-      "bg": "",
-      "font": "bold"
+      "bg": "#7C7C86",
+      "font": ""
     },
     "operator": {
       "fg": "",
@@ -39,17 +39,20 @@
       "font": ""
     },
     "keyword": {
-      "fg": "#0000EE",
+      "fg": "#F46E75",
       "bg": "",
-      "font": "bold"
+      "font": ""
     },
     "keyword2": {
       "fg": "",
       "bg": "",
-      "font": ""
+      "font": [
+        "italic",
+        "bold"
+      ]
     },
     "controlchar": {
-      "fg": "",
+      "fg": "#F46E75",
       "bg": "",
       "font": ""
     },
@@ -59,39 +62,39 @@
       "font": ""
     },
     "num": {
-      "fg": "",
+      "fg": "#F46E75",
       "bg": "",
       "font": ""
     },
     "char": {
-      "fg": "#9900EE",
+      "fg": "#F46E75",
       "bg": "",
       "font": ""
     },
     "str": {
-      "fg": "#9900EE",
+      "fg": "#F46E75",
       "bg": "",
       "font": ""
     },
     "openstr": {
-      "fg": "#9900EE",
-      "bg": "",
-      "font": "bold"
+      "fg": "#F46E75",
+      "bg": "#F2F2F2",
+      "font": ""
     },
     "infix": {
-      "fg": "",
+      "fg": "#F46E75",
       "bg": "",
       "font": ""
     },
     "openinfix": {
-      "fg": "",
-      "bg": "",
+      "fg": "#F46E75",
+      "bg": "#7C7C86",
       "font": ""
     },
     "decorator": {
-      "fg": "#6600EE",
+      "fg": "#F46E75",
       "bg": "",
-      "font": ""
+      "font": "bold"
     },
     "class": {
       "fg": "",
@@ -104,51 +107,47 @@
       "font": ""
     },
     "comment": {
-      "fg": "#006600",
+      "fg": "#F1D302",
       "bg": "",
       "font": ""
     },
     "commentblock": {
-      "fg": "#006600",
-      "bg": "",
+      "fg": "#F1D302",
+      "bg": "#7C7C86",
       "font": ""
     },
     "commentkw": {
-      "fg": "#006600",
+      "fg": "#F1D302",
       "bg": "",
       "font": ""
     },
     "commenterror": {
-      "fg": "#006600",
+      "fg": "#F1D302",
       "bg": "",
       "font": ""
     },
     "documentation": {
-      "fg": "#4C4C4C",
+      "fg": "#F1D302",
       "bg": "",
       "font": "italic"
     },
     "documentation2": {
-      "fg": "#4C4C4C",
+      "fg": "#F1D302",
       "bg": "",
       "font": "italic"
     },
     "whitespace": {
-      "fg": "#CDCDCD",
+      "fg": "#7C7C86",
       "bg": "",
       "font": ""
     },
     "python": {
-
     },
     "c++": {
-
     },
     "r": {
-
     },
     "json": {
-
     }
   }
 }

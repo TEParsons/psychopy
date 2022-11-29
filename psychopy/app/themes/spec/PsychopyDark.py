@@ -1,4 +1,4 @@
-{
+PsychopyDark = {
   "app": "dark",
   "icons": "dark",
   "info": "A darker version of Psychopy's default look",

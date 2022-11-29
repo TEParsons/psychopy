@@ -1,55 +1,55 @@
-{
-  "app": "light",
+HiVisLight = {
+  "app": "contrast_white",
   "icons": "light",
-  "info": "Light theme modelled after the styling used by GitHub",
+  "info": "High-contrast light theme for maximum visibility",
   "code": {
     "base": {
-      "fg": "#333333",
+      "fg": "#030308",
       "bg": "#FFFFFF",
       "font": "JetBrains Mono"
     },
     "margin": {
       "fg": "",
-      "bg": "#eeeeee",
+      "bg": "#FFFFFF",
       "font": ""
     },
     "caret": {
-      "fg": "",
-      "bg": "",
+      "fg": "#F46E75",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "select": {
       "fg": "#FFFFFF",
-      "bg": "#969896",
+      "bg": "#75757D",
       "font": ""
     },
     "indent": {
-      "fg": "#969896",
-      "bg": "",
+      "fg": "#F2F2F2",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "brace": {
       "fg": "",
-      "bg": "",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "operator": {
-      "fg": "#A71D5D",
+      "fg": "",
       "bg": "",
       "font": ""
     },
     "keyword": {
-      "fg": "#a71d5d",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "keyword2": {
-      "fg": "#0086B3",
+      "fg": "",
       "bg": "",
-      "font": ""
+      "font": ["italic","bold"]
     },
     "controlchar": {
-      "fg": "#63a35c",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
@@ -59,82 +59,82 @@
       "font": ""
     },
     "num": {
-      "fg": "#0086B3",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "char": {
-      "fg": "#032f62",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "str": {
-      "fg": "#032f62",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "openstr": {
-      "fg": "#032f62",
-      "bg": "#969896",
+      "fg": "#F2545B",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "infix": {
-      "fg": "",
+      "fg": "#F2545B",
       "bg": "",
       "font": ""
     },
     "openinfix": {
-      "fg": "",
-      "bg": "",
+      "fg": "#F2545B",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "decorator": {
-      "fg": "#0086B3",
+      "fg": "#F2545B",
       "bg": "",
-      "font": ""
+      "font": "bold"
     },
     "class": {
-      "fg": "#795da3",
+      "fg": "",
       "bg": "",
       "font": ""
     },
     "def": {
-      "fg": "#795da3",
+      "fg": "",
       "bg": "",
       "font": ""
     },
     "comment": {
-      "fg": "#969896",
+      "fg": "#800080",
       "bg": "",
       "font": ""
     },
     "commentblock": {
-      "fg": "#969896",
-      "bg": "",
+      "fg": "#800080",
+      "bg": "#F2F2F2",
       "font": ""
     },
     "commentkw": {
-      "fg": "#969896",
+      "fg": "#800080",
       "bg": "",
       "font": ""
     },
     "commenterror": {
-      "fg": "#969896",
+      "fg": "#800080",
       "bg": "",
       "font": ""
     },
     "documentation": {
-      "fg": "",
+      "fg": "#800080",
       "bg": "",
       "font": "italic"
     },
     "documentation2": {
-      "fg": "",
+      "fg": "#800080",
       "bg": "",
       "font": "italic"
     },
     "whitespace": {
-      "fg": "",
+      "fg": "#F2F2F2",
       "bg": "",
       "font": ""
     },

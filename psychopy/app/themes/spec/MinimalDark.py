@@ -1,16 +1,16 @@
-{
-  "app": "contrast_black",
+MinimalDark = {
+  "app": "dark",
   "icons": "dark",
-  "info": "High-contrast dark theme for maximum visibility",
+  "info": "Psychopy Dark with more minimal code colours",
   "code": {
     "base": {
       "fg": "#F2F2F2",
-      "bg": "#000000",
+      "bg": "#75757D",
       "font": "JetBrains Mono"
     },
     "margin": {
       "fg": "#F2F2F2",
-      "bg": "#000000",
+      "bg": "#75757D",
       "font": ""
     },
     "caret": {
@@ -46,10 +46,7 @@
     "keyword2": {
       "fg": "",
       "bg": "",
-      "font": [
-        "italic",
-        "bold"
-      ]
+      "font": ["italic","bold"]
     },
     "controlchar": {
       "fg": "#F46E75",
@@ -107,32 +104,32 @@
       "font": ""
     },
     "comment": {
-      "fg": "#F1D302",
+      "fg": "#ACACB0",
       "bg": "",
       "font": ""
     },
     "commentblock": {
-      "fg": "#F1D302",
+      "fg": "#ACACB0",
       "bg": "#7C7C86",
       "font": ""
     },
     "commentkw": {
-      "fg": "#F1D302",
+      "fg": "#ACACB0",
       "bg": "",
       "font": ""
     },
     "commenterror": {
-      "fg": "#F1D302",
+      "fg": "#ACACB0",
       "bg": "",
       "font": ""
     },
     "documentation": {
-      "fg": "#F1D302",
+      "fg": "#ACACB0",
       "bg": "",
       "font": "italic"
     },
     "documentation2": {
-      "fg": "#F1D302",
+      "fg": "#ACACB0",
       "bg": "",
       "font": "italic"
     },
@@ -142,12 +139,16 @@
       "font": ""
     },
     "python": {
+
     },
     "c++": {
+
     },
     "r": {
+
     },
     "json": {
+
     }
   }
 }

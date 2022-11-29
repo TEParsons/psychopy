@@ -1,0 +1,25 @@
+from ..colors import scheme
+
+dark = {
+    "text": scheme['offwhite'],
+    "frame_bg": scheme['grey'] - 1,
+    "docker_bg": scheme['grey'] - 2,
+    "docker_fg": scheme['offwhite'],
+    "panel_bg": scheme['grey'],
+    "tab_bg": scheme['grey'] + 1,
+    "bmpbutton_bg_hover": scheme['grey'] + 1,
+    "bmpbutton_fg_hover": scheme['offwhite'],
+    "txtbutton_bg_hover": scheme['red'],
+    "txtbutton_fg_hover": scheme['offwhite'],
+    "rt_timegrid": scheme['grey'] + 2,
+    "rt_comp": scheme['blue'],
+    "rt_comp_force": scheme['orange'],
+    "rt_comp_disabled": scheme['grey'],
+    "rt_static": scheme['red'] * 75,
+    "rt_static_disabled": scheme['white'] * 75,
+    "fl_routine_fg": scheme['white'],
+    "fl_routine_bg_slip": scheme['blue'],
+    "fl_routine_bg_nonslip": scheme['green'],
+    "fl_flowline_bg": scheme['offwhite'] - 1,
+    "fl_flowline_fg": scheme['black'],
+}

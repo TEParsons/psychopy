@@ -1,4 +1,4 @@
-{
+PsychopyLight = {
   "app": "light",
   "icons": "light",
   "info": "Psychopy's default look",

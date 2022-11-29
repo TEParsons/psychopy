@@ -1,0 +1,25 @@
+from ..colors import scheme
+
+pink = {
+    "text": scheme['red'] - 10,
+    "frame_bg": scheme['red'] + 8,
+    "docker_bg": scheme['red'] + 7,
+    "docker_fg": scheme['red'] - 10,
+    "panel_bg": scheme['red'] + 9,
+    "tab_bg": scheme['red'] + 10,
+    "bmpbutton_bg_hover": scheme['red'] + 7,
+    "bmpbutton_fg_hover": scheme['red'] - 10,
+    "txtbutton_bg_hover": scheme['red'] + 7,
+    "txtbutton_fg_hover": scheme['red'] - 10,
+    "rt_timegrid": scheme['red'] + 4,
+    "rt_comp": scheme['blue'] + 12,
+    "rt_comp_force": scheme['orange'] + 12,
+    "rt_comp_disabled": scheme['red'] + 6,
+    "rt_static": scheme['white'] * 170,
+    "rt_static_disabled": scheme['red'] * 21,
+    "fl_routine_fg": scheme['red'] - 10,
+    "fl_routine_bg_slip": scheme['blue'] + 12,
+    "fl_routine_bg_nonslip": scheme['green'] + 8,
+    "fl_flowline_bg": scheme['red'] + 4,
+    "fl_flowline_fg": scheme['red'] - 10,
+}

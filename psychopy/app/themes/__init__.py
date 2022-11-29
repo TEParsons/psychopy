@@ -63,16 +63,16 @@ class Theme:
         return Theme(self.code)
 
 
-def loadSpec(file):
-    # Convert to path
-    if isinstance(file, str):
-        file = Path(file)
-    # If filename is not already cached, load and cache the file
-    if file.stem not in _cache:
-        with open(file) as f:
-            _cache[file] = json.load(f)
+def loadSpec(name):
+    # If given a path, use its stem
+    if isinstance(name, Path):
+        name = name.stem
+    # If filename is not already cached, load and cache the spec dict
+    if name not in _cache:
+        spec = __import__("psychopy.app.themes.spec." + name, fromlist=[name])
+        _cache[name] = getattr(spec, name)
     # Return cached values
-    return _cache[file]
+    return _cache[name]
 
 
 theme = Theme("PsychopyLight")
