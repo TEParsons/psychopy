@@ -3,7 +3,7 @@ import sys
 from copy import copy
 
 import wx
-from pathlib import Path
+import pkgutil
 
 import psychopy.app.themes.base
 from .base import theme, Theme
@@ -23,10 +23,9 @@ class ThemeSwitcher(wx.Menu):
     def __init__(self, app):
         self.app = app
         # Get list of themes
-        themeFolder = Path(prefs.paths['themes'])
-        themeList = []
-        for file in themeFolder.glob("*.json"):
-            themeList.append(Theme(file.stem))
+        from . import spec
+        themeModules = pkgutil.walk_packages(spec.__path__)
+        themeList = [Theme(module.name) for module in themeModules]
         # Reorder so that priority items are at the start
         self.themes = []
         order = copy(self.order)
