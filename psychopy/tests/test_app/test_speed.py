@@ -3,6 +3,7 @@ import sys
 import numpy
 from pathlib import Path
 
+import psychopy.app.themes.base
 from ..utils import TESTS_DATA_PATH
 
 import shutil
@@ -31,7 +32,7 @@ class TestSpeed:
             for frame in get_app._allFrames:
                 frame().Close()
             # Set theme
-            get_app.theme = "PsychopyLight"
+            psychopy.app.themes.base.theme = "PsychopyLight"
             # Open one of each frame
             get_app.newBuilderFrame()
             get_app.showCoder()
@@ -49,7 +50,7 @@ class TestSpeed:
             # Start timer
             start = time.time()
             # Change theme
-            get_app.theme = "PsychopyDark"
+            psychopy.app.themes.base.theme = "PsychopyDark"
             # Stop timer
             finish = time.time()
             # Store runtime
@@ -75,7 +76,7 @@ class TestSpeed:
         for frame in get_app._allFrames:
             frame().Close()
         # Set theme
-        get_app.theme = "PsychopyLight"
+        psychopy.app.themes.base.theme = "PsychopyLight"
         # Open one of each frame (to populate icon cache)
         get_app.newBuilderFrame()
         get_app.showCoder()

@@ -15,7 +15,7 @@ import py2app  # noqa: needed to build app bundle, even though not explicitly us
 import psychopy
 version = psychopy.__version__
 
-# regenerate __init__.py only if we're in the source repos (not in a zip file)
+# regenerate base.py only if we're in the source repos (not in a zip file)
 try:
     from building import createInitFile  # won't exist in a sdist.zip
     writeNewInit=True

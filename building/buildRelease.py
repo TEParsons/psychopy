@@ -56,7 +56,7 @@ def buildRelease(versionStr, noCommit=False, interactive=True):
                                      ".DS_Store", ".coverage")
     shutil.copytree("psychopy", dest, symlinks=False, ignore=ignores)
     os.mkdir(dest/'tests')
-    shutil.copyfile("psychopy/tests/__init__.py", dest/'tests/__init__.py')
+    shutil.copyfile("psychopy/tests/base.py", dest/'tests/base.py')
     shutil.copyfile("psychopy/tests/utils.py", dest/'tests/utils.py')
 
     # todo: would be nice to check here that we didn't accidentally add anything large (check new folder size)
@@ -98,9 +98,9 @@ def buildRelease(versionStr, noCommit=False, interactive=True):
     print(output)
 
     # revert the __init__ file to non-ditribution state
-    print('reverting the main master branch: git checkout HEAD psychopy/__init__.py ')
+    print('reverting the main master branch: git checkout HEAD psychopy/base.py ')
     print(subprocess.check_output(
-         ["git", "checkout", "HEAD", "psychopy/__init__.py"],
+         ["git", "checkout", "HEAD", "psychopy/base.py"],
          cwd=MAIN))
     return True  # success
 

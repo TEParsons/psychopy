@@ -5,7 +5,7 @@ import numpy
 import wx
 from pathlib import Path
 from psychopy import prefs
-from . import theme as appTheme
+from .base import theme as appTheme
 
 retStr = ""
 resources = Path(prefs.paths['resources'])

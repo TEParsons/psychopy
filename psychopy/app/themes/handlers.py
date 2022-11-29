@@ -1,6 +1,7 @@
 from copy import deepcopy
 
-from . import colors, icons, theme
+from . import colors, icons
+from .base import theme
 from ...preferences.preferences import prefs
 
 # --- Functions to handle specific subclasses of wx.Window ---

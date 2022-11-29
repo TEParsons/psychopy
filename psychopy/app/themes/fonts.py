@@ -7,9 +7,10 @@ import wx
 import wx.stc as stc
 import re
 
+import psychopy.app.themes.palettes
 from ... import prefs
-from . import colors, theme, loadSpec
-
+from . import colors, palettes
+from .base import theme, loadSpec
 
 # STC tags corresponding to words in theme spec
 tags = {
@@ -316,10 +317,9 @@ class CodeTheme(dict):
 
         cache = {}
         # Load theme from file
-        filename = Path(prefs.paths['themes']) / (theme.code + ".json")
-        spec = loadSpec(filename)
+        spec = loadSpec(theme.code)
         # Set base attributes
-        self.base = CodeFont(*extractAll(spec['code']['base']))
+        self.base = CodeFont(*extractAll(spec['codecolors']['base']))
         CodeFont.pointSize = self.base.pointSize
         CodeFont.foreColor = self.base.foreColor
         CodeFont.backColor = self.base.backColor
@@ -328,8 +328,8 @@ class CodeTheme(dict):
         CodeFont.italic = self.base.italic
         # Store other non-tag spec
         for attr in ('caret', 'margin', 'select'):
-            if attr in spec['code']:
-                val = CodeFont(*extractAll(spec['code'][attr]))
+            if attr in spec['codecolors']:
+                val = CodeFont(*extractAll(spec['codecolors'][attr]))
             else:
                 val = CodeFont()
             setattr(self, attr, val)
@@ -344,19 +344,19 @@ class CodeTheme(dict):
                 lex = lexerNames[key]
                 cache[lex] = {}
                 # If lexer isn't described in spec, skip
-                if key not in spec['code']:
+                if key not in spec['codecolors']:
                     continue
                 for subkey, subtag in tag.items():
                     # For each subtag, extract font
-                    if subkey in spec['code'][key]:
+                    if subkey in spec['codecolors'][key]:
                         # If font is directly specified, use it
-                        cache[lex][subtag] = CodeFont(*extractAll(spec['code'][key][subkey]))
-                    elif subkey in spec['code']:
+                        cache[lex][subtag] = CodeFont(*extractAll(spec['codecolors'][key][subkey]))
+                    elif subkey in spec['codecolors']:
                         # If font is not directly specified, use universal equivalent
-                        cache[lex][subtag] = CodeFont(*extractAll(spec['code'][subkey]))
-            elif key in spec['code']:
+                        cache[lex][subtag] = CodeFont(*extractAll(spec['codecolors'][subkey]))
+            elif key in spec['codecolors']:
                 # If tag is a tag, extract font
-                cache[tag] = CodeFont(*extractAll(spec['code'][key]))
+                cache[tag] = CodeFont(*extractAll(spec['codecolors'][key]))
             else:
                 cache[tag] = CodeFont()
 
@@ -597,13 +597,13 @@ def extractColor(val):
     parts = re.split(r"[\\\s,\(\)\[\]]", val)
     parts = [p for p in parts if p]
     # Set assumed values
-    color = colors.scheme['black']
+    color = palettes.psychopy['black']
     modifier = +0
     alpha = 255
     for i, part in enumerate(parts):
         # If value is a named psychopy color, get it
-        if part in colors.scheme:
-            color = colors.scheme[part]
+        if part in palettes.psychopy:
+            color = palettes.psychopy[part]
         # If assigned an operation, store it for application
         if part == "+" and i < len(parts) and parts[i+1].isnumeric():
             modifier = int(parts[i+1])
@@ -615,7 +615,7 @@ def extractColor(val):
         if re.fullmatch(r"#[\dabcdefABCDEF]{6}", part):
             part = part.replace("#", "")
             vals = [int(part[i:i+2], 16) for i in range(0, len(part), 2)] + [255]
-            color = colors.BaseColor(*vals)
+            color = psychopy.app.themes.palettes.BaseColor(*vals)
     # Apply modifier
     color = color + modifier
     # Apply alpha

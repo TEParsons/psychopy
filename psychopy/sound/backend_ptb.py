@@ -52,7 +52,7 @@ if prefs.hardware['audioDevice']=='auto':
 else:
     audioDevice = prefs.hardware['audioDevice']
 
-# these will be used by sound.__init__.py
+# these will be used by sound.base.py
 defaultInput = None
 defaultOutput = audioDevice
 

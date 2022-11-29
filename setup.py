@@ -49,7 +49,7 @@ else:
     shutil.make_archive(join('psychopy', 'psychojs'),
                         'zip', 'psychojs')
 
-# regenerate __init__.py only if we're in the source repos (not in a source
+# regenerate base.py only if we're in the source repos (not in a source
 # zip file)
 try:
     from building import createInitFile   # won't exist in a sdist.zip

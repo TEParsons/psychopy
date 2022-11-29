@@ -7,6 +7,7 @@
 
 from pathlib import Path
 
+import psychopy.app.themes.base
 from psychopy.app.colorpicker import PsychoColorPicker
 
 import sys
@@ -1151,13 +1152,13 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
     @property
     def theme(self):
         """The theme to be used through the application"""
-        return themes.theme
+        return psychopy.app.themes.base.theme
 
     @theme.setter
     def theme(self, value):
         """The theme to be used through the application"""
         # Make sure we just have a name
-        if isinstance(value, themes.Theme):
+        if isinstance(value, psychopy.app.themes.base.Theme):
             value = value.code
         # Store new theme
         prefs.app['theme'] = value
@@ -1165,12 +1166,12 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         # Reset icon cache
         icons.iconCache.clear()
         # Set theme at module level
-        themes.theme.set(value)
+        psychopy.app.themes.base.theme.set(value)
         # Apply to frames
         for frameRef in self._allFrames:
             frame = frameRef()
             if isinstance(frame, handlers.ThemeMixin):
-                frame.theme = themes.theme
+                frame.theme = psychopy.app.themes.base.theme
 
         # On OSX 10.15 Catalina at least calling SetFaceName with 'AppleSystemUIFont' fails.
         # So this fix checks to see if changing the font name invalidates the font.

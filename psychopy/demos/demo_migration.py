@@ -162,7 +162,7 @@ def demo_update_one(filename):
     """
     f = get_contents(filename)
     if not len(f.strip()):
-        return ''  # eg __init__.py
+        return ''  # eg base.py
     f = remove_doublesharp_trailing_whitespace(f)
     f = add_shebang_encoding_future(f)
     f = add_win_close_quit_demo_license(f)
@@ -180,7 +180,7 @@ def demo_update_one(filename):
 def demo_update_two(filename):
     f = get_contents(filename)
     if not len(f.strip()):
-        return ''  # eg __init__.py
+        return ''  # eg base.py
     f = f + '\n'
     return f
 
@@ -197,7 +197,7 @@ if __name__ == '__main__':
             os.mkdir(d.replace('coder', 'coder_updated'))
         py = glob.glob(d + '/*.py')
         for f1 in py:
-            if '__init__.py' in f1:
+            if 'base.py' in f1:
                 continue
             new = demo_update_two(f1)
             

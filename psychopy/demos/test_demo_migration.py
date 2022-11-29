@@ -139,7 +139,7 @@ if __name__ == '__main__':
     for d in dirs:
         p = glob.glob(d+'/*.py')
         for f1 in p:
-            if '__init__.py' in f1:
+            if 'base.py' in f1:
                 continue
             f2 = f1.replace('coder/', 'coder_updated/')
             t1, t2 = process_files(f1, f2)

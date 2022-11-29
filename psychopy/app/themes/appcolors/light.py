@@ -1,4 +1,4 @@
-from ..colors import scheme
+from ..palettes import psychopy as scheme
 
 light = {
     "text": scheme['black'],

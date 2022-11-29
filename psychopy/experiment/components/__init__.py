@@ -92,7 +92,7 @@ def getComponents(folder=None, fetchIcons=True):
     be 'compts' literally.)
     The .py and .png files for a component should all go in this directory.
     (Previously, files were in `/.../.../compts`.) In addition, the directory
-    must contain a python init file, ` /.../.../compts/compts/__init__.py`,
+    must contain a python init file, ` /.../.../compts/compts/base.py`,
     to allow it to be treated as a module in python so that the components
     can be imported. For this reason, the file name for a component
     cannot begin with a number; it must be a legal python name.
@@ -136,12 +136,12 @@ def getComponents(folder=None, fetchIcons=True):
 
     # go through components in directory
     cfiles = glob.glob(os.path.join(folder, '*.py'))  # old-style: just comp.py
-    # new-style: directories w/ __init__.py
+    # new-style: directories w/ base.py
     dfiles = [d for d in os.listdir(folder)
               if os.path.isdir(os.path.join(folder, d))]
     for cmpfile in cfiles + dfiles:
         cmpfile = os.path.split(cmpfile)[1]
-        if cmpfile[0] in '_0123456789':  # __init__.py, _base.py, leading digit
+        if cmpfile[0] in '_0123456789':  # base.py, _base.py, leading digit
             continue
         # can't use imp - breaks py2app:
         # module = imp.load_source(file[:-3], fullPath)
@@ -157,8 +157,8 @@ def getComponents(folder=None, fetchIcons=True):
         except ImportError:
             logging.error(
                 'Failed to load component package `{}`. Does it have a '
-                '`__init__.py`?'.format(cmpfile))
-            continue  # not a valid module (no __init__.py?)
+                '`base.py`?'.format(cmpfile))
+            continue  # not a valid module (no base.py?)
             
         # check for orphaned pyc files (__file__ is not a .py file)
         if hasattr(module, '__file__'):

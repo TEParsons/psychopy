@@ -11,6 +11,7 @@ import platform
 import re
 import os
 
+import psychopy.app.themes.base
 from psychopy.app.themes import icons
 from . import dialogs
 from psychopy import localization, prefs
@@ -788,7 +789,7 @@ class PreferencesDlg(wx.Dialog):
                         self.fontList[thisPref]
                     continue
                 if prefName in ('theme',):
-                    self.app.theme = self.prefsCfg[sectionName][prefName] = self.themeList[thisPref]
+                    psychopy.app.themes.base.theme = self.prefsCfg[sectionName][prefName] = self.themeList[thisPref]
                     continue
                 elif prefName == 'audioDevice':
                     self.prefsCfg[sectionName][prefName] = \
@@ -877,10 +878,10 @@ class PreferencesDlg(wx.Dialog):
                 # apply settings over document pages
                 for ii in range(frame.notebook.GetPageCount()):
                     doc = frame.notebook.GetPage(ii)
-                    doc.theme = prefs.app['theme']
+                    psychopy.app.themes.base.theme = prefs.app['theme']
                 for ii in range(frame.shelf.GetPageCount()):
                     doc = frame.shelf.GetPage(ii)
-                    doc.theme = prefs.app['theme']
+                    psychopy.app.themes.base.theme = prefs.app['theme']
 
                 # apply console font, not handled by theme system ATM
                 if hasattr(frame, 'shell'):

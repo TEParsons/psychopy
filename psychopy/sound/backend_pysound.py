@@ -40,7 +40,7 @@ def getDevices(kind=None):
         dev['id'] = ii
     return devs
 
-# these will be controlled by sound.__init__.py
+# these will be controlled by sound.base.py
 defaultInput = None
 defaultOutput = None
 

@@ -4,7 +4,9 @@ from copy import copy
 
 import wx
 from pathlib import Path
-from . import theme, Theme
+
+import psychopy.app.themes.base
+from .base import theme, Theme
 from psychopy.localization import _translate
 from psychopy.tools import filetools as ft
 from ... import prefs
@@ -53,7 +55,7 @@ class ThemeSwitcher(wx.Menu):
         """Handles a theme change event"""
         # Set theme at app level
         newTheme = self.FindItemById(evt.GetId()).ItemLabel
-        self.app.theme = newTheme
+        psychopy.app.themes.base.theme = newTheme
         # Update other theme menus with new value
         global menuCache
         for menu in menuCache.copy():

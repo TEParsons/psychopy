@@ -3,7 +3,8 @@ import webbrowser
 from PIL import Image as pil
 
 from .packages import InstallErrorDlg
-from psychopy.app.themes import theme, handlers, colors, icons
+from psychopy.app.themes import handlers, colors, icons
+from psychopy.app.themes.base import theme
 from psychopy.app import utils
 from psychopy.localization import _translate
 from psychopy import plugins

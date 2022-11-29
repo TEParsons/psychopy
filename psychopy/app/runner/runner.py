@@ -8,6 +8,7 @@ import glob
 import json
 import errno
 
+import psychopy.app.themes.base
 from ..themes import handlers, colors, icons
 from ..themes.ui import ThemeSwitcher
 
@@ -87,7 +88,7 @@ class RunnerFrame(wx.Frame, handlers.ThemeMixin):
                 self.addTask(fileName=filePath)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        self.theme = app.theme
+        self.theme = psychopy.app.themes.base.theme
 
     @property
     def filename(self):
@@ -673,7 +674,7 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.alertsToggleBtn.ToggleMenu(True)
         self.stdoutToggleBtn.ToggleMenu(True)
 
-        self.theme = parent.theme
+        self.theme = psychopy.app.themes.base.theme
 
     def _applyAppTheme(self):
         # Srt own background

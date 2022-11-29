@@ -94,7 +94,7 @@ def test_getCRSPhotometers():
                 from . import minolta, pr
         >       from psychopy.hardware import crs
         E       ImportError: cannot import name crs
-        hardware/__init__.py:60: ImportError
+        hardware/base.py:60: ImportError
 
         or an assert error on travis-ci
         >               assert p.longName != "CRS ColorCAL"

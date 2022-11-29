@@ -18,7 +18,7 @@ with open('version') as f:
 
 
 def createInitFile(dist=None, version=None, sha=None):
-    """Create psychopy/__init__.py
+    """Create psychopy/base.py
 
     :param:`dist` can be:
         None:
@@ -49,7 +49,7 @@ def createInitFile(dist=None, version=None, sha=None):
                 'platform': platformStr}
 
     # write it
-    with open(str(root/'psychopy/__init__.py'), 'w') as f:
+    with open(str(root/'psychopy/base.py'), 'w') as f:
         outStr = template.format(**infoDict)
         f.write(outStr)
     print('wrote init for ', version, sha)
