@@ -54,7 +54,7 @@ class ThemeSwitcher(wx.Menu):
         """Handles a theme change event"""
         # Set theme at app level
         newTheme = self.FindItemById(evt.GetId()).ItemLabel
-        psychopy.app.themes.base.theme = newTheme
+        self.app.theme = newTheme
         # Update other theme menus with new value
         global menuCache
         for menu in menuCache.copy():
