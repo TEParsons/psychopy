@@ -216,6 +216,7 @@ class FontCtrl(wx.Panel, _HideMixin):
         self.sizer.AddSpacer(6)
         # Add button to open font manager dlg
         self.mgrBtn = wx.Button(self, size=(24, 24))
+        self.mgrBtn.SetBitmap(icons.ButtonIcon("font", size=16).bitmap)
         self.mgrBtn.Bind(wx.EVT_BUTTON, self.onFontManager)
         self.sizer.Add(self.mgrBtn, flag=wx.EXPAND)
 
