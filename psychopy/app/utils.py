@@ -1452,7 +1452,8 @@ class FontManagerDialog(wx.Dialog):
     class FontsPanel(wx.Panel):
         def __init__(self, parent,
                      label="",
-                     fontList=None):
+                     fontList=None,
+                     allowCopy=True):
             # Alias None
             if fontList is None:
                 fontList = []
@@ -1473,10 +1474,58 @@ class FontManagerDialog(wx.Dialog):
             for fontName in fontList:
                 self.ctrl.Append([fontName])
             self.sizer.Add(self.ctrl, proportion=1, border=6, flag=wx.ALL)
+            self.ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
+            self.ctrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.onSelect)
+            # Add copy button
+            self.copyPnl = wx.Panel(self)
+            self.copyPnl.sizer = wx.BoxSizer(wx.HORIZONTAL)
+            self.copyPnl.SetSizer(self.copyPnl.sizer)
+            self.copyBtn = wx.Button(self.copyPnl, label=_translate("Copy"))
+            self.copyBtn.Disable()
+            self.copyBtn.SetToolTip(_translate("Copy the selected font's name to the clipboard"))
+            self.copyBtn.Bind(wx.EVT_BUTTON, self.onCopy)
+            self.copyPnl.sizer.Add(self.copyBtn, flag=wx.ALL | wx.EXPAND)
+            self.copyLbl = wx.StaticText(self.copyPnl, label=_translate("Copied!"))
+            self.copyLbl.Hide()
+            self.copyPnl.sizer.Add(self.copyLbl, border=6, proportion=1, flag=wx.LEFT | wx.ALIGN_CENTER_VERTICAL)
+            self.sizer.Add(self.copyPnl, border=6, flag=wx.ALL | wx.EXPAND)
+            self.copyPnl.Show(allowCopy)
 
             self.Layout()
 
-    def __init__(self, parent):
+        def onCopy(self, evt=None):
+            """
+            Copy the selected font name to the clipboard
+            """
+            if wx.TheClipboard.Open():
+                text = str(self.getValue())
+                obj = wx.TextDataObject(text)
+                wx.TheClipboard.SetData(obj)
+                wx.TheClipboard.Close()
+                # Show success label
+                self.copyLbl.Show()
+                self.Layout()
+
+        def onSelect(self, evt=None):
+            if self.ctrl.GetFocusedItem() == -1:
+                # If no selection, disable copy button
+                self.copyBtn.Disable()
+            else:
+                # Otherwise, enable
+                self.copyBtn.Enable()
+            self.copyLbl.Hide()
+            self.Layout()
+
+        def getValue(self, evt=None):
+            """
+            Get the name of currently selected font
+            """
+            i = self.ctrl.GetFocusedItem()
+            return self.ctrl.GetItemText(i)
+
+    def __init__(self, parent,
+                 allowCopy=True,
+                 allowInsert=True):
         from psychopy.visual.textbox2 import fontmanager
         import freetype as ft
         wx.Dialog.__init__(self, parent,
@@ -1503,7 +1552,8 @@ class FontManagerDialog(wx.Dialog):
             fontList=[
                 "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New",
                 "Brush Script MT"
-            ]
+            ],
+            allowCopy=allowCopy
         )
         self.fontLists.AddPage(self.sources['websafe'], text=_translate("Web Safe"))
         self.sources['websafe'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
@@ -1521,7 +1571,8 @@ class FontManagerDialog(wx.Dialog):
                 "The following fonts are installed on this computer. This means these will present as expected when "
                 "running on this computer, but results may vary on other devices."
             ),
-            fontList=systemFontFaces
+            fontList=systemFontFaces,
+            allowCopy=allowCopy
         )
         self.fontLists.AddPage(self.sources['system'], text=_translate("System"))
         self.sources['system'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
@@ -1540,7 +1591,8 @@ class FontManagerDialog(wx.Dialog):
                 "will present as expected when running locally on this computer or any which has these fonts saved, "
                 "but results may vary when running online or on other devices."
             ),
-            fontList=userFontFaces
+            fontList=userFontFaces,
+            allowCopy=allowCopy
         )
         self.fontLists.AddPage(self.sources['user'], text=_translate("User"))
         self.sources['user'].ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
@@ -1554,6 +1606,12 @@ class FontManagerDialog(wx.Dialog):
         # Make buttons
         self.btns = self.CreateStdDialogButtonSizer(flags=wx.OK | wx.CANCEL | wx.HELP)
         self.border.Add(self.btns, border=6, flag=wx.EXPAND | wx.ALL)
+        # Restyle OK as Insert
+        self.insertBtn = self.FindWindowById(wx.ID_OK)
+        self.insertBtn.SetLabel(_translate("Insert"))
+        self.insertBtn.SetToolTip(_translate("Insert the selected font into the field"))
+        self.insertBtn.Bind(wx.EVT_BUTTON, self.onInsert)
+        self.insertBtn.Show(allowInsert)
 
     def onSelect(self, evt=None):
         fontName = evt.GetItem().GetText()
@@ -1564,10 +1622,15 @@ class FontManagerDialog(wx.Dialog):
         # Do usual selection
         evt.Skip()
 
+    def onInsert(self, evt=None):
+        """
+        Close, returning OK
+        """
+        self.EndModal(wx.ID_OK)
+
     def getValue(self):
         page = self.fontLists.GetCurrentPage()
-        i = page.ctrl.GetFocusedItem()
-        return page.ctrl.GetItemText(i)
+        return page.getValue()
 
 
 def sanitize(inStr):
