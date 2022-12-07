@@ -271,28 +271,42 @@ class RegionOfInterestComponent(PolygonComponent):
 
     def writeRoutineEndCode(self, buff):
         BaseVisualComponent.writeRoutineEndCode(self, buff)
-        if len(self.exp.flow._loopList):
-            currLoop = self.exp.flow._loopList[-1]  # last (outer-most) loop
-        else:
-            currLoop = self.exp._expHandler
-        name = self.params['name']
-        if self.params['save'] == 'first look':
-            index = "[0]"
-        elif self.params['save'] == 'last look':
-            index = "[-1]"
-        else:
-            index = ""
+
+        # Copy params so we don't pollute the original object
+        params = self.params.copy()
+        # Store ref to current loop
+        params['loop'] = self.currentLoop
         if self.params['save'] != 'none':
+            # Write code to store look times
             code = (
-                f"{currLoop.params['name']}.addData('{name}.numLooks', {name}.numLooks)\n"
-                f"if {name}.numLooks:\n"
-                f"   {currLoop.params['name']}.addData('{name}.timesOn', {name}.timesOn{index})\n"
-                f"   {currLoop.params['name']}.addData('{name}.timesOff', {name}.timesOff{index})\n"
-                f"else:\n"
-                f"   {currLoop.params['name']}.addData('{name}.timesOn', \"\")\n"
-                f"   {currLoop.params['name']}.addData('{name}.timesOff', \"\")\n"
+                "%(loop)s.addData('%(name)s.numLooks', %(name)s.numLooks)\n"
+                "if %(name)s.numLooks:\n"
             )
-            buff.writeIndentedLines(code)
+            if self.params['save'] == 'first look':
+                code += (
+                "    %(loop)s.addData('%(name)s.timesOn', %(name)s.timesOn[0])\n"
+                "    %(loop)s.addData('%(name)s.timesOff', %(name)s.timesOff[0])\n"
+                "    %(loop)s.addData('%(name)s.dwellDurs', %(name)s.timesOff[0] - %(name)s.timesOn[0])\n"
+                )
+            elif self.params['save'] == 'last look':
+                code += (
+                "    %(loop)s.addData('%(name)s.timesOn', %(name)s.timesOn[-1])\n"
+                "    %(loop)s.addData('%(name)s.timesOff', %(name)s.timesOff[-1])\n"
+                "    %(loop)s.addData('%(name)s.dwellDurs', %(name)s.timesOff[-1] - %(name)s.timesOn[-1])\n"
+                )
+            else:
+                code += (
+                "    %(loop)s.addData('%(name)s.timesOn', %(name)s.timesOn)\n"
+                "    %(loop)s.addData('%(name)s.timesOff', %(name)s.timesOff)\n"
+                "    %(loop)s.addData('%(name)s.dwellDurs', [%(name)s.timesOff[i] - %(name)s.timesOn[i] for i in range(%(name)s.numLooks)])\n"
+                )
+            code += (
+                "else:\n"
+                "    %(loop)s.addData('%(name)s.timesOn', '')\n"
+                "    %(loop)s.addData('%(name)s.timesOff', '')\n"
+                "    %(loop)s.addData('%(name)s.dwellDurs', '')\n"
+                )
+            buff.writeIndentedLines(code % params)
 
     def writeExperimentEndCode(self, buff):
         pass
