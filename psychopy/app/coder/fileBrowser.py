@@ -78,7 +78,7 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
         self.parent = parent
         ListCtrlAutoWidthMixin.__init__(self)
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnRightClick)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
+        # self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
 
     def OnRightClick(self, evt=None):
         # are we on an item?
