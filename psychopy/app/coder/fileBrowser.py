@@ -81,6 +81,8 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightClick)
 
     def OnRightClick(self, evt=None):
+        # are we on an item?
+        isOnItem = evt.EventType == wx.EVT_LIST_ITEM_RIGHT_CLICK.typeId
         # create menu
         menu = wx.Menu()
         # create new menu
@@ -92,22 +94,30 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
         )
         newMenu.Bind(wx.EVT_MENU, self.parent.OnNewFolderTool, source=btn)
         menu.AppendSubMenu(newMenu, _translate("New..."))
-        # rename btn
-        btn = menu.Append(
-            wx.ID_ANY,
-            item=_translate("Rename"),
-            helpString=_translate("Rename the file"))
-        menu.Bind(wx.EVT_MENU, self.parent.OnRenameTool, source=btn)
-        # delete btn
+        if isOnItem:
+            # rename btn
+            btn = menu.Append(
+                wx.ID_ANY,
+                item=_translate("Rename"),
+                helpString=_translate("Rename the file"))
+            menu.Bind(wx.EVT_MENU, self.parent.OnRenameTool, source=btn)
+            # delete btn
+            btn = menu.Append(
+                wx.ID_DELETE,
+                item=_translate("Delete"),
+                helpString=_translate("Delete the file"))
+            menu.Bind(wx.EVT_MENU, self.parent.OnDeleteTool, source=btn)
+        # refresh
+        menu.AppendSeparator()
         btn = menu.Append(
             wx.ID_DELETE,
-            item=_translate("Delete"),
-            helpString=_translate("Delete the file"))
-        menu.Bind(wx.EVT_MENU, self.parent.OnDeleteTool, source=btn)
+            item=_translate("Refresh"),
+            helpString=_translate("Refresh the file browser to show recent changes"))
+        menu.Bind(wx.EVT_MENU, self.parent.OnRefreshTool, source=btn)
         # show menu
-        if evt.EventType == wx.EVT_LIST_ITEM_RIGHT_CLICK.typeId:
+        if isOnItem:
             self.PopupMenu(menu, pos=evt.GetPoint())
-        elif evt.EventType == wx.EVT_RIGHT_DOWN.typeId:
+        else:
             self.PopupMenu(menu, pos=evt.GetPosition())
 
     def _applyAppTheme(self, target=None):
@@ -384,6 +394,12 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
     # def OnCopyTool(self, event=None):
     #     """Activated when the copy tool is pressed."""
     #     pass  # mdc - will add this in a later version
+
+    def OnRefreshTool(self, evt=None):
+        """
+        Refresh the current file browser view
+        """
+        self.updateFileBrowser()
 
     def rename(self):
         """Rename a file or directory."""
