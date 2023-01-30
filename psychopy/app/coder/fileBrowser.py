@@ -6,6 +6,7 @@
 # Part of the PsychoPy library
 # Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2022 Open Science Tools Ltd.
 # Distributed under the terms of the GNU General Public License (GPL).
+from pathlib import Path
 
 import wx
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
@@ -82,19 +83,50 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
 
     def OnRightClick(self, evt=None):
         # are we on an item?
-        isOnItem = evt.EventType == wx.EVT_LIST_ITEM_RIGHT_CLICK.typeId
+        idx = None
+        if evt.EventType == wx.EVT_LIST_ITEM_RIGHT_CLICK.typeId:
+            idx = evt.GetIndex()
         # create menu
         menu = wx.Menu()
+        # Store reference to target directory
+        targetDir = Path(self.parent.currentPath)
+        if idx is not None:
+            targetDir = Path(self.parent.dirData[idx].abspath)
+            if not targetDir.is_dir():
+                targetDir = targetDir.parent
+        menu.targetDir = targetDir
         # create new menu
         newMenu = wx.Menu()
+        menu.AppendSubMenu(newMenu, _translate("New..."))
+        # new folder
         btn = newMenu.Append(
             wx.ID_NEW,
             item=_translate("Folder"),
             helpString=_translate("Create a new folder here.")
         )
         newMenu.Bind(wx.EVT_MENU, self.parent.OnNewFolderTool, source=btn)
-        menu.AppendSubMenu(newMenu, _translate("New..."))
-        if isOnItem:
+        # new text file
+        btn = newMenu.Append(
+            wx.ID_ANY,
+            item=_translate("Text file"),
+            helpString=_translate("Create a new text file in this location.")
+        )
+        newMenu.Bind(wx.EVT_MENU, self.parent.OnNewTextFileTool, source=btn)
+        # new Python file
+        btn = newMenu.Append(
+            wx.ID_ANY,
+            item=_translate("Python file"),
+            helpString=_translate("Create a new Python (.py) file in this location.")
+        )
+        newMenu.Bind(wx.EVT_MENU, self.parent.OnNewPyFileTool, source=btn)
+        # new JS file
+        btn = newMenu.Append(
+            wx.ID_ANY,
+            item=_translate("JS file"),
+            helpString=_translate("Create a new JavaScript (.js) file in this location.")
+        )
+        newMenu.Bind(wx.EVT_MENU, self.parent.OnNewJSFileTool, source=btn)
+        if idx is not None:
             # rename btn
             btn = menu.Append(
                 wx.ID_ANY,
@@ -115,7 +147,7 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
             helpString=_translate("Refresh the file browser to show recent changes"))
         menu.Bind(wx.EVT_MENU, self.parent.OnRefreshTool, source=btn)
         # show menu
-        if isOnItem:
+        if idx is not None:
             self.PopupMenu(menu, pos=evt.GetPoint())
         else:
             self.PopupMenu(menu, pos=evt.GetPosition())
@@ -368,6 +400,87 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
         # open the folder we just created
         self.gotoDir(abspath)
 
+    def newFile(self, ext="", targetDir=None):
+        """
+        Open a dialog to get a filename and make a new file at the specified location with the specified extension
+        (leave blank to assume extension is in filename)
+        """
+        if targetDir is None:
+            targetDir = self.currentPath
+        # Convert extension to a name for the message
+        typeName = "text"
+        if ext == ".py":
+            typeName = "Python"
+        elif ext == ".js":
+            typeName = "JavaScript"
+        # Get name from dlg
+        keepAsking = True
+        while keepAsking:
+            dlg = wx.TextEntryDialog(parent=None, message=_translate("Name for new {} file...").format(typeName))
+            if dlg.ShowModal() == wx.ID_OK:
+                # Get file path
+                stem = dlg.GetValue()
+                target = Path(targetDir) / (stem + ext)
+                # Validate
+                if target.is_file():
+                    dlg = wx.MessageDialog(parent=None, message=_translate(
+                        "File {}{} already exists, please choose a different name."
+                    ).format(stem, ext), style=wx.ICON_WARNING)
+                    dlg.ShowModal()
+                else:
+                    # If OK, make file
+                    with open(str(target), "w") as f:
+                        f.write("")
+                    # Stop asking
+                    keepAsking = False
+            else:
+                # Stop asking if they cancelled
+                keepAsking = False
+        # Refresh
+        self.gotoDir(self.currentPath)
+
+    def OnNewTextFileTool(self, evt=None):
+        """
+        Create a new text file in a given location
+        """
+        # Try to get target dir from button
+        menu = evt.GetEventObject().GetParent()
+        if hasattr(menu, "targetDir"):
+            targetDir = menu.targetDir
+        else:
+            # Use current path if fail
+            targetDir = None
+        # Create a new file at that location
+        self.newFile(ext="", targetDir=targetDir)
+
+    def OnNewPyFileTool(self, evt=None):
+        """
+        Create a new Python (.py) file in a given location
+        """
+        # Try to get target dir from button
+        menu = evt.GetEventObject().GetParent()
+        if hasattr(menu, "targetDir"):
+            targetDir = menu.targetDir
+        else:
+            # Use current path if fail
+            targetDir = None
+        # Create a new file at that location
+        self.newFile(ext=".py", targetDir=targetDir)
+
+    def OnNewJSFileTool(self, evt=None):
+        """
+        Create a new JavaScript (.js) file in a given location
+        """
+        # Try to get target dir from button
+        menu = evt.GetEventObject().GetParent()
+        if hasattr(menu, "targetDir"):
+            targetDir = menu.targetDir
+        else:
+            # Use current path if fail
+            targetDir = None
+        # Create a new file at that location
+        self.newFile(ext=".js", targetDir=targetDir)
+
     def OnDeleteTool(self, event=None):
         """Activated when the delete tool is pressed."""
         if self.selectedItem is not None:
@@ -399,7 +512,7 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
         """
         Refresh the current file browser view
         """
-        self.updateFileBrowser()
+        self.gotoDir(self.currentPath)
 
     def rename(self):
         """Rename a file or directory."""
