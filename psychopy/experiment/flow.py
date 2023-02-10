@@ -13,6 +13,7 @@ from xml.etree.ElementTree import Element
 from psychopy.experiment import getAllStandaloneRoutines
 from psychopy.experiment.routines._base import Routine, BaseStandaloneRoutine
 from psychopy.experiment.loops import LoopTerminator, LoopInitiator
+from psychopy.tools import filetools as ft
 
 
 class Flow(list):
@@ -224,8 +225,8 @@ class Flow(list):
         code = ("\n# Create some handy timers\n"
                 "globalClock = core.Clock()  # to track the "
                 "time since experiment started\n"
-                "routineTimer = core.CountdownTimer()  # to "
-                "track time remaining of each (non-slip) routine \n")
+                "routineTimer = core.Clock()  # to "
+                "track time remaining of each (possibly non-slip) routine \n")
         script.writeIndentedLines(code)
         # run-time code
         for entry in self:
@@ -237,7 +238,6 @@ class Flow(list):
         for entry in self:
             self._currentRoutine = entry
             entry.writeExperimentEndCode(script)
-
 
     def writeFlowSchedulerJS(self, script):
         """Initialise each component and then write the per-frame code too
@@ -284,7 +284,7 @@ class Flow(list):
                             "flowScheduler.add({name}LoopEnd);\n"
                             .format(name=thisEntry.loop.params['name'].val))
                     loopStack.append(thisEntry.loop)
-                elif thisEntry.getType() == "Routine":
+                elif isinstance(thisEntry, (Routine, BaseStandaloneRoutine)):
                     code = ("flowScheduler.add({params[name]}RoutineBegin());\n"
                             "flowScheduler.add({params[name]}RoutineEachFrame());\n"
                             "flowScheduler.add({params[name]}RoutineEnd());\n"
@@ -297,18 +297,45 @@ class Flow(list):
                     loopStack.remove(thisEntry.loop)
             script.writeIndentedLines(code)
         # quit when all routines are finished
-        script.writeIndented("flowScheduler.add(quitPsychoJS, '', true);\n")
+        script.writeIndented("flowScheduler.add(quitPsychoJS, %(End Message)s, true);\n" % self.exp.settings.params)
         # handled all the flow entries
         code = ("\n// quit if user presses Cancel in dialog box:\n"
                 "dialogCancelScheduler.add(quitPsychoJS, '', false);\n\n")
         script.writeIndentedLines(code)
 
         # Write resource list
-        resourceFiles = set([resource['rel'].replace("\\", "/") for resource in self.exp.getResourceFiles()])
+        resourceFiles = []
+        for resource in self.exp.getResourceFiles():
+            if isinstance(resource, dict):
+                # Get name
+                if "https://" in resource:
+                    name = resource.split('/')[-1]
+                elif 'surveyId' in resource:
+                    name = 'surveyId'
+                elif 'name' in resource and resource['name'] in list(ft.defaultStim):
+                    name = resource['name']
+                elif 'rel' in resource:
+                    name = resource['rel']
+                else:
+                    name = ""
+
+                # Get resource
+                resourceFile = None
+                if 'rel' in resource:
+                    # If resource is a file path, add its relative path
+                    resourceFile = resource['rel'].replace("\\", "/")
+                elif 'surveyId' in resource:
+                    # If resource is a survey ID, add it and mark as a survey id
+                    resourceFile = "sid:" + resource['surveyId']
+
+                # If we have a resource, add it
+                if resourceFile is not None:
+                    resourceFiles.append((name, resourceFile))
         if self.exp.htmlFolder:
             resourceFolderStr = "resources/"
         else:
             resourceFolderStr = ""
+        # start PsychoJS
         script.writeIndented("psychoJS.start({\n")
         script.setIndentLevel(1, relative=True)
         script.writeIndentedLines("expName: expName,\n"
@@ -318,12 +345,32 @@ class Flow(list):
         if not self.exp.htmlFolder:
             script.writeIndentedLines("resources: [\n")
             script.setIndentLevel(1, relative=True)
-            code = ""
-            for idx, resource in enumerate(resourceFiles):
-                temp = "{{'name': '{0}', 'path': '{1}{0}'}}".format(resource, resourceFolderStr)
-                code += temp
-                if idx != (len(resourceFiles)-1):
-                    code += ",\n"  # Trailing comma
+            # do we need to load surveys?
+            needsSurveys = False
+            for rt in self:
+                if hasattr(rt, "type") and rt.type == "PavloviaSurvey":
+                    needsSurveys = True
+            if needsSurveys:
+                script.writeIndentedLines(
+                    "// libraries:\n"
+                    "{'surveyLibrary': true},\n"
+                )
+            code = "// resources:\n"
+            for name, resource in resourceFiles:
+                if "sid:" in resource:
+                    # Strip sid prefix from survey id
+                    resource = resource.replace("sid:", "")
+                    # Add this line
+                    code += f"{{'surveyId': '{resource}'}},\n"
+                else:
+                    if "https://" in resource:
+                        # URL paths are already fine
+                        pass
+                    else:
+                        # Anything else make it relative to resources folder
+                        resource = resourceFolderStr + resource
+                    # Add this line
+                    code += f"{{'name': '{name}', 'path': '{resource}'}},\n"
             script.writeIndentedLines(code)
             script.setIndentLevel(-1, relative=True)
             script.writeIndented("]\n")

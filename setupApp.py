@@ -71,6 +71,7 @@ includes = ['_sitebuiltins',  # needed for help()
             'vlc',  # install with pip install python-vlc
             'msgpack_numpy',
             'configparser',
+            'ntplib',  # for egi-pynetstation
             ]
 packages = ['pydoc',  # needed for help()
             'wx', 'psychopy',
@@ -78,7 +79,7 @@ packages = ['pydoc',  # needed for help()
             'pyglet', 'pytz', 'OpenGL', 'glfw',
             'scipy', 'matplotlib', 'openpyxl', 'pandas',
             'xml', 'xmlschema', 'elementpath',
-            'ffpyplayer', 'cython',
+            'ffpyplayer', 'cython', 'AVFoundation',
             'moviepy', 'imageio', 'imageio_ffmpeg',
             '_sounddevice_data', '_soundfile_data',
             'cffi', 'pycparser',
@@ -87,7 +88,6 @@ packages = ['pydoc',  # needed for help()
             'objc', 'Quartz', 'AppKit', 'QTKit', 'Cocoa',
             'Foundation', 'CoreFoundation',
             'pkg_resources',  # needed for objc
-            'pyo',
             'requests', 'certifi', 'cryptography',
             'json_tricks',  # allows saving arrays/dates in json
             'git', 'gitlab',
@@ -108,6 +108,7 @@ packages = ['pydoc',  # needed for help()
             'tables',  # 'cython',
             # these aren't needed, but liked
             'pylsl', 'pygaze',
+            'Phidget22',
             'smite',  # https://github.com/marcus-nystrom/SMITE (not pypi!)
             'cv2',
             'badapted', 'darc_toolbox',  # adaptive methods from Ben Vincent

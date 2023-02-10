@@ -113,6 +113,7 @@ class RegionOfInterestComponent(PolygonComponent):
             unitsStr = "units=%(units)s, " % self.params
         # do writing of init
         inits = getInitVals(self.params, 'PsychoPy')
+        inits['depth'] = -self.getPosInRoutine()
         if self.params['shape'] == 'regular polygon...':
             inits['shape'] = self.params['nVertices']
         elif self.params['shape'] == 'custom polygon...':
@@ -126,7 +127,9 @@ class RegionOfInterestComponent(PolygonComponent):
         code = (
                 "debug=%(debug)s,\n"
                 "shape=%(shape)s,\n"
-                + unitsStr + "pos=%(pos)s, size=%(size)s, anchor=%(anchor)s, ori=0.0)\n"
+                + unitsStr + "pos=%(pos)s, size=%(size)s, \n"
+                "anchor=%(anchor)s, ori=0.0, depth=%(depth)s\n"
+                ")\n"
         )
         buff.writeIndentedLines(code % inits)
         buff.setIndentLevel(-1, relative=True)
@@ -148,14 +151,14 @@ class RegionOfInterestComponent(PolygonComponent):
         """
         # do writing of init
         inits = getInitVals(self.params, 'PsychoPy')
-        # Write basics
-        BaseVisualComponent.writeFrameCode(self, buff)
-        buff.setIndentLevel(1, relative=True)
-        code = (
-            "%(name)s.status = STARTED\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-1, relative=True)
+        # Write start code
+        indented = self.writeStartTestCode(buff)
+        if indented:
+            code = (
+                "%(name)s.setAutoDraw(True)\n"
+            )
+            buff.writeIndentedLines(code % inits)
+        buff.setIndentLevel(-indented, relative=True)
         # String to get time
         if inits['timeRelativeTo'] == 'roi onset':
             timing = "%(name)s.clock.getTime()"
@@ -166,11 +169,7 @@ class RegionOfInterestComponent(PolygonComponent):
         else:
             timing = "globalClock.getTime()"
         # Assemble code
-        code = (
-            f"if %(name)s.status == STARTED:\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(1, relative=True)
+        indented = self.writeActiveTestCode(buff)
         code = (
             f"# check whether %(name)s has been looked in\n"
             f"if %(name)s.isLookedIn:\n"
@@ -258,7 +257,10 @@ class RegionOfInterestComponent(PolygonComponent):
 
         )
         buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-2, relative=True)
+        buff.setIndentLevel(-1, relative=True)
+
+        buff.setIndentLevel(-indented, relative=True)
+
         code = (
             f"else:\n"
         )
@@ -270,6 +272,15 @@ class RegionOfInterestComponent(PolygonComponent):
         )
         buff.writeIndentedLines(code % inits)
         buff.setIndentLevel(-1, relative=True)
+
+        # Write stop code
+        indented = self.writeStopTestCode(buff)
+        if indented:
+            code = (
+                "%(name)s.setAutoDraw(False)\n"
+            )
+            buff.writeIndentedLines(code % inits)
+        buff.setIndentLevel(-indented, relative=True)
 
     def writeRoutineEndCode(self, buff):
         BaseVisualComponent.writeRoutineEndCode(self, buff)

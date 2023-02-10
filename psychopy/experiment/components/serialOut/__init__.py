@@ -6,6 +6,7 @@
 # Distributed under the terms of the GNU General Public License (GPL).
 from copy import copy
 from pathlib import Path
+from psychopy.tools import stringtools as st
 from psychopy.experiment.components import BaseComponent, Param, _translate, getInitVals
 from psychopy.localization import _localized as __localized
 _localized = __localized.copy()
@@ -15,7 +16,7 @@ _localized.update({'address': _translate('Port address'),
                    'register': _translate('U3 Register'),
                    'startData': _translate("Start data"),
                    'stopData': _translate("Stop data"),
-                   'syncScreen': _translate('Sync to screen')})
+                   'syncScreenRefresh': _translate('Sync to screen')})
 
 
 class SerialOutComponent(BaseComponent):
@@ -25,20 +26,22 @@ class SerialOutComponent(BaseComponent):
     targets = ['PsychoPy']
     iconFile = Path(__file__).parent / 'serial.png'
     tooltip = _translate('Serial out: send signals from a serial port')
+    beta = True
 
-    def __init__(self, exp, parentName, name='serial',
+    def __init__(self, exp, parentName, name='serialPort',
                  startType='time (s)', startVal=0.0,
                  stopType='duration (s)', stopVal=1.0,
                  startEstim='', durationEstim='',
                  port="COM3", baudrate=9600, bytesize=8, stopbits=1, parity='None',
                  startdata=1, stopdata=0,
-                 timeout="", getResponse=True,
-                 syncScreen=True):
+                 timeout="", getResponse=False,
+                 syncScreenRefresh=False):
         super(SerialOutComponent, self).__init__(
             exp, parentName, name,
             startType=startType, startVal=startVal,
             stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            startEstim=startEstim, durationEstim=durationEstim,
+            syncScreenRefresh=syncScreenRefresh)
 
         self.type = 'SerialOut'
         self.url = "https://www.psychopy.org/builder/components/serialout.html"
@@ -50,17 +53,17 @@ class SerialOutComponent(BaseComponent):
             label=_translate("Port")
         )
         self.params['baudrate'] = Param(
-            baudrate, valType='int', inputType="num", categ='Hardware',
+            baudrate, valType='int', inputType="int", categ='Hardware',
             hint=_translate("The baud rate, or speed, of the connection."),
             label=_translate("Baud rate")
         )
         self.params['bytesize'] = Param(
-            bytesize, valType='int', inputType="num", categ='Hardware',
+            bytesize, valType='int', inputType="int", categ='Hardware',
             hint=_translate("Size of bits to be sent."),
             label=_translate("Data bits")
         )
         self.params['stopbits'] = Param(
-            stopbits, valType='int', inputType="num", categ='Hardware',
+            stopbits, valType='int', inputType="int", categ='Hardware',
             hint=_translate("Size of bits to be sent on stop."),
             label=_translate("Stop bits")
         )
@@ -78,55 +81,54 @@ class SerialOutComponent(BaseComponent):
             label=_translate('Timeout'))
 
         self.params['startdata'] = Param(
-            startdata, valType='code', inputType="single", allowedTypes=[], categ='Basic',
-            hint=_translate("Data to be sent at start of pulse"),
+            startdata, valType='str', inputType="single", allowedTypes=[], categ='Basic',
+            hint=_translate("Data to be sent at start of pulse. Data will be converted to bytes, so to specify a"
+                            "numeric value directly use $chr(...)."),
             label=_translate('Start data'))
         self.params['stopdata'] = Param(
-            stopdata, valType='code', inputType="single", allowedTypes=[], categ='Basic',
-            hint=_translate("Data to be sent at end of pulse"),
+            stopdata, valType='str', inputType="single", allowedTypes=[], categ='Basic',
+            hint=_translate("String data to be sent at end of pulse. Data will be converted to bytes, so to specify a"
+                            "numeric value directly use $chr(...)."),
             label=_translate('Stop data'))
         self.params['getResponse'] = Param(
             getResponse, valType='bool', inputType='bool', categ="Data",
             hint=_translate("After sending a signal, should PsychoPy read and record a response from the port?"),
             label=_translate("Get response?")
         )
-        msg = _translate("If the serial port data relates to visual "
-                         "stimuli then sync its pulse to the screen refresh")
-        self.params['syncScreen'] = Param(
-            syncScreen, valType='bool', inputType="bool", categ='Data',
-            allowedVals=[True, False],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate('Sync screen'))
+
+    def writeRunOnceInitCode(self, buff):
+        inits = getInitVals(self.params, "PsychoPy")
+        # Get device-based variable name
+        inits['varName'] = self.getDeviceVarName()
+        # Create object for serial device
+        code = (
+            "# Create serial object for device at port %(port)s\n"
+            "%(varName)s = serial.Serial(\n"
+        )
+        for key in ('port', 'baudrate', 'bytesize', 'parity', 'stopbits', 'timeout'):
+            if self.params[key].val is not None:
+                code += (
+                    f"    {key}=%({key})s,\n"
+                )
+        code += (
+            ")\n"
+        )
+        buff.writeOnceIndentedLines(code % inits)
 
     def writeInitCode(self, buff):
         inits = getInitVals(self.params, "PsychoPy")
-
+        # Get device-based variable name
+        inits['varName'] = self.getDeviceVarName()
+        # Point component name to device object
         code = (
-            "# Create serial object for Component \"%(name)s\"\n"
-            "%(name)s = serial.Serial(\n"
+            "\n"
+            "# point %(name)s to device at port %(port)s and make sure it's open\n"
+            "%(name)s = %(varName)s\n"
+            "%(name)s.status = NOT_STARTED\n"
+            "if not %(name)s.is_open:\n"
+            "    %(name)s.open()\n"
         )
         buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(+1, relative=True)
-        for key in ('port', 'baudrate', 'bytesize', 'parity', 'stopbits', 'timeout'):
-            code = (
-                f"{key}=%({key})s,\n"
-            )
-            if self.params[key].val is not None:
-                buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-1, relative=True)
-        code = (
-            ")\n"
-        )
-        buff.writeIndented(code % inits)
-
-    def writeRoutineStartCode(self, buff):
-        # Open the port
-        code = (
-            "# Open serial port"
-            "%(name)s.open()\n"
-        )
-        buff.writeIndented(code % self.params)
 
     def writeFrameCode(self, buff):
         params = copy(self.params)
@@ -134,48 +136,78 @@ class SerialOutComponent(BaseComponent):
         params['loop'] = self.currentLoop
 
         # On component start, send start bits
-        self.writeStartTestCode(buff)
-        if self.params['syncScreen']:
+        indented = self.writeStartTestCode(buff)
+        if indented:
+            if self.params['syncScreenRefresh']:
+                code = (
+                    "win.callOnFlip(%(name)s.write, bytes(%(startdata)s, 'utf8'))\n"
+                )
+            else:
+                code = (
+                    "%(name)s.write(bytes(%(startdata)s, 'utf8'))\n"
+                )
+            buff.writeIndented(code % params)
+            # Update status
             code = (
-                "win.callOnFlip(%(name)s.write, %(startdata)s)\n"
-            )
-        else:
-            code = (
-                "%(name)s.write(%(startdata)s)\n"
-            )
-        buff.writeIndented(code % params)
-        # If we want responses, get them
-        if self.params['getResponse']:
-            code = (
-                "%(loop)s.addData('%(name)s.startResp', %(name)s.read())\n"
+                "%(name)s.status = STARTED\n"
             )
             buff.writeIndented(code % params)
+            # If we want responses, get them
+            if self.params['getResponse']:
+                code = (
+                    "%(loop)s.addData('%(name)s.startResp', %(name)s.read())\n"
+                )
+                buff.writeIndented(code % params)
         # Dedent
-        buff.setIndentLevel(-1, relative=True)
+        buff.setIndentLevel(-indented, relative=True)
 
         # On component stop, send stop pulse
-        self.writeStopTestCode(buff)
-        if self.params['syncScreen']:
+        indented = self.writeStopTestCode(buff)
+        if indented:
+            if self.params['syncScreenRefresh']:
+                code = (
+                    "win.callOnFlip(%(name)s.write, bytes(%(stopdata)s, 'utf8'))\n"
+                )
+            else:
+                code = (
+                    "%(name)s.write(bytes(%(stopdata)s, 'utf8'))\n"
+                )
+            buff.writeIndented(code % params)
+            # Update status
             code = (
-                "win.callOnFlip(%(name)s.write, %(stopdata)s)\n"
-            )
-        else:
-            code = (
-                "%(name)s.write(%(stopdata)s)\n"
-            )
-        buff.writeIndented(code % params)
-        # If we want responses, get them
-        if self.params['getResponse']:
-            code = (
-                "%(loop)s.addData('%(name)s.stopResp', %(name)s.read())\n"
+                "%(name)s.status = FINISHED\n"
             )
             buff.writeIndented(code % params)
+            # If we want responses, get them
+            if self.params['getResponse']:
+                code = (
+                    "%(loop)s.addData('%(name)s.stopResp', %(name)s.read())\n"
+                )
+                buff.writeIndented(code % params)
         # Dedent
-        buff.setIndentLevel(-1, relative=True)
+        buff.setIndentLevel(-indented, relative=True)
 
-    def writeRoutineEndCode(self, buff):
+    def writeExperimentEndCode(self, buff):
         # Close the port
         code = (
-            "%(name)s.close()\n"
+            "# Close %(name)s\n"
+            "if %(name)s.is_open:\n"
+            "    %(name)s.close()\n"
         )
-        buff.writeIndented(code % self.params)
+        buff.writeIndentedLines(code % self.params)
+
+    def getDeviceVarName(self, case="camel"):
+        """
+        Create a variable name from the port address of this component's device.
+
+        Parameters
+        ----------
+        case : str
+            Format of the variable name (see stringtools.makeValidVarName for info on accepted formats)
+        """
+        # Add "serial_" in case port name is all numbers
+        name = "serial_%(port)s" % self.params
+        # Make valid
+        varName = st.makeValidVarName(name, case=case)
+
+        return varName
