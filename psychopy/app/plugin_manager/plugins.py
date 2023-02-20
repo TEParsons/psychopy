@@ -424,8 +424,11 @@ class PluginBrowserList(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
         self.border.Add(self.sizer, proportion=1, border=6, flag=wx.ALL | wx.EXPAND)
         # Add search box
         self.searchCtrl = wx.SearchCtrl(self)
+        self.searchCtrl.ShowSearchButton(True)
+        self.searchCtrl.ShowCancelButton(True)
         self.sizer.Add(self.searchCtrl, border=9, flag=wx.ALL | wx.EXPAND)
         self.searchCtrl.Bind(wx.EVT_SEARCH, self.search)
+        self.searchCtrl.Bind(wx.EVT_SEARCH_CANCEL, self.search)
         # Setup items sizers & labels
         self.itemSizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.itemSizer, proportion=1, border=3, flag=wx.ALL | wx.EXPAND)
@@ -455,6 +458,10 @@ class PluginBrowserList(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
         self.SetupScrolling()
 
     def search(self, evt=None):
+        # If triggered by a cancel event, clear search Ctrl
+        if evt.GetEventType() == wx.EVT_SEARCHCTRL_CANCEL.typeId:
+            self.searchCtrl.SetValue("")
+
         searchTerm = self.searchCtrl.GetValue().strip()
         for item in self.items:
             # Otherwise show/hide according to search
