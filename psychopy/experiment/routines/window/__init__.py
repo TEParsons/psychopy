@@ -66,7 +66,7 @@ class WindowRoutine(BaseStandaloneRoutine):
             "units",
         ]
         self.params["screen"] = Param(
-            screen, valType='num', inputType="single", categ="Layout",
+            screen, valType='num', inputType="scrNum", categ="Layout",
             hint=_translate("Which physical screen to run on (1 or 2)"),
             label=_translate("Screen")
         )

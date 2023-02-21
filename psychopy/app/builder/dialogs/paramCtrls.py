@@ -1148,3 +1148,82 @@ class DictCtrl(ListWidget, _ValidatorMixin, _HideMixin):
         Hide all items in the dict ctrl
         """
         self.Show(False)
+
+
+# Component/routine specific controls
+class ScreenNumCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
+    inputType = "scrNum"
+
+    def __init__(self, parent, valType,
+                 val="", fieldName="",
+                 size=wx.Size(-1, 24), style=wx.TE_LEFT):
+        # Create self
+        wx.TextCtrl.__init__(self)
+        self.Create(parent, -1, val, name=fieldName, size=size, style=style)
+        self.valType = valType
+
+        # On MacOS, we need to disable smart quotes
+        if sys.platform == 'darwin':
+            self.OSXDisableAllSmartSubstitutions()
+
+        # Add sizer
+        self._szr = wx.BoxSizer(wx.HORIZONTAL)
+        if not valType == "str" and not fieldName == "name":
+            # Add $ for anything to be interpreted verbatim
+            self.dollarLbl = wx.StaticText(parent, -1, "$", size=wx.Size(-1, -1), style=wx.ALIGN_RIGHT)
+            self.dollarLbl.SetToolTip(_translate("This parameter will be treated as code - we have already put in the $, so you don't have to."))
+            self._szr.Add(self.dollarLbl, border=5, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT)
+        # Add self to sizer
+        self._szr.Add(self, proportion=1, border=5, flag=wx.EXPAND)
+        # Add button to show screen numbers
+        self.screenNsBtn = wx.Button(self.GetParent(), label=_translate("Show screen numbers"))
+        self._szr.Add(self.screenNsBtn, border=5, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT)
+        self.screenNsBtn.Bind(wx.EVT_BUTTON, self.showScreenNumbers)
+        # Bind to validation
+        self.Bind(wx.EVT_TEXT, self.validate)
+        self.validate()
+
+    @staticmethod
+    def showScreenNumbers(evt=None, dur=5):
+        """
+        Spawn some PsychoPy windows to display each monitor's number.
+        """
+        from psychopy import visual
+        import time
+
+        for n in range(wx.Display.GetCount()):
+            start = time.time()
+            # Open a window on the appropriate screen
+            win = visual.Window(
+                pos=(0, 0),
+                size=(128, 128),
+                units="norm",
+                screen=n,
+                color="black"
+            )
+            # Draw screen number to the window
+            screenNum = visual.TextBox2(
+                win, text=str(n + 1),
+                size=1, pos=0,
+                alignment="center", anchor="center",
+                letterHeight=0.5, bold=True,
+                fillColor=None, color="white"
+            )
+            # Progress bar
+            progBar = visual.Rect(
+                win, anchor="bottom left",
+                pos=(-1, -1), size=(0, 0.1)
+            )
+
+            # Frame loop
+            t = 0
+            while t < dur:
+                t = time.time() - start
+                # Set progress bar size
+                progBar.size = (t / 5 * 2, 0.1)
+                # Draw
+                progBar.draw()
+                screenNum.draw()
+                win.flip()
+            # Close window
+            win.close()

@@ -219,7 +219,7 @@ class SettingsComponent:
             hint=_translate("Size of window (if not fullscreen)"),
             label=_localized["Window size (pixels)"], categ='Screen')
         self.params['Screen'] = Param(
-            screen, valType='num', inputType="spin", allowedTypes=[],
+            screen, valType='num', inputType="scrNum", allowedTypes=[],
             hint=_translate("Which physical screen to run on (1 or 2)"),
             label=_localized["Screen"], categ='Screen')
         self.params['Monitor'] = Param(
