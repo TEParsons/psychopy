@@ -50,7 +50,7 @@ class WindowRoutine(BaseStandaloneRoutine):
             allowedLabels=['add', 'average', 'average (no FBO)'],
             hint=_translate("Should new stimuli be added or averaged with "
                             "the stimuli that have been drawn already"),
-            label=_translate("blendMode")
+            label=_translate("Blend mode")
         )
         self.params['showMouse'] = Param(
             showMouse, valType='bool', inputType="bool", categ="Basic",
@@ -104,14 +104,14 @@ class WindowRoutine(BaseStandaloneRoutine):
             hint=_translate("Color of the screen (e.g. black, $[1.0,1.0,1.0],"
                             " $variable. Right-click to bring up a "
                             "color-picker.)"),
-            label=_translate("color")
+            label=_translate("Window color")
         )
         self.params['colorSpace'] = Param(
             colorSpace, valType='str', inputType="choice", categ="Appearance",
             allowedVals=['rgb', 'dkl', 'lms', 'hsv', 'hex'],
             hint=_translate("Needed if color is defined numerically (see "
                             "PsychoPy documentation on color spaces)"),
-            label=_translate("colorSpace")
+            label=_translate("Color space")
         )
         self.params['backgroundImg'] = Param(
             backgroundImg, valType="str", inputType="file", categ="Appearance",
