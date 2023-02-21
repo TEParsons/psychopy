@@ -731,6 +731,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
                       u" the PsychoPy user list".format(filename))
                 traceback.print_exc()
                 logging.flush()
+            self.handleLegacy()
             self.resetUndoStack()
             self.setIsModified(False)
             self.filename = filename
@@ -922,6 +923,20 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
             elif resp == wx.ID_NO:
                 pass  # don't save just quit
         return True
+
+    def handleLegacy(self):
+        """
+        Perform any legacy handling functions needed on the current .exp
+        """
+        # --- Handle win routine ---
+        msg = _translate(
+            "Experiment file has window settings in Experiment Settings. These are now handled by a dedicated Window "
+            "Routine. Would you like to migrate these parameters now? This will not change your .psyexp file until "
+            "you click Save."
+        )
+        dlg = wx.MessageDialog(None, msg, style=wx.YES | wx.NO | wx.ICON_QUESTION)
+        if dlg.ShowModal() == wx.ID_YES:
+            self.exp = experiment.legacy.migrateLegacyScreenParams(self.exp)
 
     def fileClose(self, event=None, checkSave=True, updateViews=True):
         """This is typically only called when the user x

@@ -23,6 +23,7 @@ from ._experiment import Experiment
 from .utils import unescapedDollarSign_re, valid_var_re, \
      nonalphanumeric_re
 from psychopy.experiment.utils import CodeGenerationException
+from . import legacy
 
 
 def getAllElements(fetchIcons=True):
