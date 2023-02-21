@@ -195,9 +195,24 @@ class WindowRoutine(BaseStandaloneRoutine):
             "\n"
             "# store frame rate of monitor if we can measure it\n"
             "expInfo['frameRate'] = %(name)s.getActualFrameRate()\n"
-            "if frameDur is None:\n"
+            "if expInfo['frameRate'] is None:\n"
             "    frameDur = 1.0 / 60.0  # could not measure, so guess\n"
             "else:\n"
             "    frameDur = 1.0 / round(expInfo['frameRate'])\n"
         )
         buff.writeIndentedLines(code % params)
+
+
+class MainWindowRoutine(WindowRoutine, BaseStandaloneRoutine):
+    """
+    Special version of WindowRoutine which points to the main window (`win`) - fixed as compulsory and
+    limited to 1 per experiment
+    """
+    compulsory = True
+    limit = 1
+
+    def writeStartCode(self, buff):
+        WindowRoutine.writeMainCode(self, buff)
+
+    def writeMainCode(self, buff):
+        return

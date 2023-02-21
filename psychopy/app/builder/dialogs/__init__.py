@@ -682,6 +682,12 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
             self.paramCtrls.update(page.ctrls)
             # Add page to notebook
             self.AddPage(page, _translate(categ))
+        # Disable name ctrl if element is compulsory
+        if hasattr(element, "compulsory") and element.compulsory:
+            if 'name' in self.paramCtrls:
+                self.paramCtrls['name'].valueCtrl.Disable()
+            if 'disable' in self.paramCtrls:
+                self.paramCtrls['disabled'].valueCtrl.Disable()
 
     def checkDepends(self, event=None):
         """

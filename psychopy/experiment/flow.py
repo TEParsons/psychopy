@@ -204,8 +204,6 @@ class Flow(list):
     def writeStartCode(self, script):
         """Write the code that comes after the Window is created
         """
-        script.writeIndentedLines("\n# Start Code - component code to be "
-                                  "run after the window creation\n")
         for entry in self:
             # NB each entry is a routine or LoopInitiator/Terminator
             self._currentRoutine = entry

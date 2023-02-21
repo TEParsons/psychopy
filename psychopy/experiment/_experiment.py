@@ -136,6 +136,13 @@ class Experiment:
 
         _settingsComp = getComponents(fetchIcons=False)['SettingsComponent']
         self.settings = _settingsComp(parentName='', exp=self)
+        # create window
+        from .routines.window import MainWindowRoutine
+        self.win = MainWindowRoutine(self, name="win")
+        self.win.compulsory = True
+        self.win.limit = 1
+        self.addStandaloneRoutine("win", self.win)
+        self.flow.addRoutine(self.win, 0)
         # this will be the xml.dom.minidom.doc object for saving
         self._doc = xml.ElementTree()
         self.namespace = NameSpace(self)  # manage variable names

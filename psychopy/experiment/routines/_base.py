@@ -23,7 +23,9 @@ class BaseStandaloneRoutine:
     targets = []
     iconFile = Path(__file__).parent / "unknown" / "unknown.png"
     tooltip = ""
-    limit = float('inf')
+    compulsory = False  # If True, cannot be deleted, renamed or moved
+    classLimit = float('inf')  # Max number of this type of routine which can be in flow
+    limit = float('inf')  # Max number of this routine instance which can be in flow
 
     def __init__(self, exp, name='',
                  stopType='duration (s)', stopVal='',
@@ -41,7 +43,7 @@ class BaseStandaloneRoutine:
         self.params['name'] = Param(name,
                                     valType='code', inputType="single", categ='Basic',
                                     hint=msg,
-                                    label=_translate('name'))
+                                    label=_translate('Name'))
 
         self.params['stopVal'] = Param(stopVal,
             valType='num', inputType="single", categ='Basic',
@@ -223,6 +225,7 @@ class Routine(list):
     """
 
     targets = ["PsychoPy", "PsychoJS"]
+    compulsory = False  # If True, cannot be deleted, renamed or moved
 
     def __init__(self, name, exp, components=(), disabled=False):
         super(Routine, self).__init__()
@@ -264,6 +267,7 @@ class Routine(list):
         # Make root element
         element = Element("Routine")
         element.set("name", self.name)
+        element.set("compulsory", str(self.compulsory))
         # Add each component's element
         for comp in self:
             element.append(comp._xml)

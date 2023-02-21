@@ -96,7 +96,8 @@ _localized = {
 
 # Components which are always hidden
 alwaysHidden = [
-    'SettingsComponent', 'UnknownComponent', 'UnknownRoutine', 'UnknownStandaloneRoutine', 'UnknownPluginComponent'
+    'SettingsComponent', 'MainWindowRoutine', 'UnknownComponent', 'UnknownRoutine', 'UnknownStandaloneRoutine',
+    'UnknownPluginComponent'
 ]
 
 
@@ -1574,6 +1575,14 @@ class RoutinesNotebook(aui.AuiNotebook, handlers.ThemeMixin):
         currentPage = self.GetPage(event.GetSelection())
         routine = currentPage.routine
         name = routine.name
+
+        # don't delete compulsory routines
+        if hasattr(routine, "compulsory") and routine.compulsory:
+            # Add the page back in
+            self.addRoutinePage(name, routine)
+            # Skip everything else
+            event.Skip()
+            return
 
         # name is not valid for some reason
         if name not in self.frame.exp.routines:
@@ -3175,11 +3184,17 @@ class FlowPanel(wx.ScrolledWindow, handlers.ThemeMixin):
             id = wx.NewIdRef()
             item = menu.Append(id, name)
             # Enable / disable each routine's button according to limits
-            if hasattr(routine, "limit"):
+            if hasattr(routine, "limit") and hasattr(routine, "classLimit"):
+                # Limit = limit on how many of *this routine* is allowed
                 limitProgress = 0
+                # Class limit = limit on how many of *this type of routine* are allowed
+                classLimitProgress = 0
                 for rt in flow:
-                    limitProgress += int(isinstance(rt, type(routine)))
-                item.Enable(limitProgress < routine.limit or routine in flow)
+                    limitProgress += int(rt.name == routine.name)
+                    classLimitProgress += int(isinstance(rt, type(routine)))
+                item.Enable(
+                    classLimitProgress < routine.classLimit and limitProgress < routine.limit
+                )
             self.routinesFromID[id] = name
             menu.Bind(wx.EVT_MENU, self.onInsertRoutineSelect, id=id)
         btnPos = self.btnInsertRoutine.GetRect()
@@ -3426,7 +3441,10 @@ class FlowPanel(wx.ScrolledWindow, handlers.ThemeMixin):
         flow = self.frame.exp.flow
         component = flow[compID]
         compType = component.getType()
-        if compType == 'Routine':
+        if hasattr(component, "compulsory") and component.compulsory:
+            # destroy to avoid mem leak:
+            menu.Destroy()
+        elif compType == 'Routine':
             for item in self.contextMenuItems:
                 id = self.contextIDFromItem[item]
                 menu.Append(id, self.contextMenuLabels[item])
@@ -3810,7 +3828,11 @@ class FlowPanel(wx.ScrolledWindow, handlers.ThemeMixin):
             font.SetPointSize(1000 // self.dpi - fontSizeDelta)
 
         maxTime, nonSlip = routine.getMaxTime()
-        if hasattr(routine, "disabled") and routine.disabled:
+        if hasattr(routine, "compulsory") and routine.compulsory:
+            rtFill = colors.app['fl_flowline_bg']
+            rtEdge = colors.app['fl_flowline_bg']
+            rtText = colors.app['fl_routine_fg']
+        elif hasattr(routine, "disabled") and routine.disabled:
             rtFill = colors.app['rt_comp_disabled']
             rtEdge = colors.app['rt_comp_disabled']
             rtText = colors.app['fl_routine_fg']

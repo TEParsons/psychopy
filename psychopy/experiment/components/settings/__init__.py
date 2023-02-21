@@ -1337,6 +1337,9 @@ class SettingsComponent:
     def writeWindowCode(self, buff):
         """Setup the window code.
         """
+        if "win" in [obj.name for obj in self.exp.flow]:
+            # Skip if we have a main window routine
+            return
         buff.writeIndentedLines("\n# --- Setup the Window ---\n")
         # get parameters for the Window
         fullScr = self.params['Full-screen window'].val
