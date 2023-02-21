@@ -928,15 +928,42 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         """
         Perform any legacy handling functions needed on the current .exp
         """
-        # --- Handle win routine ---
-        msg = _translate(
-            "Experiment file has window settings in Experiment Settings. These are now handled by a dedicated Window "
-            "Routine. Would you like to migrate these parameters now? This will not change your .psyexp file until "
-            "you click Save."
-        )
-        dlg = wx.MessageDialog(None, msg, style=wx.YES | wx.NO | wx.ICON_QUESTION)
-        if dlg.ShowModal() == wx.ID_YES:
-            self.exp = experiment.legacy.migrateLegacyScreenParams(self.exp)
+        # --- Legacy screen params ---
+        # If legacy screen parameters are detected, prompt to migrate them to a Routine.
+        hasLegacyScreenParams = False
+        for name, param in self.exp.settings.params.items():
+            if name in experiment.legacy.legacyScreenParams:
+                hasLegacyScreenParams = True
+
+        if hasLegacyScreenParams:
+            # Prompt to migrate settings
+            msg = _translate(
+                "Legacy 'Screen' parameters detected.\n"
+                "\n"
+                "As of v2023.2.0, parameters for controlling the size and appearance of the "
+                "experiment window are no longer located in Experiment Settings. They are "
+                "now handled by a dedicated Window Routine in the Experiment Flow. \n"
+                "\n"
+                "Would you like to migrate these parameters to a Window Routine now?\n"
+            )
+            dlg = wx.MessageDialog(
+                None, msg,
+                caption=_translate("Migrate Screen settings?"),
+                style=wx.YES | wx.NO | wx.ICON_QUESTION)
+            if dlg.ShowModal() == wx.ID_YES:
+                # If allowed to migrate, do so
+                self.exp = experiment.legacy.migrateLegacyScreenParams(self.exp)
+                # Alert user that migration is complete
+                msg = _translate(
+                    "Parameters migrated successfully!\n"
+                    "\n"
+                    "Your experiment (.psyexp) file will be updated when you next save your work."
+                )
+                dlg = wx.MessageDialog(None, msg, style=wx.OK)
+                dlg.Show()
+            else:
+                # If not allowed to migrate, give legacy params a categ so they appear in the correct tab
+                self.exp = experiment.legacy.categorizeLegacyScreenParams(self.exp)
 
     def fileClose(self, event=None, checkSave=True, updateViews=True):
         """This is typically only called when the user x
