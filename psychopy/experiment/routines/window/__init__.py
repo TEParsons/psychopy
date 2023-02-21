@@ -12,7 +12,7 @@ class WindowRoutine(BaseStandaloneRoutine):
     tooltip = "Window: Create a new window."
 
     def __init__(
-            self, exp, name='',
+            self, exp, name='win',
             fullScr=True, winSize=(1024, 768), units='height',
             screen=1, monitor='testMonitor', showMouse=False,
             color='$[0, 0, 0]', colorSpace='rgb',
