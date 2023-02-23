@@ -228,12 +228,53 @@ class Flow(list):
                 "routineTimer = core.Clock()  # to "
                 "track time remaining of each (possibly non-slip) routine \n")
         script.writeIndentedLines(code)
+        # define routine functions
+        code = (
+            "# === Define routine functions ===\n"
+        )
+        script.writeIndentedLines(code)
+        for rt in self.exp.routines.values():
+            # Enter function def
+            code = (
+                "def %(name)s():\n"
+            )
+            script.writeIndentedLines(code % rt.params)
+            script.setIndentLevel(+1, relative=True)
+            code = (
+                '"""\n'
+                'Function to run Routine \'%(name)s\'.\n'
+                '"""\n'
+            )
+            script.writeIndentedLines(code % rt.params)
+            # Write routine code
+            rt.writeMainCode(script)
+            if hasattr(rt, "writeRoutineEndCode"):
+                rt.writeRoutineEndCode(script)
+            # Put variables back into global namespace
+            code = (
+                "# make local variables from this function available outside of this function\n"
+                "globals().update(locals())\n"
+            )
+            script.writeIndentedLines(code)
+            # Exit function def
+            script.setIndentLevel(-1, relative=True)
+            code = (
+                "\n"
+            )
+            script.writeIndentedLines(code)
         # run-time code
         for entry in self:
             self._currentRoutine = entry
-            entry.writeMainCode(script)
-            if hasattr(entry, "writeRoutineEndCode"):
-                entry.writeRoutineEndCode(script)
+            if isinstance(entry, (Routine, BaseStandaloneRoutine)):
+                code = (
+                    "# Run Routine '%(name)s'\n"
+                    "%(name)s()\n"
+                )
+                script.writeIndentedLines(code % entry.params)
+            else:
+                entry.writeMainCode(script)
+                if hasattr(entry, "writeRoutineEndCode"):
+                    entry.writeRoutineEndCode(script)
         # tear-down code (very few components need this)
         for entry in self:
             self._currentRoutine = entry
