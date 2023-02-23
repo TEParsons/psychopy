@@ -236,6 +236,7 @@ class Flow(list):
         for rt in self.exp.routines.values():
             # Enter function def
             code = (
+                "@core.routine\n"
                 "def %(name)s():\n"
             )
             script.writeIndentedLines(code % rt.params)
@@ -252,8 +253,8 @@ class Flow(list):
                 rt.writeRoutineEndCode(script)
             # Put variables back into global namespace
             code = (
-                "# make local variables from this function available outside of this function\n"
-                "globals().update(locals())\n"
+                "# return local variables so they can be accessed throughout the experiment\n"
+                "return locals()\n"
             )
             script.writeIndentedLines(code)
             # Exit function def

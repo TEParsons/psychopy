@@ -53,7 +53,20 @@ openWindows = []  # visual.Window updates this, event.py and clock.py use it
 # (which was also a descripancy between OS's when win32 was using time.clock).
 
 
-def getTime(applyZero = True):
+def routine(func):
+    """
+    Decorator for PsychoPy Routines, adds local variables from within the routine to the
+    global (experiment) namespace.
+    """
+    def wrapper():
+        # Run function - it should return a dict of variables to be added to the global space
+        localVars = func()
+        # Add these to the global space (global relative to function - i.e. the experiment namespace)
+        func.__globals__.update(localVars)
+    return wrapper
+
+
+def getTime(applyZero=True):
     """Get the current time since psychopy.core was loaded.
 
 
