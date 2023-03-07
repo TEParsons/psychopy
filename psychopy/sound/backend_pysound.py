@@ -4,8 +4,6 @@ from pathlib import Path
 
 from psychopy import logging, prefs
 from .exceptions import DependencyError
-from psychopy.constants import (STARTED, PLAYING, PAUSED, FINISHED, STOPPED,
-                                NOT_STARTED, FOREVER)
 from psychopy.tools import attributetools, filetools as ft
 from ._base import _SoundBase
 
@@ -60,7 +58,6 @@ class _PySoundCallbackClass():
     """
 
     def __init__(self, sndInstance):
-        self.status = NOT_STARTED
         self._sampleIndex = 0
         self.bufferSize = sndInstance.bufferSize
         self.sndInstance = weakref.ref(sndInstance)
@@ -86,7 +83,7 @@ class _PySoundCallbackClass():
         snd = self.sndInstance()
         chansIn, chansOut = snd._stream.channels
         nSamples = len(snd.sndArr)
-        if snd.status == STOPPED:
+        if snd.isPlaying is False:
             outData[:] = 0
             return soundcard.abort_flag
         if self._sampleIndex + self.bufferSize > nSamples:

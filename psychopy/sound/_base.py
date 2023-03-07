@@ -9,8 +9,6 @@ import numpy
 import copy
 from os import path
 from psychopy import logging
-from psychopy.constants import (STARTED, PLAYING, PAUSED, FINISHED, STOPPED,
-                                NOT_STARTED, FOREVER)
 from psychopy.tools.filetools import pathToString, defaultStim, defaultStimRoot
 from sys import platform
 from .audioclip import AudioClip
@@ -214,7 +212,6 @@ class _SoundBase():
         else:
             if log and self.autoLog:
                 logging.exp("Set %s sound=%s" % (self.name, value), obj=self)
-            self.status = NOT_STARTED
 
     def _setSndFromNote(self, thisNote, secs, octave, hamming=True):
         # note name -> freq -> sound

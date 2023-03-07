@@ -12,8 +12,6 @@ import weakref
 from pathlib import Path
 
 from psychopy import prefs, logging, exceptions
-from psychopy.constants import (STARTED, PAUSED, FINISHED, STOPPING,
-                                NOT_STARTED)
 from psychopy.tools import filetools as ft
 from .exceptions import SoundFormatError, DependencyError
 from ._base import _SoundBase, HammingWindow
@@ -333,7 +331,6 @@ class SoundPTB(_SoundBase):
         self.setSound(value, secs=self.secs, octave=self.octave,
                       hamming=self.hamming)
         self._isPlaying = False  # set `True` after `play()` is called
-        self.status = NOT_STARTED
 
     @property
     def isPlaying(self):
@@ -352,26 +349,6 @@ class SoundPTB(_SoundBase):
         if not self.track:
             return None
         return self.track.status
-
-    @property
-    def status(self):
-        """status gives a simple value from psychopy.constants to indicate
-        NOT_STARTED, STARTED, FINISHED, PAUSED
-
-        Psychtoolbox sounds also have a statusDetailed property with further info"""
-        if self.__dict__['status']==STARTED:
-            # check portaudio to see if still playing
-            pa_status = self.statusDetailed
-            if not pa_status['Active'] and pa_status['State']==0:
-                # we were playing and now not so presumably FINISHED
-                self._EOS()
-
-        return self.__dict__['status']
-
-
-    @status.setter
-    def status(self, newStatus):
-        self.__dict__['status'] = newStatus
 
     @property
     def volume(self):

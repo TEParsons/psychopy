@@ -5,8 +5,6 @@ from pathlib import Path
 import numpy
 from os import path
 from psychopy import logging, prefs
-from psychopy.constants import (STARTED, PLAYING, PAUSED, FINISHED, STOPPED,
-                                NOT_STARTED, FOREVER)
 from psychopy.tools import filetools as ft
 from ._base import _SoundBase
 from .exceptions import DependencyError
@@ -244,7 +242,6 @@ class SoundPygame(_SoundBase):
         and fun to include as a possibility :)
         """
         self._snd.fadeout(mSecs)
-        self.status = STOPPED
 
     def getDuration(self):
         """Gets the duration of the current sound in secs
