@@ -1915,8 +1915,13 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
             else:
                 rowComponents.append(component)
 
-        # draw static, time grid, normal (row) comp:
+        # draw title
         yPos = self.yPosTop
+        # draw settings button and title
+        self.drawTitle(self.pdc, self.routine.settings)
+        yPos += self.iconSize / 2 + 6
+
+        # draw static, time grid, normal (row) comp:
         yPosBottom = yPos + len(rowComponents) * self.componentStep
         # draw any Static Components first (below the grid)
         for component in staticCompons:
@@ -1927,8 +1932,7 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         for component in rowComponents:
             self.drawComponent(self.pdc, component, yPos)
             yPos += self.componentStep
-        # draw settings button
-        self.drawSettingsBtn(self.pdc, self.routine.settings)
+
 
         # the 50 allows space for labels below the time axis
         self.SetVirtualSize((int(self.maxWidth), yPos + 50))
@@ -2186,7 +2190,8 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
                 fullRect.Union(wx.Rect(xSt, int(y + yOffset), w, h))
         dc.SetIdBounds(id, fullRect)
 
-    def drawSettingsBtn(self, dc, component):
+    def drawTitle(self, dc, component):
+        offset = 12
         # Setup ID
         id = None
         for key in self.componentFromID:
@@ -2199,10 +2204,28 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # Get settings icon
         sz = self.iconSize/2
         thisIcon = icons.ComponentIcon(component, size=sz).bitmap
-        # Draw button
-        dc.DrawBitmap(thisIcon, 12, 12, True)
+        # Draw settings icon
+        iconRect = wx.Rect(
+            topLeft=wx.Point(self.timeXposStart - sz - offset, self.yPosTop - self.GetFont().GetPointSize() * 1.5 - offset),
+            bottomRight=wx.Point(self.timeXposStart - offset, self.yPosTop - offset)
+        )
+        dc.DrawBitmap(thisIcon, iconRect.TopLeft, True)
+        # Draw label
+        lblRect = wx.Rect(
+            topLeft=wx.Point(self.timeXposStart, self.yPosTop - self.GetFont().GetPointSize() * 1.5 - offset),
+            bottomRight=wx.Point(self.timeXposEnd, self.yPosTop - offset)
+        )
+        font = self.GetFont()
+        font.SetPointSize(self.GetFont().GetPointSize() * 1.5)
+        dc.SetFont(font)
+        dc.DrawLabel(
+            component.name,
+            lblRect,
+            alignment=wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL
+        )
+        dc.SetFont(self.GetFont())
         # Bind to ID bounds
-        dc.SetIdBounds(id, wx.Rect(12, 12, sz, sz))
+        dc.SetIdBounds(id, lblRect.Union(iconRect))
 
     def copyCompon(self, event=None, component=None):
         """This is easy - just take a copy of the component into memory
