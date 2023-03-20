@@ -1,0 +1,23 @@
+name: changelog
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  name: Update changelog
+  steps:
+    - name: Get releases
+      id: releases
+      run: gh release list $REPO >> $releases
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO: ${{ github.event.repository.name }}
+
+    - name: Construct changelog
+      id: changelog_txt
+      run: |
+        ${{ steps.tests.outputs.releases }}

@@ -16,6 +16,7 @@ import mmap
 import time
 import io
 import argparse
+import git
 
 from psychopy.app.themes import icons, colors, handlers
 
@@ -450,6 +451,8 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             self.firstRun = True
         else:
             last = self.prefs.appData['lastVersion']
+        # parse last version
+        last = parse_version(last)
 
         if self.firstRun and not self.testMode:
             pass
@@ -583,7 +586,7 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         self.tasks = None
 
         prefsConn = self.prefs.connections
-
+        # check for cross-version compatability
         ok, msg = checkCompatibility(last, self.version, self.prefs, fix=True)
         # tell the user what has changed
         if not ok and not self.firstRun and not self.testMode:
@@ -591,6 +594,18 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             dlg = dialogs.MessageDialog(parent=None, message=msg, type='Info',
                                         title=title)
             dlg.ShowModal()
+
+        # check for recent upgrade
+        if self.version > last:
+            from tempfile import mkdtemp
+            tmp = mkdtemp()
+            git.Repo(tmp)
+            repo = git.Repo.clone_from(
+                url="https://github.com/psychopy/psychopy",
+                to_path=tmp
+            )
+            remote = git.Remote(repo, "release")
+
 
         if self.prefs.app['showStartupTips'] and not self.testMode:
             tipFile = os.path.join(
