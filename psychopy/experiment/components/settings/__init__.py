@@ -7,7 +7,7 @@ from pathlib import Path
 from xml.etree.ElementTree import Element
 import re
 import wx.__version__
-from psychopy import logging, plugins
+from psychopy import logging, plugins, javascriptisms
 from psychopy.experiment.components import Param, _translate
 from psychopy.experiment.routines.eyetracker_calibrate import EyetrackerCalibrationRoutine
 import psychopy.tools.versionchooser as versions
@@ -754,10 +754,14 @@ class SettingsComponent:
         buff.write(
             "from psychopy import %s\n" % ', '.join(psychopyImports) +
             "from psychopy.tools import environmenttools\n"
-            "from psychopy.constants import (NOT_STARTED, STARTED, PLAYING,"
-            " PAUSED,\n"
-            "                                STOPPED, FINISHED, PRESSED, "
-            "RELEASED, FOREVER)\n\n"
+            "from psychopy.constants import (\n"
+            "    NOT_STARTED, STARTED, PLAYING, PAUSED, STOPPED, FINISHED, PRESSED, \n"
+            "    RELEASED, FOREVER\n"
+            ")\n"
+            "from psychopy.javascriptisms import (\n"
+            + "    %s\n" % ', '.join([var for var in dir(javascriptisms) if not var.startswith("__")]) +
+            ")\n" 
+            "\n"
             "import numpy as np  # whole numpy lib is available, "
             "prepend 'np.'\n"
             "from numpy import (%s,\n" % ', '.join(_numpyImports[:7]) +
