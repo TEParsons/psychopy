@@ -86,6 +86,19 @@ class MinimalStim:
     Includes: name, autoDraw, autoLog, status, __str__
     """
 
+    def __new__(cls, *args, **kwargs):
+        obj = object.__new__(cls)
+        cls.__init__(obj, *args, **kwargs)
+
+        for attr in dir(cls):
+            val = getattr(cls, attr)
+            if hasattr(val, "fset"):
+                def call(value):
+                    setattr(obj, attr, value)
+                setattr(obj, "set"+attr.capitalize(), call)
+
+        return obj
+
     def __init__(self, name=None, autoLog=None):
         if name not in (None, ''):
             self.__dict__['name'] = name
