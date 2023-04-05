@@ -969,6 +969,46 @@ class TableCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
             self.validate(event)
 
 
+class ExperimentCtrl(FileCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
+    def __init__(self, parent, valType,
+                 val="", fieldName="",
+                 size=wx.Size(-1, 24)):
+        FileCtrl.__init__(
+            self, parent, valType,
+            val=val, fieldName=fieldName,
+            size=size
+        )
+        # Add "open" button
+        bmp = icons.ButtonIcon(stem="psyexp", size=16, theme="light").bitmap
+        self.openBtn = wx.BitmapButton(
+            parent, -1, bitmap=bmp, style=wx.BU_EXACTFIT
+        )
+        self.openBtn.SetToolTip(_translate("Open current file..."))
+        self.openBtn.Bind(wx.EVT_BUTTON, self.openExperiment)
+        self._szr.Add(self.openBtn)
+
+    def openExperiment(self, evt=None):
+        validate(self, "file")
+        file = Path(self.frame.filename).parent / str(self.GetValue())
+        if file and file != "None":
+            if file.suffix == ".psyexp":
+                self.frame.app.newBuilderFrame().fileOpen(filename=str(file))
+            else:
+                self.frame.fileOpen(filename=str(file))
+
+    def validate(self, evt=None):
+        """Redirect validate calls to global validate method, assigning appropriate valType"""
+        validate(self, "file")
+        if not hasattr(self, "openBtn"):
+            return
+        # Disable open button if value is from a variable
+        if "$" in self.GetValue():
+            self.openBtn.Disable()
+            return
+        # Enable open button if valid
+        self.openBtn.Enable(self.valid)
+
+
 class ColorCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
     def __init__(self, parent, valType,
                  val="", fieldName="",
@@ -1064,7 +1104,7 @@ def validate(obj, valType):
     if valType == "file":
         val = Path(str(val))
         if not val.is_absolute():
-            frame = obj.GetTopLevelParent().frame
+            frame = obj.frame
             # If not an absolute path, append to current directory
             val = Path(frame.filename).parent / val
         if not val.is_file():

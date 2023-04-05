@@ -178,6 +178,10 @@ class ParamCtrls():
         elif param.inputType == 'table':
             self.valueCtrl = paramCtrls.TableCtrl(parent, val=param.val, valType=param.valType,
                                                   fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
+        elif param.inputType == 'exp':
+            self.valueCtrl = paramCtrls.ExperimentCtrl(parent,
+                                                       val=str(param.val), valType=param.valType,
+                                                       fieldName=fieldName, size=wx.Size(self.valueWidth, 24))
         elif param.inputType == 'color':
             self.valueCtrl = paramCtrls.ColorCtrl(parent,
                                                   val=param.val, valType=param.valType,
