@@ -7,29 +7,6 @@
 # Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2022 Open Science Tools Ltd.
 # Distributed under the terms of the GNU General Public License (GPL).
 
-haveQt = False  # until we confirm otherwise
-importOrder = ['PyQt5', 'PyQt4']
-
-for libname in importOrder:
-    try:
-        exec("import {}".format(libname))
-        haveQt = libname
-        break
-    except ImportError:
-        pass
-
-if not haveQt:
-    # do the main import again not in a try...except to recreate error
-    exec("import {}".format(importOrder[0]))
-elif haveQt == 'PyQt5':
-    from PyQt5 import QtWidgets
-    from PyQt5 import QtGui
-    from PyQt5.QtCore import Qt
-else:
-    from PyQt4 import QtGui  
-    QtWidgets = QtGui  # in qt4 these were all in one package
-    from PyQt4.QtCore import Qt
-
 from psychopy import logging
 import numpy as np
 import os
@@ -37,7 +14,62 @@ import sys
 import json
 from psychopy.localization import _translate
 
-OK = QtWidgets.QDialogButtonBox.Ok
+
+def importBestQt(versions=("PyQt6", "PyQt5", "PyQt4")):
+    """
+    Get the best version of PyQt installed
+
+    Parameters
+    ----------
+    versions : list, tuple
+        List of versions to try, in order or priority.
+
+    Returns
+    -------
+    module
+        PyQt.QtCore.Qt
+    module
+        PyQt.QtGui
+    module
+        PyQt.QtWidgets (or PyQt.QtGui if best version is PyQt4)
+    """
+    import importlib
+    import importlib.util
+
+    # start off assuming we don't have any PyQt installed
+    haveQt = None
+    # query whether each version is installed
+    for libname in versions:
+        if importlib.util.find_spec(libname):
+            haveQt = libname
+            break
+    # raise error if not installed
+    if haveQt is None:
+        versionsStr = "\n".join([f"- {v}" for v in versions])
+        raise ImportError(
+            f"We tried importing the following versions of PyQt and could find none installed:\n"
+            f"{versionsStr}"
+        )
+    # do imports which are the same across versions
+    Qt = importlib.import_module(f"{haveQt}.QtCore").Qt
+    QtGui = importlib.import_module(f"{haveQt}.QtGui")
+    # if on PyQt4, alias QtWidgets with QtGui
+    if haveQt == "PyQt4":
+        QtWidgets = QtGui
+    else:
+        QtWidgets = importlib.import_module(f"{haveQt}.QtWidgets")
+
+    return haveQt, Qt, QtGui, QtWidgets
+
+
+# import the best installed version of PyQt
+haveQt, Qt, QtGui, QtWidgets = importBestQt()
+
+
+if haveQt == "PyQt6":
+    OK = QtWidgets.QDialogButtonBox.StandardButton.Ok
+else:
+    OK = QtWidgets.QDialogButtonBox.Ok
 
 qtapp = QtWidgets.QApplication.instance()
 
