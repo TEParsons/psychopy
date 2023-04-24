@@ -214,6 +214,27 @@ class ElementArrayStim(MinimalStim, TextureMixin, ColorMixin):
         return value
 
     @attributeSetter
+    def nElements(self, value: int):
+        """
+        Number of elements in this array.
+        """
+        # Get old value and store new one
+        self.__dict__['nElements'] = value
+        # Update arrays to new element number
+        for attr in ('xys', 'sizes', 'colors', 'opacities', 'oris', 'vertices', 'verticesPix'):
+            if attr in self.__dict__:
+                val = self.__dict__[attr]
+                if val.shape[0] < value:
+                    # if new value is smaller, take subset of array
+                    val = val[:value, :]
+                else:
+                    # otherwise, resize
+                    shape = list(val.shape)
+                    shape[0] = value
+                    val = numpy.resize(val, tuple(shape))
+                setattr(self, attr, val)
+
+    @attributeSetter
     def xys(self, value):
         """The xy positions of the elements centres, relative to the
         field centre. Values should be:

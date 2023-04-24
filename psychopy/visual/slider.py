@@ -24,6 +24,7 @@ from .shape import ShapeStim
 from . import TextBox2
 from ..tools.attributetools import logAttrib, setAttribute, attributeSetter
 from ..constants import FINISHED, STARTED, NOT_STARTED
+from psychopy.localization import _translate
 
 # Set to True to make borders visible for debugging
 debug = False
@@ -149,6 +150,10 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
         else:
             self.ticks = np.array(ticks)
         self.labels = labels
+        # Slider must have either ticks or labels
+        assert self.ticks is not None or self.labels is not None, _translate(
+            "Slider cannot be created without ticks or labels."
+        )
         # Set pos and size via base method as objects don't yet exist to layout
         self.units = units
         WindowMixin.pos.fset(self, pos)
@@ -511,6 +516,7 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
         self._getTickParams()
         # Apply tick params
         self.tickLines.units = self.units
+        self.tickLines.nElements = self.tickParams['xys'].shape[0]
         for param, value in self.tickParams.items():
             setattr(self.tickLines, param, value)
 
@@ -603,10 +609,10 @@ class Slider(MinimalStim, WindowMixin, ColorMixin):
         """
         # If categorical, create tick values from labels
         if self.categorical:
+            # If categorical with no labels, substitute blank labels
             if self.labels is None:
-                self.ticks = np.arange(5)
-            else:
-                self.ticks = np.arange(len(self.labels))
+                self.labels = [""] * len(self.ticks)
+            self.ticks = np.arange(len(self.labels))
             self.granularity = 1.0
         # Calculate positions
         xys = self._ratingToPos(self.ticks)

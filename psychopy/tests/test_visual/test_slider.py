@@ -326,3 +326,19 @@ class Test_Slider(_TestColorMixin, _TestBoilerplateMixin):
         assert s.history[-1][1] == s.getRT()
         assert type(s.getRT()) == float # Check thet getRT() returns a float (as expected)
         assert s.getRT() == testRT # Check that getRT() returns the provided testRT
+
+    def test_categoric_assertions(self):
+        cases = [
+            {'ticks': (1, 2, 3, 4), 'labels': ("one", "two", "three"), 'good': True},
+            {'ticks': None, 'labels': ("one", "two", "three"), 'good': True},
+            {'ticks': (1, 2, 3, 4), 'labels': None, 'good': False},
+            {'ticks': None, 'labels': None, 'good': False},
+        ]
+
+        for case in cases:
+            slider = Slider(self.win, size=(1, 0.1), ticks=case['ticks'], labels=case['labels'], style="radio")
+            slider.value = 0
+            slider.markerPos = 0
+            slider.rating = 0
+            slider.draw()
+            self.win.flip()
