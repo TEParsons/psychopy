@@ -12,10 +12,11 @@ Inspired by rockNroll87q - https://github.com/rockNroll87q/pyDrawing
 from psychopy import event, logging
 from .shape import ShapeStim
 from .basevisual import MinimalStim
+from psychopy.localization import _translate
 
-__author__ = 'David Bridges'
+__author__ = ('David Bridges', 'Todd Parsons')
 
-from ..tools.attributetools import attributeSetter
+from ..tools.attributetools import attributeSetter, setAttribute
 
 
 class Brush(MinimalStim):
@@ -48,6 +49,7 @@ class Brush(MinimalStim):
         self.opacity = opacity
         self.closeShape = closeShape
         self.buttonRequired = buttonRequired
+        self.fixedPos = None
         self.pointer = event.Mouse(win=self.win)
         self.shapes = []
         self.brushPos = []
@@ -126,7 +128,7 @@ class Brush(MinimalStim):
         Check whether the brush is down. If brushDown is True, the brush path is drawn on screen.
         """
         if self.brushDown:
-            self.brushPos.append(self.pointer.getPos())
+            self.brushPos.append(self.getPos())
             self.shapes[self.currentShape].setVertices(self.brushPos)
         else:
             self.atStartPoint = False
@@ -202,3 +204,86 @@ class Brush(MinimalStim):
             Button press required (True or False).
         """
         self.buttonRequired = value
+
+    def linkToInput(self, input, log=None):
+        """
+        Connect this brush to a different input object than the default Mouse,
+        for example an eyetracker.
+
+        Parameters
+        ----------
+        input : psychopy.visual.BaseVisualStim
+            The object to be used in place of the default Mouse. Will need to
+            have a `getPos` method, and if a button press is required for this
+            Brush to draw then it will also need to have a `getPressed` method.
+        log : bool
+            Should PsychoPy record this to the log?
+        """
+        # Input needs to have a `getPos` method
+        assert hasattr(input, "getPos"), _translate(
+            "In order to link a different input object to a Brush, that object "
+            "must have a method `getPos`. Could not find any such method for "
+            "the object:\n"
+            "{}\n"
+        ).format(input)
+        # If button is required, the input needs to have a `getPressed` method
+        if self.buttonRequired:
+            assert hasattr(input, "getPressed"), _translate(
+                "In order to link a different input object to a Brush which "
+                "requires a button press, that object must have a method "
+                "`getPressed`. Could not find any such method for the object:\n"
+                "{}\n"
+            )
+        # Use given input as this brush's pointer
+        setAttribute(self, "pointer", input, log=log)
+        # Remove any fixed position
+        setAttribute(self, "fixedPos", None, log=log)
+
+    def unlinkInput(self, log=None):
+        """
+        Disconnect this brush from its current input method. Brush position
+        will become fixed at its last location.
+
+        Parameters
+        ----------
+        log : bool
+            Should PsychoPy record this to the log?
+        """
+        if self.pointer is None:
+            # If pointer is already unlinked, do nothing
+            return
+        # Fix to last location
+        setAttribute(self, "fixedPos", self.pointer.getPos(), log=log)
+        # Disconnect pointer
+        setAttribute(self, "pointer", None, log=log)
+
+    def setPos(self, value, log=None,
+                 operation=False,):
+        """
+        Fix the Brush to a given position. To unfix it from this position,
+        either set the position to `None` or use `linkToInput` or
+        `linkToDefaultMouse` to re-connect this Brush to an input object.
+
+        Parameters
+        ----------
+        value : tuple, list, numpy.ndarray or layout.Position
+            Position to fix this Brush to, in the unit space of the Brush.
+        log : bool
+            Should PsychoPy record this to the log?
+        operation : str
+            How to set this value - whether to add it to the original, subtract
+            from, multiply or divide by, or just set the value. Default is to
+            set the value.
+        """
+        setAttribute(self, "fixedPos", value, log=log, operation=operation)
+
+    def getPos(self):
+        if self.pointer is not None:
+            return self.pointer.getPos()
+        elif self.fixedPos is not None:
+            return self.fixedPos
+        else:
+            raise AttributeError(_translate(
+                "Could not get position of Brush stim with no pointer or fixed "
+                "pos."
+            ))
