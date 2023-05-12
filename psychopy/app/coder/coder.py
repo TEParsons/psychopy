@@ -49,7 +49,8 @@ from psychopy.app.coder.sourceTree import SourceTreePanel
 from psychopy.app.themes import handlers, colors
 from psychopy.app.coder.folding import CodeEditorFoldingMixin
 from psychopy.app.stdout.stdOutRich import ScriptOutputPanel
-from psychopy.app.coder.repl import PythonREPLCtrl
+from psychopy.app.coder.repl import PythonREPLCtrl, JavaScriptREPLCtrl
+
 # from ..plugin_manager import PluginManagerFrame
 
 try:
@@ -1258,7 +1259,13 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
 
         # Add shell to output pane
         self.shell.SetName("PythonShell")
-        self.shelf.AddPage(self.shell, _translate('Shell'))
+        self.shelf.AddPage(self.shell, _translate('Py Shell'))
+
+        # Add JS shell
+        self.jsShell = JavaScriptREPLCtrl(self)
+        # Add JS shell to output pane
+        self.jsShell.SetName("JSShell")
+        self.shelf.AddPage(self.jsShell, _translate('JS Shell'))
 
         # script output panel
         self.consoleOutputPanel = ScriptOutputPanel(self.shelf)

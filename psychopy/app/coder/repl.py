@@ -8,10 +8,15 @@
 # Distributed under the terms of the GNU General Public License (GPL).
 
 import sys
+import time
+from pathlib import Path
+
 import wx
 import wx.richtext
 from psychopy.app.themes import handlers, colors, icons, fonts
+import wx.html2
 from psychopy.localization import _translate
+from psychopy import __version__
 import os
 
 
@@ -495,6 +500,120 @@ class PythonREPLCtrl(wx.Panel, handlers.ThemeMixin):
         self.sep.SetBackgroundColour(fonts.coderTheme.margin.backColor)
         self.Refresh()
         self.Update()
+
+
+class JavaScriptREPLCtrl(wx.Panel, handlers.ThemeMixin):
+    def __init__(self,
+                 parent,
+                 id_=wx.ID_ANY,
+                 pos=wx.DefaultPosition,
+                 size=wx.DefaultSize,
+                 style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
+                 name=wx.EmptyString):
+
+        wx.Panel.__init__(self, parent, id=id_, pos=pos, size=size, style=style,
+                          name=name)
+        self.tabIcon = "coderjs"
+
+        # sizer for the panel
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Toolbar
+        self.toolbar = wx.Panel()
+        self.sizer.Add(self.toolbar, flag=wx.EXPAND)
+
+        # TextCtrl used to display the text from the console
+        self.consoleSizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.consoleSizer, proportion=3, border=3, flag=wx.ALL | wx.EXPAND)
+
+        # make text output
+        self.console = wx.richtext.RichTextCtrl(
+            self,
+            wx.ID_ANY,
+            wx.EmptyString,
+            wx.DefaultPosition,
+            wx.DefaultSize,
+            style=wx.HSCROLL | wx.TE_MULTILINE | wx.NO_BORDER | wx.TE_READONLY)
+        self.consoleSizer.Add(self.console, proportion=1, border=3, flag=wx.ALL | wx.EXPAND)
+
+        # make text input
+        self.txtTerm = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER | wx.TE_PROCESS_TAB)
+        self.consoleSizer.Add(self.txtTerm, border=3, flag=wx.ALL | wx.EXPAND)
+        # capture keypresses
+        if wx.Platform == '__WXMAC__' or wx.Platform == '__WXMSW__':
+            # need to use this on MacOS and Windows
+            keyDownBindingId = wx.EVT_KEY_DOWN
+        else:
+            keyDownBindingId = wx.EVT_CHAR
+
+        self.txtTerm.Bind(keyDownBindingId, self.onChar)
+
+        # HTML preview for context
+        htmlPath = Path(__file__).parent / "index.html"
+        with open(str(htmlPath), "r") as f:
+            html = f.read()
+        html.replace("{{version}}", __version__)
+        self.preview = wx.html2.WebView.New(self)
+        self.preview.SetPage(
+            html=html,
+            baseUrl="index.html"
+        )
+        self.sizer.Add(self.preview, proportion=1, border=6, flag=wx.ALL | wx.EXPAND)
+        # Setup console logging
+        self._needsLoggingSetup = True
+        self.preview.AddScriptMessageHandler("log")
+        self.preview.Bind(wx.html2.EVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, self.onConsoleLog)
+        self.preview.Bind(wx.html2.EVT_WEBVIEW_ERROR, self.onError)
+
+        self.SetSizer(self.sizer)
+        self.Layout()
+
+    def onConsoleLog(self, evt):
+        """
+        Called when something in JS is printed to the console.
+        """
+        self.console.AppendText(evt.GetString() + "\n")
+
+    def onError(self, evt):
+        """
+        Called when there's an error in JS
+        """
+        self.console.BeginTextColour(colors.scheme['red'])
+        self.console.AppendText(evt.GetString() + "\n")
+        self.console.EndTextColour()
+
+    def onChar(self, evt):
+        """
+        Called when the shell gets a keypress event.
+        """
+        if evt.GetKeyCode() == wx.WXK_RETURN:
+            cmd = self.txtTerm.GetValue()
+            style = wx.TextAttr()
+            # if logging isn't setup, do it (would do this in init but it hits a race condition)
+            if self._needsLoggingSetup:
+                code = (
+                    "console.log = function log(msg){window.log.postMessage(msg)};"
+                )
+                self.preview.RunScript(code)
+                self._needsLoggingSetup = False
+            # add code to output
+            self.console.AppendText(f">> {cmd}  ↻\n")
+            i = self.console.GetLastPosition() - 3
+            style.SetTextColour(colors.scheme['orange'])
+            self.console.SetStyle(i, i+2, style)
+            # run code
+            success, result = self.preview.RunScript(cmd)
+            # add success
+            icn = {True: "✔", False: "❌"}[success]
+            self.console.Replace(i, i+2, icn)
+            col = {True: colors.scheme['green'], False: colors.scheme['red']}[success]
+            style.SetTextColour(col)
+            self.console.SetStyle(i, i+2, style)
+
+            # clear
+            self.txtTerm.Clear()
+
+        evt.Skip()
 
 
 if __name__ == "__main__":
