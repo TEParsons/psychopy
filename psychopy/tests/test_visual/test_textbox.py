@@ -453,7 +453,53 @@ class Test_textbox(_TestColorMixin, _TestUnitsMixin, _TestBoilerplateMixin):
             utils.compareScreenshot(filename, self.win, crit=20)
 
 
-def test_font_manager():
+class TestFontManager():
+    def test_parse_styles(self):
+        cases = [
+            # usual and correct format
+            {'name': "Montserrat Thin Italic", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 100, 'italic': True},
+            {'name': "Montserrat Regular Italic", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 400, 'italic': True},
+            {'name': "Montserrat SemiBold Italic", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 600, 'italic': True},
+            {'name': "Montserrat Bold Italic", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 700, 'italic': True},
+            {'name': "Montserrat Thin", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 100, 'italic': False},
+            {'name': "Montserrat Regular", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 400, 'italic': False},
+            {'name': "Montserrat SemiBold", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 600, 'italic': False},
+            {'name': "Montserrat Bold", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 700, 'italic': False},
+            {'name': "Montserrat", 'supplyFamily': False,
+             'family': "Montserrat", 'weight': 400, 'italic': False},
+            # font with style term in name
+            {'name': "Shadows Into Light", 'supplyFamily': True,
+             'family': "Shadows Into Light", 'weight': 400, 'italic': False},
+            {'name': "Shadows Into Light Light", 'supplyFamily': True,
+             'family': "Shadows Into Light", 'weight': 300, 'italic': False},
+            {'name': "Shadows Into Light Italic", 'supplyFamily': True,
+             'family': "Shadows Into Light", 'weight': 400, 'italic': True},
+            {'name': "Shadows Into Light Bold", 'supplyFamily': True,
+             'family': "Shadows Into Light", 'weight': 700, 'italic': False},
+            {'name': "Shadows Into Light", 'supplyFamily': False,
+             'family': "Shadows Into", 'weight': 300, 'italic': False},  # this one is wrong on purpose!
+        ]
+
+        for case in cases:
+            # parse cases for styles and family names
+            if case['supplyFamily']:
+                family, weight, italic = FontManager.parseStyles(name=case['name'], family=case['family'])
+            else:
+                family, weight, italic = FontManager.parseStyles(name=case['name'])
+            # check against correct
+            assert family == case['family'], "Got wrong family name from: %(name)s" % case
+            assert weight == case['weight'], "Got wrong weight from: %(name)s" % case
+            assert italic == case['italic'], "Got wrong italic from: %(name)s" % case
+
+    def test_font_manager(self):
         # Create a font manager
         mgr = FontManager()
         # Check that it finds fonts which should be pre-packaged with PsychoPy in the resources folder

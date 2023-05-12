@@ -742,6 +742,65 @@ class FontManager():
               .format(len(self.getFontFamilyNames())))
         return S
 
+    @staticmethod
+    def parseStyles(name, family=None):
+        """
+        Split a given string into family name, weight and italic.
+
+        Parameters
+        ----------
+        name : str
+            Name to parse, e.g. "Arial Narrow Italic"
+        family : str or None
+            If font family name is known, specify it so it remains intact, rather than having
+            style terms removed, as in e.g. "Shadows Into Light", which is the name of a font
+            family and does not specify weight.
+
+        Returns
+        -------
+        family : str
+            Font family name, without reference to style
+        weight : int
+            Numeric font weight corresponding to the weight, if any, specified in `name`. Defaults
+            to 400 (aka Regular).
+        italic : bool
+            True if `name` indicates an italic font, otherwise False
+
+        """
+        # start off assuming regular & not italic
+        weight = 400
+        italic = False
+        # if we're given a family name, exclude it when searching for styles
+        if family is not None:
+            first = name.lower().find(family.lower())
+            last = first + len(family)
+            name = name[:first] + name[last:]
+        # look for bold, black, etc. in name
+        for term, val in _weightMap.items():
+            if isinstance(term, str) and term in name.lower():
+                # if any found, use corresponding weight
+                weight = val
+                # remove string (and trailing space) from name
+                first = name.lower().find(term)
+                last = first + len(term)
+                if name[first-1] == " ":
+                    first -= 1
+                name = name[:first] + name[last:]
+        # look for italic
+        if "italic" in name.lower():
+            italic = True
+            # remove string (and trailing space) from name
+            term = "italic"
+            first = name.lower().find(term)
+            last = first + len(term)
+            if name[first - 1] == " ":
+                first -= 1
+            name = name[:first] + name[last:]
+        # if family name was given, use it instead of name
+        if family is not None:
+            name = family
+        return name, weight, italic
+
     def getDefaultSansFont(self):
         """Load and return the FontInfo for the first found default font"""
         for name in ['Verdana', 'DejaVu Sans', 'Bitstream Vera Sans', 'Tahoma']:
