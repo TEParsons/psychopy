@@ -9,6 +9,7 @@ from psychopy.tests.test_experiment.test_component_compile_python import _TestBo
 from psychopy.visual import Window
 from psychopy.visual import TextBox2
 from psychopy.visual.textbox2.fontmanager import FontManager
+from psychopy.preferences import prefs
 import pytest
 from psychopy.tests import utils
 
@@ -454,6 +455,32 @@ class Test_textbox(_TestColorMixin, _TestUnitsMixin, _TestBoilerplateMixin):
 
 
 class TestFontManager():
+
+    def setup_method(self):
+        # create a font manager object to use in tests
+        self.obj = FontManager()
+
+    def test_get_font(self):
+        cases = [
+            {'value': "Open Sans", 'found': True},
+            {'value': Path(prefs.paths['resources']) / "fonts" / "Arvo-Bold.ttf", 'found': True},
+            {'value': str(Path(prefs.paths['resources']) / "fonts" / "Arvo-Bold.ttf"), 'found': True},
+            {'value': "Madeup Font", 'found': False},
+        ]
+
+        for case in cases:
+            # get font info from case value
+            fontInfo = self.obj.getFont(case['value'])
+            # check that it is/isn't found as expected
+            if case['found']:
+                assert str(fontInfo) != "Verdana_Regular_32", (
+                    f"Could not find font {case['value']}."
+                )
+            else:
+                assert str(fontInfo) == "Verdana_Regular_32", (
+                    f"Found nonexistant font {case['value']} as {fontInfo}."
+                )
+
     def test_parse_styles(self):
         cases = [
             # usual and correct format
@@ -491,25 +518,23 @@ class TestFontManager():
         for case in cases:
             # parse cases for styles and family names
             if case['supplyFamily']:
-                family, weight, italic = FontManager.parseStyles(name=case['name'], family=case['family'])
+                family, weight, italic = self.obj.parseStyles(name=case['name'], family=case['family'])
             else:
-                family, weight, italic = FontManager.parseStyles(name=case['name'])
+                family, weight, italic = self.obj.parseStyles(name=case['name'])
             # check against correct
             assert family == case['family'], "Got wrong family name from: %(name)s" % case
             assert weight == case['weight'], "Got wrong weight from: %(name)s" % case
             assert italic == case['italic'], "Got wrong italic from: %(name)s" % case
 
     def test_font_manager(self):
-        # Create a font manager
-        mgr = FontManager()
         # Check that it finds fonts which should be pre-packaged with PsychoPy in the resources folder
-        assert bool(mgr.getFontNamesSimilar("Open Sans"))
+        assert bool(self.obj.getFontNamesSimilar("Open Sans"))
         # Check that it doesn't find fonts which aren't installed as default
-        assert not bool(mgr.getFontNamesSimilar("Dancing Script"))
+        assert not bool(self.obj.getFontNamesSimilar("Dancing Script"))
         # Check that it can install fonts from Google
-        mgr.addGoogleFont("Hanalei")
+        self.obj.addGoogleFont("Hanalei")
         # Check that these fonts are found once installed
-        assert bool(mgr.getFontNamesSimilar("Hanalei"))
+        assert bool(self.obj.getFontNamesSimilar("Hanalei"))
 
 
 @pytest.mark.uax14
