@@ -913,8 +913,12 @@ class Session:
         # Sub None for current
         if key is None:
             key = self.currentExperiment.name
-        # Get last experiment data
-        for run in reversed(self.runs):
+        # Get runs with current included
+        runs = list(reversed(self.runs))
+        if self.currentExperiment is not None:
+            runs = [self.currentExperiment] + runs
+        # Get last/current experiment data
+        for run in runs:
             if run.name == key:
                 # Send experiment data
                 self.sendToLiaison(run)
