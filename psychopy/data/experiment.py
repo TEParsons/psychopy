@@ -206,7 +206,7 @@ class ExperimentHandler(_ComparisonMixin):
 
         return names, vals
 
-    def addData(self, name, value, salience=None):
+    def addData(self, name, value, row=None, salience=None):
         """
         Add the data with a given name to the current experiment.
 
@@ -233,6 +233,8 @@ class ExperimentHandler(_ComparisonMixin):
             Name of the column to add data as.
         value : any
             Value to add
+        row : int or None
+            Index of the row to add data at. Leave as None to add to the current entry.
         salience : int
             Salience value to set the column to - more salient columns appear nearer to the start of
             the data file. Use values from `constants.salience` as landmark values:
@@ -245,17 +247,25 @@ class ExperimentHandler(_ComparisonMixin):
         """
         if name not in self.dataNames:
             self.dataNames.append(name)
+        # set salience if given
+        if salience is not None:
+            self.setSalience(name, salience)
+
         # could just copy() every value, but not always needed, so check:
         try:
             hash(value)
         except TypeError:
             # unhashable type (list, dict, ...) == mutable, so need a copy()
             value = copy.deepcopy(value)
-        self.thisEntry[name] = value
 
-        # set salience if given
-        if salience is not None:
-            self.setSalience(name, salience)
+        # get entry
+        if row is None:
+            entry = self.thisEntry
+        else:
+            entry = self.entries[row]
+
+        # set value
+        entry[name] = value
 
     def getSalience(self, name):
         """
