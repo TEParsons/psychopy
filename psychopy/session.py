@@ -633,6 +633,13 @@ class Session:
         logging.info(_translate(
             "Running experiment via Session: name={key}, expInfo={expInfo}"
         ).format(key=key, expInfo=expInfo))
+        # Send started data to liaison
+        if self.liaison is not None:
+            self.sendToLiaison({
+                    'type': "experiment_status",
+                    'name': thisExp.name,
+                    'status': constants.STARTED
+                })
         # Run this experiment
         try:
             self.experiments[key].run(
