@@ -615,6 +615,7 @@ class Session:
         # Setup data for this experiment
         thisExp = self.experiments[key].setupData(expInfo=expInfo)
         thisExp.name = key
+        thisExp.session = self
         # Mark ExperimentHandler as current
         self.currentExperiment = thisExp
         # Hide Window message
@@ -633,13 +634,6 @@ class Session:
         logging.info(_translate(
             "Running experiment via Session: name={key}, expInfo={expInfo}"
         ).format(key=key, expInfo=expInfo))
-        # Send started data to liaison
-        if self.liaison is not None:
-            self.sendToLiaison({
-                    'type': "experiment_status",
-                    'name': thisExp.name,
-                    'status': constants.STARTED
-                })
         # Run this experiment
         try:
             self.experiments[key].run(
@@ -674,13 +668,6 @@ class Session:
             "Finished running experiment via Session: name={key}, expInfo={expInfo}"
         ).format(key=key, expInfo=expInfo))
         logging.flush()
-        # Send finished data to liaison
-        if self.liaison is not None:
-            self.sendToLiaison({
-                    'type': "experiment_status",
-                    'name': thisExp.name,
-                    'status': thisExp.status
-                })
 
         return True
 
@@ -899,6 +886,41 @@ class Session:
         logging.data(f"NAME={name}, SALIENCE={salience}, VALUE={value}")
 
         return True
+
+    def sendExperimentStatus(self, key=None, status=None):
+        """
+        Send an experiment status to liaison. Can either specify an experiment name and status flag to send, or leave
+        as None to send the current experiment's name and status.
+
+
+        Parameters
+        ----------
+        key : str or None
+            Name of the experiment whose status flag to send. Leave as None to use the current experiment.
+        status : str or None
+            Status flag to send. Leave as None to use the status of this Session.
+        Returns
+        -------
+        bool
+            True if data was sent, otherwise False
+        """
+        if self.liaison is None:
+            return
+        # Get experiment name
+        if key is None and self.currentExperiment is not None:
+            key = self.currentExperiment.name
+        elif key is None:
+            key = "null"
+        # Get experiment status
+        if status is None:
+            status = self.getStatus()
+        # Send data
+        self.sendToLiaison({
+                'type': "experiment_status",
+                'name': key,
+                'status': status
+        })
+
 
     def sendExperimentData(self, key=None):
         """

@@ -32,6 +32,7 @@ class ExperimentHandler(_ComparisonMixin):
     def __init__(self,
                  name='',
                  version='',
+                 thisSession=None,
                  extraInfo=None,
                  runtimeInfo=None,
                  originPath=None,
@@ -48,6 +49,9 @@ class ExperimentHandler(_ComparisonMixin):
 
             version : usually a string (e.g. '1.1.0')
                 To keep track of which version of the experiment was run
+
+            thisSession : psychopy.session.Session or None
+                Handle to the Session from which this experiment is running, or None if running without a Session.
 
             extraInfo : a dictionary
                 Containing useful information about this run
@@ -79,6 +83,7 @@ class ExperimentHandler(_ComparisonMixin):
         self.loopsUnfinished = []
         self.name = name
         self.version = version
+        self.session = thisSession
         self.runtimeInfo = runtimeInfo
         if extraInfo is None:
             self.extraInfo = {}
@@ -408,6 +413,9 @@ class ExperimentHandler(_ComparisonMixin):
         logging.exp(f"{self.name}: status = {valStr}", obj=self)
         # make change
         self._status = value
+        # send to Session (if any)
+        if self.session is not None:
+            self.session.sendExperimentStatus()
 
     def pause(self):
         """
