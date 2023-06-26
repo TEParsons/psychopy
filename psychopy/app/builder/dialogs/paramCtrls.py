@@ -1126,6 +1126,9 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
             # setup sizer
             self.sizer = wx.BoxSizer(wx.HORIZONTAL)
             self.SetSizer(self.sizer)
+            # drag ctrl
+            self.dragCtrl = wx.Button(self, label=" ", style=wx.BU_EXACTFIT | wx.BORDER_NONE)
+            self.sizer.Add(self.dragCtrl, border=3, flag=wx.EXPAND | wx.RIGHT)
             # setup splitter
             self.splitter = wx.SplitterWindow(self)
             self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onSashChange)
