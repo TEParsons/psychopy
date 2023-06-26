@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import webbrowser
+from collections import OrderedDict
 
 import wx
 import wx.stc
@@ -1113,63 +1114,104 @@ def validate(obj, valType):
     obj.updateCodeFont(valType)
 
 
-class DictCtrl(ListWidget, _ValidatorMixin, _HideMixin):
+class DictCtrl(wx.Panel, _ValidatorMixin):
+    class DictItemCtrl(wx.Panel, _HideMixin):
+        """
+        Represents an individual key:value pair within a DictCtrl
+        """
+        def __init__(self, parent, key="", value=""):
+            wx.Panel.__init__(self, parent=parent)
+            self.SetBackgroundColour("white")
+            self.parent = parent
+            # setup sizer
+            self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+            self.SetSizer(self.sizer)
+            # setup splitter
+            self.splitter = wx.SplitterWindow(self)
+            self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onSashChange)
+            self.sizer.Add(self.splitter, proportion=1)
+            # key ctrl
+            self.keyCtrl = wx.TextCtrl(self.splitter, value=str(key))
+            # value ctrl
+            self.valueCtrl = wx.TextCtrl(self.splitter, value=str(value))
+            # add ctrls to splitter
+            self.splitter.SplitVertically(
+                window1=self.keyCtrl,
+                window2=self.valueCtrl
+            )
+            self.splitter.SetMinimumPaneSize(180)
+            # remove button
+            self.removeBtn = wx.Button(self, style=wx.BU_EXACTFIT | wx.BORDER_NONE)
+            self.removeBtn.SetBackgroundColour("white")
+            self.removeBtn.SetBitmap(
+                icons.ButtonIcon("delete", size=16).bitmap
+            )
+            self.removeBtn.Bind(wx.EVT_BUTTON, self.onRemove)
+            self.sizer.Add(self.removeBtn, border=6, flag=wx.ALIGN_CENTER_VERTICAL | wx. LEFT)
+
+        def onRemove(self, evt=None):
+            i = self.parent.itemCtrls.index(self)
+            self.parent.itemCtrls.pop(i)
+            self.Destroy()
+
+        def onSashChange(self, evt):
+            self.parent.onSashChange(evt)
+
     def __init__(self, parent,
-                 val={}, valType='dict',
+                 val=None, valType='dict',
+                 labels=(_translate("Field"), _translate("Default")),
                  fieldName=""):
-        if not isinstance(val, (dict, list)):
-            raise ValueError("DictCtrl must be supplied with either a dict or a list of 1-long dicts, value supplied was {}".format(val))
-        # If supplied with a dict, convert it to a list of dicts
+
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        # default value
+        if val is None:
+            val = {}
         if isinstance(val, dict):
-            newVal = []
-            for key, v in val.items():
-                if hasattr(v, "val"):
-                    v = v.val
-                newVal.append({'Field': key, 'Default': v})
-            val = newVal
-        # If any items within the list are not dicts or are dicts longer than 1, throw error
-        if not all(isinstance(v, dict) and len(v) == 2 for v in val):
-            raise ValueError("DictCtrl must be supplied with either a dict or a list of 1-long dicts, value supplied was {}".format(val))
-        # Create ListWidget
-        ListWidget.__init__(self, parent, val, order=['Field', 'Default'])
+            val = OrderedDict(val)
+        # setup sizer
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
 
-    def SetForegroundColour(self, color):
-        for child in self.Children:
-            if hasattr(child, "SetForegroundColour"):
-                child.SetForegroundColour(color)
+        # add DictItemCtrl for each item
+        self.itemCtrls = []
+        self.setValue(val)
 
-    def Enable(self, enable=True):
-        """
-        Enable or disable all items in the dict ctrl
-        """
-        # Iterate through all children
-        for cell in self.Children:
-            # Get the actual child rather than the sizer item
-            child = cell.Window
-            # If it can be enabled/disabled, enable/disable it
-            if hasattr(child, "Enable"):
-                child.Enable(enable)
+        # add "add" button
+        self.newBtn = wx.Button(self, style=wx.BU_EXACTFIT | wx.BORDER_NONE)
+        self.newBtn.SetBackgroundColour("white")
+        self.newBtn.SetBitmap(
+            icons.ButtonIcon("plus", size=16).bitmap
+        )
+        self.newBtn.Bind(wx.EVT_BUTTON, self.newItem)
+        self.sizer.Add(self.newBtn, border=3, flag=wx.ALIGN_LEFT | wx.ALL)
 
-    def Disable(self):
-        """
-        Disable all items in the dict ctrl
-        """
-        self.Enable(False)
+    def newItem(self, evt=None):
+        self.addItem(key="", value="")
 
-    def Show(self, show=True):
-        """
-        Show or hide all items in the dict ctrl
-        """
-        # Iterate through all children
-        for cell in self.Children:
-            # Get the actual child rather than the sizer item
-            child = cell.Window
-            # If it can be shown/hidden, show/hide it
-            if hasattr(child, "Show"):
-                child.Show(show)
+    def addItem(self, key, value):
+        item = self.DictItemCtrl(self, key=key, value=value)
+        self.itemCtrls.append(item)
+        self.sizer.Add(item, border=3, flag=wx.EXPAND | wx.ALL)
 
-    def Hide(self):
-        """
-        Hide all items in the dict ctrl
-        """
-        self.Show(False)
+        self.parent.Layout()
+
+    def getValue(self):
+        value = OrderedDict()
+        for item in self.itemCtrls:
+            value[item.keyCtrl.GetValue()] = item.valueCtrl.GetValue()
+        return value
+
+    def setValue(self, value):
+        self.clear()
+        for key, val in value.items():
+            self.addItem(key=key, value=val)
+
+    def clear(self):
+        for item in self.itemCtrls.copy():
+            item.onRemove()
+
+    def onSashChange(self, evt):
+        pos = evt.GetSashPosition()
+        for item in self.itemCtrls:
+            item.splitter.SetSashPosition(pos)
