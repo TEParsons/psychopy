@@ -1136,9 +1136,18 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
             index = siblings.index(self.parent.sizer.GetItem(self))
             self.parent.sizer.Detach(item)
             self.parent.sizer.Insert(index, item, border=3, flag=wx.EXPAND | wx.ALL)
+            # refresh itemCtrl and moveTarget refs
+            self.parent._itemCtrls = self.parent._moveTargets = None
 
-            # TODO: rearrange move targets
-
+            # rearrange move targets
+            moveTargets = self.parent.moveTargets
+            itemCtrls = self.parent.itemCtrls
+            for child in self.parent.sizer.GetChildren():
+                self.parent.sizer.Detach(child.Window)
+            self.parent.sizer.Add(moveTargets[0], flag=wx.EXPAND)
+            for moveTarget, item in zip(moveTargets[1:], itemCtrls):
+                self.parent.sizer.Add(item, border=3, flag=wx.EXPAND | wx.ALL)
+                self.parent.sizer.Add(moveTarget, flag=wx.EXPAND)
 
             # return to normal
             self.parent._moving = None
@@ -1187,8 +1196,6 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
             self.sizer.Add(self.removeBtn, border=6, flag=wx.ALIGN_CENTER_VERTICAL | wx. LEFT)
 
         def onRemove(self, evt=None):
-            i = self.parent.itemCtrls.index(self)
-            self.parent.itemCtrls.pop(i)
             self.Destroy()
 
         def onSashChange(self, evt):
@@ -1215,11 +1222,11 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
 
         # add move target for first index
         target = self.DictMoveTarget(self)
-        self.moveTargets = [target]
         self.sizer.Add(target, flag=wx.EXPAND)
 
         # add DictItemCtrl for each item
-        self.itemCtrls = []
+        self._moveTargets = None
+        self._itemCtrls = None
         self.setValue(val)
 
         # add "add" button
@@ -1234,20 +1241,45 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
         # take note of which items are moving
         self._moving = None
 
+    def _getObjectsByType(self, objType):
+        """
+        Get a list of objects within this control by type
+        Parameters
+        ----------
+        objType : type
+            Type of object to get, DictItemCtrl or DictMoveTarget
+        """
+        items = []
+        for child in self.sizer.GetChildren():
+            item = getattr(child, "Window", child)
+            if isinstance(item, objType):
+                items.append(item)
+        return items
+
+    @property
+    def itemCtrls(self):
+        if self._itemCtrls is None:
+            self._itemCtrls = self._getObjectsByType(self.DictItemCtrl)
+        return self._itemCtrls
+
+    @property
+    def moveTargets(self):
+        if self._moveTargets is None:
+            self._moveTargets = self._getObjectsByType(self.DictMoveTarget)
+        return self._moveTargets
+
     def newItem(self, evt=None):
         self.addItem(key="", value="")
 
     def addItem(self, key, value):
-        # get last index
-        index = len(self.moveTargets)
         # add item ctrl
         item = self.DictItemCtrl(self, key=key, value=value)
-        self.itemCtrls.append(item)
         self.sizer.Add(item, border=3, flag=wx.EXPAND | wx.ALL)
         # add move target
         target = self.DictMoveTarget(self)
-        self.moveTargets.append(target)
         self.sizer.Add(target, flag=wx.EXPAND)
+        # item ctrls and move targets have changed, so refresh them
+        self._itemCtrls = self._moveTargets = None
 
         self.parent.Layout()
 
