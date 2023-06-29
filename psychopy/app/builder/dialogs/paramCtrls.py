@@ -1115,20 +1115,55 @@ def validate(obj, valType):
 
 
 class DictCtrl(wx.Panel, _ValidatorMixin):
+    class DictMoveTarget(wx.Button):
+        """
+        Button which is shown only when moving items within a dict ctrl.
+        """
+        def __init__(self, parent):
+            wx.Button.__init__(self, parent)
+            self.parent = parent
+            self.Bind(wx.EVT_BUTTON, self.onClick)
+            self.Hide()
+
+        def onClick(self, evt):
+            # get currently moving item from parent (do nothing if there is none)
+            item = self.parent._moving
+            if item is None:
+                return
+
+            # move that item
+            siblings = list(self.parent.sizer.GetChildren())
+            index = siblings.index(self.parent.sizer.GetItem(self))
+            self.parent.sizer.Detach(item)
+            self.parent.sizer.Insert(index, item, border=3, flag=wx.EXPAND | wx.ALL)
+
+            # TODO: rearrange move targets
+
+
+            # return to normal
+            self.parent._moving = None
+            for itemCtrl in self.parent.itemCtrls:
+                itemCtrl.moveCtrl.SetValue(False)
+                itemCtrl.moveCtrl.Enable(True)
+            for target in self.parent.moveTargets:
+                target.Hide()
+            self.parent.Layout()
+            self.parent.parent.Layout()
+
     class DictItemCtrl(wx.Panel, _HideMixin):
         """
         Represents an individual key:value pair within a DictCtrl
         """
         def __init__(self, parent, key="", value=""):
             wx.Panel.__init__(self, parent=parent)
-            self.SetBackgroundColour("white")
             self.parent = parent
             # setup sizer
             self.sizer = wx.BoxSizer(wx.HORIZONTAL)
             self.SetSizer(self.sizer)
             # drag ctrl
-            self.dragCtrl = wx.Button(self, label=" ", style=wx.BU_EXACTFIT | wx.BORDER_NONE)
-            self.sizer.Add(self.dragCtrl, border=3, flag=wx.EXPAND | wx.RIGHT)
+            self.moveCtrl = wx.ToggleButton(self, label=" ", style=wx.BU_EXACTFIT | wx.BORDER_NONE)
+            self.moveCtrl.Bind(wx.EVT_TOGGLEBUTTON, self.startMoving)
+            self.sizer.Add(self.moveCtrl, border=3, flag=wx.EXPAND | wx.RIGHT)
             # setup splitter
             self.splitter = wx.SplitterWindow(self)
             self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onSashChange)
@@ -1145,7 +1180,6 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
             self.splitter.SetMinimumPaneSize(180)
             # remove button
             self.removeBtn = wx.Button(self, style=wx.BU_EXACTFIT | wx.BORDER_NONE)
-            self.removeBtn.SetBackgroundColour("white")
             self.removeBtn.SetBitmap(
                 icons.ButtonIcon("delete", size=16).bitmap
             )
@@ -1159,6 +1193,9 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
 
         def onSashChange(self, evt):
             self.parent.onSashChange(evt)
+
+        def startMoving(self, evt=None):
+            self.parent.startMovingItem(self)
 
     def __init__(self, parent,
                  val=None, valType='dict',
@@ -1176,6 +1213,11 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
 
+        # add move target for first index
+        target = self.DictMoveTarget(self)
+        self.moveTargets = [target]
+        self.sizer.Add(target, flag=wx.EXPAND)
+
         # add DictItemCtrl for each item
         self.itemCtrls = []
         self.setValue(val)
@@ -1189,15 +1231,36 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
         self.newBtn.Bind(wx.EVT_BUTTON, self.newItem)
         self.sizer.Add(self.newBtn, border=3, flag=wx.ALIGN_LEFT | wx.ALL)
 
+        # take note of which items are moving
+        self._moving = None
+
     def newItem(self, evt=None):
         self.addItem(key="", value="")
 
     def addItem(self, key, value):
+        # get last index
+        index = len(self.moveTargets)
+        # add item ctrl
         item = self.DictItemCtrl(self, key=key, value=value)
         self.itemCtrls.append(item)
         self.sizer.Add(item, border=3, flag=wx.EXPAND | wx.ALL)
+        # add move target
+        target = self.DictMoveTarget(self)
+        self.moveTargets.append(target)
+        self.sizer.Add(target, flag=wx.EXPAND)
 
         self.parent.Layout()
+
+    def startMovingItem(self, item):
+        self._moving = item
+        for itemCtrl in self.itemCtrls:
+            itemCtrl.moveCtrl.SetValue(itemCtrl == item)
+            itemCtrl.moveCtrl.Disable()
+        for target in self.moveTargets:
+            target.Show()
+
+            self.Layout()
+            self.parent.Layout()
 
     def getValue(self):
         value = OrderedDict()
