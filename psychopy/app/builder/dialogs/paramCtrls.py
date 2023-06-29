@@ -1287,6 +1287,7 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
         for itemCtrl in self.itemCtrls:
             itemCtrl.moveCtrl.SetValue(itemCtrl == item)
             itemCtrl.moveCtrl.Disable()
+            itemCtrl.removeBtn.Disable()
         for target in self.moveTargets:
             target.Show()
 
