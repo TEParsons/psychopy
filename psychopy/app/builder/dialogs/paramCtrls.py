@@ -1150,14 +1150,7 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
                 self.parent.sizer.Add(moveTarget, border=36, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
 
             # return to normal
-            self.parent._moving = None
-            for itemCtrl in self.parent.itemCtrls:
-                itemCtrl.moveCtrl.SetValue(False)
-                itemCtrl.moveCtrl.Enable(True)
-            for target in self.parent.moveTargets:
-                target.Hide()
-            self.parent.Layout()
-            self.parent.parent.Layout()
+            self.parent.stopMovingItem()
 
     class DictItemCtrl(wx.Panel, _HideMixin):
         """
@@ -1202,7 +1195,10 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
             self.parent.onSashChange(evt)
 
         def startMoving(self, evt=None):
-            self.parent.startMovingItem(self)
+            if self.moveCtrl.Value:
+                self.parent.startMovingItem(self)
+            else:
+                self.parent.stopMovingItem()
 
     def __init__(self, parent,
                  val=None, valType='dict',
@@ -1283,16 +1279,31 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
         self.parent.Layout()
 
     def startMovingItem(self, item):
-        self._moving = item
-        for itemCtrl in self.itemCtrls:
-            itemCtrl.moveCtrl.SetValue(itemCtrl == item)
-            itemCtrl.moveCtrl.Disable()
-            itemCtrl.removeBtn.Disable()
-        for target in self.moveTargets:
-            target.Show()
+        self.setMovingStatus(True, item=item)
 
-            self.Layout()
-            self.parent.Layout()
+    def stopMovingItem(self):
+        self.setMovingStatus(False)
+
+    def setMovingStatus(self, status, item=None):
+        if status:
+            self._moving = item
+            for itemCtrl in self.itemCtrls:
+                itemCtrl.moveCtrl.SetValue(itemCtrl == item)
+                itemCtrl.moveCtrl.Enable(itemCtrl == item)
+                itemCtrl.removeBtn.Disable()
+            for target in self.moveTargets:
+                target.Show()
+        else:
+            self._moving = None
+            for itemCtrl in self.itemCtrls:
+                itemCtrl.moveCtrl.SetValue(False)
+                itemCtrl.moveCtrl.Enable()
+                itemCtrl.removeBtn.Enable()
+            for target in self.moveTargets:
+                target.Hide()
+
+        self.Layout()
+        self.parent.Layout()
 
     def getValue(self):
         value = OrderedDict()
