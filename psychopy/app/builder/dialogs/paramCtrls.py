@@ -1115,12 +1115,12 @@ def validate(obj, valType):
 
 
 class DictCtrl(wx.Panel, _ValidatorMixin):
-    class DictMoveTarget(wx.Button):
+    class DictMoveTarget(utils.HoverButton):
         """
         Button which is shown only when moving items within a dict ctrl.
         """
         def __init__(self, parent):
-            wx.Button.__init__(self, parent)
+            utils.HoverButton.__init__(self, parent, size=(-1, 6))
             self.parent = parent
             self.Bind(wx.EVT_BUTTON, self.onClick)
             self.Hide()
@@ -1144,10 +1144,10 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
             itemCtrls = self.parent.itemCtrls
             for child in self.parent.sizer.GetChildren():
                 self.parent.sizer.Detach(child.Window)
-            self.parent.sizer.Add(moveTargets[0], flag=wx.EXPAND)
+            self.parent.sizer.Add(moveTargets[0], border=36, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
             for moveTarget, item in zip(moveTargets[1:], itemCtrls):
                 self.parent.sizer.Add(item, border=3, flag=wx.EXPAND | wx.ALL)
-                self.parent.sizer.Add(moveTarget, flag=wx.EXPAND)
+                self.parent.sizer.Add(moveTarget, border=36, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
 
             # return to normal
             self.parent._moving = None
@@ -1222,11 +1222,10 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
 
         # add move target for first index
         target = self.DictMoveTarget(self)
-        self.sizer.Add(target, flag=wx.EXPAND)
+        self.sizer.Add(target, border=36, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
 
         # add DictItemCtrl for each item
-        self._moveTargets = None
-        self._itemCtrls = None
+        self._moveTargets = self._itemCtrls = None
         self.setValue(val)
 
         # add "add" button
@@ -1277,7 +1276,7 @@ class DictCtrl(wx.Panel, _ValidatorMixin):
         self.sizer.Add(item, border=3, flag=wx.EXPAND | wx.ALL)
         # add move target
         target = self.DictMoveTarget(self)
-        self.sizer.Add(target, flag=wx.EXPAND)
+        self.sizer.Add(target, border=36, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
         # item ctrls and move targets have changed, so refresh them
         self._itemCtrls = self._moveTargets = None
 
