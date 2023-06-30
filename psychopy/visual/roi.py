@@ -139,3 +139,38 @@ class ROI(ShapeStim):
         if self.debug:
             # Only draw if in debug mode
             ShapeStim.draw(self, win=win, keepMatrix=keepMatrix)
+
+
+class AIROI(ROI):
+    def __init__(self,
+                 win, prompt, name=None, device=None,
+                 debug=False,
+                 units='', pos=(0, 0), size=(1, 1), anchor="center", ori=0.0,
+                 depth=0, autoLog=None, autoDraw=False):
+        # create normal ROI
+        ROI.__init__(
+            self,
+            win=win, name=name, device=device,
+            debug=debug,
+            units=units,
+            depth=depth, autoLog=autoLog, autoDraw=autoDraw
+        )
+        # set prompt
+        self.prompt = prompt
+
+    def _updateVertices(self):
+        # get still of window
+        img = self.win.getMovieFrame()
+        # TODO: use AI to get vertices (pix) from prompt
+        prompt = self.prompt
+        verts = np.array([
+            [0, 0], [100, 0], [100, 100], [0, 100]
+        ])
+        # set vertices in pixels
+        self._vertices.setas(verts, units="pix")
+        # do usual vertices update method
+        ROI._updateVertices(self)
+        # mark as not updated so this happens again next frame
+        self._needVertexUpdate = True
+
+        return verts
