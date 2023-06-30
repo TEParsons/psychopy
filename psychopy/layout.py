@@ -795,6 +795,19 @@ class Vertices:
         return [_anchorAliases[a] for a in self.anchor]
 
     def getas(self, units):
+        """
+        Get values for these Vertices in the given unit space.
+
+        Parameters
+        ----------
+        units : str
+            Units space in which to get values.
+
+        Returns
+        -------
+        numpy.Array
+            This object's values in the requested unit space.
+        """
         assert units in unitTypes, f"Unrecognised unit type '{units}'"
         # Start with base values
         verts = self.base.copy()
