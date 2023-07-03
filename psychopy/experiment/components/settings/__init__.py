@@ -119,7 +119,7 @@ class SettingsComponent:
                  color='$[0,0,0]', colorSpace='rgb', enableEscape=True,
                  backgroundImg="", backgroundFit="none",
                  blendMode='avg',
-                 sortColumns="time",
+                 sortColumns="time", colSalience={},
                  saveXLSXFile=False, saveCSVFile=False, saveHDF5File=False,
                  saveWideCSVFile=True, savePsydatFile=True,
                  savedDataFolder='', savedDataDelim='auto',
@@ -312,7 +312,8 @@ class SettingsComponent:
             "Data filename",
             "Data file delimiter",
             "sortColumns",
-            "Save Excel file",
+            "colSalience",
+            "Save excel file",
             "Save log file",
             "Save csv file",
             "Save wide csv file",
@@ -339,6 +340,14 @@ class SettingsComponent:
             hint=_translate(
                 "How should data file columns be sorted? Alphabetically, by salience, or simply in the order they were "
                 "added?"
+            )
+        )
+        self.params['colSalience'] = Param(
+            colSalience, valType="dict", inputType="dict", categ="Data",
+            label=_translate("Column salience"),
+            hint=_translate(
+                "Assign salience values to certain columns. To use predefined values, you can do $salience.HIGH, "
+                "$salience.MEDIUM, etc."
             )
         )
         self.params['Save log file'] = Param(
