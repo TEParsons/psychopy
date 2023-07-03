@@ -10,6 +10,7 @@
 
 import re
 import ast
+import json
 
 __all__ = ["prettyname"]
 
@@ -242,3 +243,41 @@ def getArgs(code):
             args[kw.arg] = _actualizeAstValue(kw.value)
 
     return args
+
+
+def validateJSON(value, assertKeys=None):
+    """
+    Validate a JSON string.
+
+    Parameters
+    ----------
+    value : str
+        String to evaluate
+    assertKeys : tuple, list or None
+        List of keys which must be present for validation to return True. Leave as None for no keys.
+
+    Returns
+    -------
+    bool
+        True if can load and has requested keys, False otherwise
+    """
+    # check that it's a string
+    if not isinstance(value, str):
+        return False
+    # check that it can be loaded
+    try:
+        value = json.loads(value)
+    except ValueError:
+        return False
+    # if any keys are asserted, check for them
+    if assertKeys:
+        # make sure we have a dict
+        if not isinstance(value, dict):
+            return False
+        # check for asserted keys
+        for key in assertKeys:
+            if key not in value:
+                return False
+
+    # valid if we got this far
+    return True

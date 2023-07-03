@@ -10,6 +10,7 @@ from pathlib import Path
 
 from psychopy import experiment, logging, constants, data, core, __version__
 from psychopy.tools.arraytools import AliasDict
+from psychopy.tools.stringtools import validateJSON
 
 from psychopy.localization import _translate
 
@@ -991,12 +992,20 @@ class Session:
                 "Could not send data to liaison server as none is initialised for this Session."
             ))
             return
-        # If ExperimentHandler, get its data as a list of dicts
-        if isinstance(value, data.ExperimentHandler):
+
+        if validateJSON(value, assertKeys=['type']):
+            # If given an already valid JSON string, send as is
+            pass
+        elif isinstance(value, data.ExperimentHandler):
+            # If ExperimentHandler, get its data as a list of dicts
             value = value.getJSON(salienceThreshold=self.salienceThreshold)
-        # Convert to JSON
-        if not isinstance(value, str):
+        elif isinstance(value, dict) and 'type' in value:
+            # If already correctly formatted, but as a dict, do simple JSON dump
             value = json.dumps(value)
+        else:
+            # Otherwise, put in a dict with a type key, then JSON dump
+            value = json.dumps({'type': "custom", 'data': value})
+
         # Send
         asyncio.run(self.liaison.broadcast(message=value))
 
