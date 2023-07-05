@@ -60,16 +60,7 @@ class TargetStim(MinimalStim, ColorMixin, WindowMixin):
         elif value == "smiley":
             # Smiley face
             self.outer.vertices = "circle"
-            self.inner.vertices = "circle"
-            n = self.inner.vertices.shape[0]
-            leftEye = self.inner.vertices * 0.2 + [-0.2, 0.15]
-            rightEye = self.inner.vertices * 0.2 + [+0.2, 0.15]
-            mouthArc = self.inner.vertices[int(n * 1 / 4):int(n * 3 / 4)]
-            mouth = np.vstack((
-                mouthArc * 0.7,
-                np.flipud(mouthArc),
-            ))
-            self.inner.vertices = [mouth.tolist(), leftEye.tolist(), rightEye.tolist()]
+            self.inner.vertices = "smiley"
 
     @property
     def anchor(self):
