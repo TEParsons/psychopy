@@ -37,6 +37,59 @@ pyglet.options['debug_gl'] = False
 GL = pyglet.gl
 
 
+def generateCircle(obj):
+    """
+    Generate vertices for a circle.
+
+    Parameters
+    ----------
+    obj : BaseShapeStim
+        Shape-derived object, for reference.
+
+    Returns
+    -------
+    np.ndarray
+        Array of vertices.
+    """
+    # calculate how many points are needed for the gap between line rects to be < 1px
+    n = obj._calculateMinEdges(obj.lineWidth, threshold=5)
+    # create circle with that many points
+    verts = obj._calcEquilateralVertices(n)
+
+    return verts
+
+
+def generateSmiley(obj):
+    """
+    Generate vertices for a smiley face shape
+
+    Parameters
+    ----------
+    obj : BaseShapeStim
+        Shape-derived object, for reference.
+
+    Returns
+    -------
+    np.ndarray
+        Array of vertices.
+    """
+    # make a big circle for the face
+    face = generateCircle(obj)
+    # get number of points in face
+    n = face.shape[0]
+    # make smaller, shifted versions of face vertices for eyes
+    leftEye = face * 0.2 + (-0.15, 0.2)
+    rightEye = face * 0.2 + (0.15, 0.2)
+    # get subset of face vertices for smile
+    mouth = face[int(n * 1 / 4):int(n * 3 / 4)] * 0.8
+    mouth = numpy.vstack((
+        mouth * 0.7,
+        numpy.flipud(mouth),
+    ))
+    # combine into single vertices array
+    return numpy.array([face, leftEye, rightEye, mouth])
+
+
 knownShapes = {
     "triangle": [
         (+0.0, 0.5),  # Point
@@ -49,7 +102,8 @@ knownShapes = {
         [ .5, -.5],  # Bottom left
         [-.5, -.5],  # Bottom right
     ],
-    "circle": "circle",  # Placeholder, value calculated on set based on line width
+    "circle": generateCircle,  # Placeholder, value calculated on set based on line width
+    "smiley": generateSmiley,  # placeholder, value calculated on set based on circle
     "cross": [
         (-0.1, +0.5),  # up
         (+0.1, +0.5),
@@ -615,9 +669,8 @@ class ShapeStim(BaseShapeStim):
         # check if this is a name of one of our known shapes
         if isinstance(value, str) and value in knownShapes:
             value = knownShapes[value]
-        if isinstance(value, str) and value == "circle":
-            # If circle is requested, calculate how many points are needed for the gap between line rects to be < 1px
-            value = self._calculateMinEdges(self.lineWidth, threshold=5)
+        if callable(value):
+            value = value(self)
         if isinstance(value, int):
             value = self._calcEquilateralVertices(value)
         # Check shape
