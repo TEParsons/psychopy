@@ -87,6 +87,8 @@ class Line(ShapeStim):
     interpolate : bool
         Enable smoothing (anti-aliasing) when drawing lines. This produces a
         smoother (less-pixelated) line.
+    draggable : bool
+        Can this stimulus be dragged by a mouse click?
     lineRGB: array_like, :class:`~psychopy.colors.Color` or None
         *Deprecated*. Please use `color` instead. This argument may be removed
         in a future version.
@@ -117,15 +119,18 @@ class Line(ShapeStim):
         Coordinates `(x, y)` for the start- and end-point of the line.
 
     """
+
+    _defaultFillColor = None
+    _defaultLineColor = "white"
+
     def __init__(self,
                  win,
                  start=(-.5, -.5),
                  end=(.5, .5),
                  units=None,
                  lineWidth=1.5,
-                 lineColor='white',
-                 fillColor=None, # Not used, but is supplied by Builder via Polygon
-                 lineColorSpace=None,
+                 lineColor=False,
+                 colorSpace='rgb',
                  pos=(0, 0),
                  size=1.0,
                  anchor="center",
@@ -134,13 +139,17 @@ class Line(ShapeStim):
                  contrast=1.0,
                  depth=0,
                  interpolate=True,
-                 lineRGB=False,
-                 fillRGB=False,
+                 draggable=False,
                  name=None,
                  autoLog=None,
                  autoDraw=False,
-                 color=None,
-                 colorSpace='rgb'):
+                 # legacy
+                 color=False,
+                 fillColor=False,
+                 lineColorSpace=None,
+                 lineRGB=False,
+                 fillRGB=False,
+                 ):
 
         """
 
@@ -171,6 +180,7 @@ class Line(ShapeStim):
             contrast=contrast,
             depth=depth,
             interpolate=interpolate,
+            draggable=draggable,
             lineRGB=lineRGB,
             fillRGB=fillRGB,
             name=name,

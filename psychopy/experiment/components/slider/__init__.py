@@ -104,17 +104,31 @@ class SliderComponent(BaseVisualComponent):
                 updates='constant',
                 hint=_translate("Tick positions (numerical) on the scale, "
                                 "separated by commas"),
-                label=_localized['ticks'])
+                label=_translate("Ticks"))
+        self.depends.append(
+            {
+                # if...
+                "dependsOn": "styles",
+                # meets...
+                "condition": "=='radio'",
+                # then...
+                "param": "ticks",
+                # should...
+                "true": "disable",
+                # otherwise...
+                "false": "enable",
+            }
+        )
         self.params['labels'] = Param(
                 labels, valType='list', inputType="single", allowedTypes=[], categ='Basic',
                 updates='constant',
                 hint=_translate("Labels for the tick marks on the scale, "
                                 "separated by commas"),
-                label=_localized['labels'])
+                label=_translate("Labels"))
         self.params['initVal'] = Param(
             initVal, valType='code', inputType="single", categ='Basic',
             hint=_translate("Value of the slider befre any response, leave blank to hide the marker until clicked on"),
-            label=_translate("Starting Value")
+            label=_translate("Starting value")
         )
         self.params['granularity'] = Param(
                 granularity, valType='num', inputType="single", allowedTypes=[], categ='Basic',
@@ -122,18 +136,32 @@ class SliderComponent(BaseVisualComponent):
                 hint=_translate("Specifies the minimum step size "
                                 "(0 for a continuous scale, 1 for integer "
                                 "rating scale)"),
-                label=_translate('Granularity'))
+                label=_translate("Granularity"))
+        self.depends.append(
+            {
+                # if...
+                "dependsOn": "styles",
+                # meets...
+                "condition": "=='radio'",
+                # then...
+                "param": "granularity",
+                # should...
+                "true": "disable",
+                # otherwise...
+                "false": "enable",
+            }
+        )
         self.params['forceEndRoutine'] = Param(
                 forceEndRoutine, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
                 updates='constant', allowedUpdates=[],
                 hint=_translate("Should setting a rating (releasing the mouse) "
-                                "cause the end of the routine (e.g. trial)?"),
-                label=_localized['forceEndRoutine'])
+                                "cause the end of the Routine (e.g. trial)?"),
+                label=_translate("Force end of Routine"))
         self.params['readOnly'] = Param(
             readOnly, valType='bool', allowedTypes=[], categ='Data',
             updates='constant', allowedUpdates=[],
             hint=_translate("Should participant be able to change the rating on the Slider?"),
-            label=_localized['readOnly'])
+            label=_translate("Read only"))
 
         # advanced params:
         self.params['flip'] = Param(
@@ -143,63 +171,61 @@ class SliderComponent(BaseVisualComponent):
                         "By default the labels will be on the bottom or "
                         "left of the scale, but this can be flipped to the "
                         "other side."),
-                label=_translate('Flip'))
+                label=_translate("Flip"))
 
         # Color changes
-        self.params['color'].label = _translate("Label Color")
+        self.params['color'].label = _translate("Label color")
         self.params['color'].hint = _translate("Color of all labels on this slider (might be overridden by the style setting)")
-        self.params['fillColor'].label = _translate("Marker Color")
+        self.params['fillColor'].label = _translate("Marker color")
         self.params['fillColor'].hint = _translate("Color of the marker on this slider (might be overridden by the style setting)")
-        self.params['borderColor'].label = _translate("Line Color")
+        self.params['borderColor'].label = _translate("Line color")
         self.params['borderColor'].hint = _translate("Color of all lines on this slider (might be overridden by the style setting)")
 
         self.params['font'] = Param(
                 font, valType='str', inputType="single", categ='Formatting',
                 updates='constant',
-                allowedUpdates=['constant', 'set every repeat'],
                 hint=_translate(
                         "Font for the labels"),
-                label=_translate('Font'))
+                label=_translate("Font"))
 
         self.params['letterHeight'] = Param(
                 letterHeight, valType='num', inputType="single", categ='Formatting',
                 updates='constant',
-                allowedUpdates=['constant', 'set every repeat'],
                 hint=_translate(
                         "Letter height for text in labels"),
-                label=_translate('Letter height'))
+                label=_translate("Letter height"))
 
         self.params['styles'] = Param(
-                style, valType='str', inputType="choice", categ='Appearance',
+                style, valType='str', inputType="choice", categ='Basic',
                 updates='constant', allowedVals=knownStyles,
                 hint=_translate(
                         "Discrete styles to control the overall appearance of the slider."),
-                label=_translate('Styles'))
+                label=_translate("Styles"))
 
         self.params['styleTweaks'] = Param(
                 styleTweaks, valType='list', inputType="multiChoice", categ='Appearance',
                 updates='constant', allowedVals=knownStyleTweaks,
                 hint=_translate(
                         "Tweaks to change the appearance of the slider beyond its style."),
-                label=_translate('Style Tweaks'))
+                label=_translate("Style tweaks"))
 
         # data params
         self.params['storeRating'] = Param(
                 storeRating, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
                 updates='constant', allowedUpdates=[],
                 hint=_translate("store the rating"),
-                label=_localized['storeRating'])
+                label=_translate("Store rating"))
         self.params['storeRatingTime'] = Param(
                 storeRatingTime, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
                 updates='constant', allowedUpdates=[],
                 hint=_translate("Store the time taken to make the choice (in "
                                 "seconds)"),
-                label=_localized['storeRatingTime'])
+                label=_translate("Store rating time"))
         self.params['storeHistory'] = Param(
                 storeHistory, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
                 updates='constant', allowedUpdates=[],
                 hint=_translate("store the history of (selection, time)"),
-                label=_localized['storeHistory'])
+                label=_translate("Store history"))
 
     def writeInitCode(self, buff):
 
@@ -214,14 +240,25 @@ class SliderComponent(BaseVisualComponent):
         inits['initVal'] = inits['initVal'] or None
 
         # build up an initialization string for Slider():
-        initStr = ("{name} = visual.Slider(win=win, name='{name}',\n"
-                   "    startValue={initVal}, size={size}, pos={pos}, units={units},\n"
-                   "    labels={labels}, ticks={ticks}, granularity={granularity},\n"
-                   "    style={styles}, styleTweaks={styleTweaks}, opacity={opacity},\n"
-                   "    labelColor={color}, markerColor={fillColor}, lineColor={borderColor}, colorSpace={colorSpace},\n"
-                   "    font={font}, labelHeight={letterHeight},\n"
-                   "    flip={flip}, ori={ori}, depth={depth}, readOnly={readOnly})\n"
-                   .format(**inits))
+        initStr = (
+            "{name} = visual.Slider(win=win, name='{name}',\n"
+            "    startValue={initVal}, size={size}, pos={pos}, units={units},\n"
+            "    labels={labels},"
+        )
+        if inits['styles'] == "radio":
+            # If style is radio, granularity should always be 1
+            initStr += "ticks=None, granularity=1,\n"
+        else:
+           initStr += (
+               " ticks={ticks}, granularity={granularity},\n"
+           )
+        initStr += (
+            "    style={styles}, styleTweaks={styleTweaks}, opacity={opacity},\n"
+            "    labelColor={color}, markerColor={fillColor}, lineColor={borderColor}, colorSpace={colorSpace},\n"
+            "    font={font}, labelHeight={letterHeight},\n"
+            "    flip={flip}, ori={ori}, depth={depth}, readOnly={readOnly})\n"
+        )
+        initStr = initStr.format(**inits)
         buff.writeIndented(initStr)
 
     def writeInitCodeJS(self, buff):
@@ -247,7 +284,8 @@ class SliderComponent(BaseVisualComponent):
                         'radio': 'RADIO',
                         'labels45': 'LABELS_45',
                         'whiteOnBlack': 'WHITE_ON_BLACK',
-                        'triangleMarker': 'TRIANGLE_MARKER'}
+                        'triangleMarker': 'TRIANGLE_MARKER',
+                        'choice': 'RADIO'}
 
         # If no style given, set default 'rating' as list
         if len(inits['styles'].val) == 0:
@@ -273,29 +311,46 @@ class SliderComponent(BaseVisualComponent):
         inits['depth'] = -self.getPosInRoutine()
 
         # build up an initialization string for Slider():
-        initStr = ("{name} = new visual.Slider({{\n"
-                   "  win: psychoJS.window, name: '{name}',\n"
-                   "  size: {size}, pos: {pos}, ori: {ori}, units: {units},\n"
-                   "  labels: {labels}, fontSize: {letterHeight}, ticks: {ticks},\n"
-                   "  granularity: {granularity}, style: {styles},\n"
-                   "  color: new util.Color({color}), markerColor: new util.Color({fillColor}), lineColor: new util.Color({borderColor}), \n"
-                   "  opacity: {opacity}, fontFamily: {font}, bold: true, italic: false, depth: {depth}, \n"
-                   ).format(**inits)
+        initStr = (
+            "{name} = new visual.Slider({{\n"
+            "  win: psychoJS.window, name: '{name}',\n"
+            "  startValue: {initVal},\n"
+            "  size: {size}, pos: {pos}, ori: {ori}, units: {units},\n"
+            "  labels: {labels}, fontSize: {letterHeight},"
+        )
+        if inits['styles'] == "radio":
+            # If style is radio, make sure the slider is marked as categorical
+            initStr += (
+                " ticks: [],\n"
+                "  granularity: 1, style: {styles},\n"
+            )
+        else:
+            initStr += (
+                " ticks: {ticks},\n"
+                "  granularity: {granularity}, style: {styles},\n"
+            )
+        initStr += (
+            "  color: new util.Color({color}), markerColor: new util.Color({fillColor}), lineColor: new util.Color({borderColor}), \n"
+            "  opacity: {opacity}, fontFamily: {font}, bold: true, italic: false, depth: {depth}, \n"
+        )
+        initStr = initStr.format(**inits)
         initStr += ("  flip: {flip},\n"
                     "}});\n\n").format(flip=boolConverter[inits['flip'].val])
         buff.writeIndentedLines(initStr)
 
     def writeRoutineStartCode(self, buff):
         buff.writeIndented("%(name)s.reset()\n" % (self.params))
+        self.writeParamUpdates(buff, 'set every repeat')
 
     def writeRoutineStartCodeJS(self, buff):
         buff.writeIndented("%(name)s.reset()\n" % (self.params))
+        self.writeParamUpdates(buff, 'set every repeat')
 
     def writeFrameCode(self, buff):
         super(SliderComponent, self).writeFrameCode(buff)  # Write basevisual frame code
         forceEnd = self.params['forceEndRoutine'].val
         if forceEnd:
-            code = ("\n# Check %(name)s for response to end routine\n"
+            code = ("\n# Check %(name)s for response to end Routine\n"
                     "if %(name)s.getRating() is not None and %(name)s.status == STARTED:\n"
                     "    continueRoutine = False")
             buff.writeIndentedLines(code % (self.params))
@@ -304,7 +359,7 @@ class SliderComponent(BaseVisualComponent):
         super(SliderComponent, self).writeFrameCodeJS(buff)  # Write basevisual frame code
         forceEnd = self.params['forceEndRoutine'].val
         if forceEnd:
-            code = ("\n// Check %(name)s for response to end routine\n"
+            code = ("\n// Check %(name)s for response to end Routine\n"
                     "if (%(name)s.getRating() !== undefined && %(name)s.status === PsychoJS.Status.STARTED) {\n"
                     "  continueRoutine = false; }\n")
             buff.writeIndentedLines(code % (self.params))

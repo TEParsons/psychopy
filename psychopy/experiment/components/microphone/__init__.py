@@ -8,30 +8,48 @@
 # Author: Jeremy R. Gray, 2012
 from pathlib import Path
 
+from psychopy import logging
 from psychopy.alerts import alert
+from psychopy.tools import stringtools as st, systemtools as syst, audiotools as at
 from psychopy.experiment.components import BaseComponent, Param, getInitVals, _translate
-from psychopy.sound.microphone import Microphone, _hasPTB
 from psychopy.sound.audiodevice import sampleRateQualityLevels
-from psychopy.sound.audioclip import AUDIO_SUPPORTED_CODECS
 from psychopy.localization import _localized as __localized
+
+_hasPTB = True
+try:
+    import psychtoolbox.audio as audio
+except (ImportError, ModuleNotFoundError):
+    logging.warning(
+        "The 'psychtoolbox' library cannot be loaded but is required for audio "
+        "capture (use `pip install psychtoolbox` to get it). Microphone "
+        "recording will be unavailable this session. Note that opening a "
+        "microphone stream will raise an error.")
+    _hasPTB = False
 
 _localized = __localized.copy()
 _localized.update({'stereo': _translate('Stereo'),
                    'channel': _translate('Channel')})
-from psychopy.tests import _vmTesting
 
-if _hasPTB and not _vmTesting:
-    devices = {d.deviceName: d for d in Microphone.getDevices()}
+# Get list of devices
+if _hasPTB and not syst.isVM_CI():
+    devices = syst.getAudioCaptureDevices()
+    deviceIndices = [d['index'] for d in devices.values()]
+    deviceNames = [d['name'] for d in devices.values()]
 else:
-    devices = {}
+    devices = []
+    deviceIndices = []
+    deviceNames = []
+deviceIndices.append(None)
+deviceNames.append("default")
+# Get list of sample rates
 sampleRates = {r[1]: r[0] for r in sampleRateQualityLevels.values()}
-devices['default'] = None
 
 onlineTranscribers = {
     "Google": "GOOGLE"
 }
 localTranscribers = {
     "Google": "google",
+    "Whisper": "whisper", 
     "Built-in": "sphinx"
 }
 allTranscribers = {**localTranscribers, **onlineTranscribers}
@@ -49,10 +67,12 @@ class MicrophoneComponent(BaseComponent):
                  startType='time (s)', startVal=0.0,
                  stopType='duration (s)', stopVal=2.0,
                  startEstim='', durationEstim='',
-                 channels='auto', device="default",
-                 sampleRate='Voice (16kHz)', maxSize=24000,
+                 channels='auto', device=None,
+                 sampleRate='DVD Audio (48kHz)', maxSize=24000,
                  outputType='default', speakTimes=True, trimSilent=False,
-                 transcribe=True, transcribeBackend="Google", transcribeLang="en-US", transcribeWords="",
+                 transcribe=False, transcribeBackend="Whisper",
+                 transcribeLang="en-US", transcribeWords="",
+                 transcribeWhisperModel="base",
                  #legacy
                  stereo=None, channel=None):
         super(MicrophoneComponent, self).__init__(
@@ -77,7 +97,8 @@ class MicrophoneComponent(BaseComponent):
                          "experiments - online experiments ask the participant which mic to use.")
         self.params['device'] = Param(
             device, valType='str', inputType="choice", categ="Basic",
-            allowedVals=list(devices),
+            allowedVals=deviceIndices,
+            allowedLabels=deviceNames,
             hint=msg,
             label=_translate("Device")
         )
@@ -92,7 +113,7 @@ class MicrophoneComponent(BaseComponent):
             channels, valType='str', inputType="choice", categ='Hardware',
             allowedVals=['auto', 'mono', 'stereo'],
             hint=msg,
-            label=_translate('Channels'))
+            label=_translate("Channels"))
 
         msg = _translate(
             "How many samples per second (Hz) to record at")
@@ -100,22 +121,22 @@ class MicrophoneComponent(BaseComponent):
             sampleRate, valType='num', inputType="choice", categ='Hardware',
             allowedVals=list(sampleRates),
             hint=msg, direct=False,
-            label=_translate('Sample Rate (Hz)'))
+            label=_translate("Sample rate (hz)"))
 
         msg = _translate(
             "To avoid excessively large output files, what is the biggest file size you are likely to expect?")
         self.params['maxSize'] = Param(
             maxSize, valType='num', inputType="single", categ='Hardware',
             hint=msg,
-            label=_translate('Max Recording Size (kb)'))
+            label=_translate("Max recording size (kb)"))
 
         msg = _translate(
             "What file type should output audio files be saved as?")
         self.params['outputType'] = Param(
             outputType, valType='code', inputType='choice', categ='Data',
-            allowedVals=["default"] + AUDIO_SUPPORTED_CODECS,
+            allowedVals=["default"] + at.AUDIO_SUPPORTED_CODECS,
             hint=msg,
-            label=_translate("Output File Type")
+            label=_translate("Output file type")
         )
 
         msg = _translate(
@@ -123,7 +144,7 @@ class MicrophoneComponent(BaseComponent):
         self.params['speakTimes'] = Param(
             speakTimes, valType='bool', inputType='bool', categ='Data',
             hint=msg,
-            label=_translate("Speaking Start / Stop Times")
+            label=_translate("Speaking start / stop times")
         )
 
         msg = _translate(
@@ -131,7 +152,7 @@ class MicrophoneComponent(BaseComponent):
         self.params['trimSilent'] = Param(
             trimSilent, valType='bool', inputType='bool', categ='Data',
             hint=msg,
-            label=_translate("Trim Silent")
+            label=_translate("Trim silent")
         )
 
         # Transcription params
@@ -144,10 +165,10 @@ class MicrophoneComponent(BaseComponent):
         self.params['transcribe'] = Param(
             transcribe, valType='bool', inputType='bool', categ='Transcription',
             hint=_translate("Whether to transcribe the audio recording and store the transcription"),
-            label=_translate("Transcribe Audio")
+            label=_translate("Transcribe audio")
         )
 
-        for depParam in ['transcribeBackend', 'transcribeLang', 'transcribeWords']:
+        for depParam in ['transcribeBackend', 'transcribeLang', 'transcribeWords', 'transcribeWhisperModel']:
             self.depends.append({
                 "dependsOn": "transcribe",
                 "condition": "==True",
@@ -160,22 +181,51 @@ class MicrophoneComponent(BaseComponent):
             transcribeBackend, valType='code', inputType='choice', categ='Transcription',
             allowedVals=list(allTranscribers), direct=False,
             hint=_translate("What transcription service to use to transcribe audio?"),
-            label=_translate("Transcription Backend")
+            label=_translate("Transcription backend")
         )
 
         self.params['transcribeLang'] = Param(
             transcribeLang, valType='str', inputType='single', categ='Transcription',
             hint=_translate("What language you expect the recording to be spoken in, e.g. en-US for English"),
-            label=_translate("Transcription Language")
+            label=_translate("Transcription language")
         )
+        self.depends.append({
+            "dependsOn": "transcribeBackend",
+            "condition": "=='Google'",
+            "param": "transcribeLang",
+            "true": "show",  # what to do with param if condition is True
+            "false": "hide",  # permitted: hide, show, enable, disable
+        })
 
         self.params['transcribeWords'] = Param(
             transcribeWords, valType='list', inputType='single', categ='Transcription',
             hint=_translate("Set list of words to listen for - if blank will listen for all words in chosen language. \n\n"
                             "If using the built-in transcriber, you can set a minimum % confidence level using a colon "
                             "after the word, e.g. 'red:100', 'green:80'. Otherwise, default confidence level is 80%."),
-            label=_translate("Expected Words")
+            label=_translate("Expected words")
         )
+        self.depends.append({
+            "dependsOn": "transcribeBackend",
+            "condition": "=='Google'",
+            "param": "transcribeWords",
+            "true": "show",  # what to do with param if condition is True
+            "false": "hide",  # permitted: hide, show, enable, disable
+        })
+
+        self.params['transcribeWhisperModel'] = Param(
+            transcribeWhisperModel, valType='code', inputType='choice', categ='Transcription',
+            allowedVals=["tiny", "base", "small", "medium", "large", "tiny.en", "base.en", "small.en", "medium.en"],
+            hint=_translate(
+                "Which model of Whisper AI should be used for transcription? Details of each model are available here at github.com/openai/whisper"),
+            label=_translate("Whisper model")
+        )
+        self.depends.append({
+            "dependsOn": "transcribeBackend",
+            "condition": "=='Whisper'",
+            "param": "transcribeWhisperModel",
+            "true": "show",  # what to do with param if condition is True
+            "false": "hide",  # permitted: hide, show, enable, disable
+        })
 
     def writeStartCode(self, buff):
         inits = getInitVals(self.params)
@@ -201,36 +251,37 @@ class MicrophoneComponent(BaseComponent):
         )
         buff.writeIndentedLines(code % inits)
 
-    def writeInitCode(self, buff):
+    def writeRunOnceInitCode(self, buff):
         inits = getInitVals(self.params)
+        # Substitute default if device not found
+        if inits['device'].val not in deviceIndices:
+            alert(4330, strFields={'device': self.params['device'].val})
+            inits['device'].val = None
         # Substitute sample rate value for numeric equivalent
         inits['sampleRate'] = sampleRates[inits['sampleRate'].val]
         # Substitute channel value for numeric equivalent
         inits['channels'] = {'mono': 1, 'stereo': 2, 'auto': None}[self.params['channels'].val]
-        # Substitute device name for device index, or default if not found
-        if self.params['device'].val in devices:
-            device = devices[self.params['device'].val]
-            if hasattr(device, "deviceIndex"):
-                inits['device'] = device.deviceIndex
-            else:
-                inits['device'] = None
-        else:
-            alert(4330, strFields={'device': self.params['device'].val})
-            inits['device'] = None
-        # Create Microphone object and clips dict
+        # Get device names
+        inits['deviceName'] = getDeviceName(inits['device'].val)
+        inits['deviceVarName'] = getDeviceVarName(inits['device'].val)
+        # Create Microphone object
         code = (
-            "%(name)s = sound.microphone.Microphone(\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(1, relative=True)
-        code = (
-                "device=%(device)s, channels=%(channels)s, \n"
-                "sampleRateHz=%(sampleRate)s, maxRecordingSize=%(maxSize)s\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-1, relative=True)
-        code = (
+            "# create a microphone object for device: %(deviceName)s\n"
+            "%(deviceVarName)s = sound.microphone.Microphone(\n"
+            "    device=%(device)s, channels=%(channels)s, \n"
+            "    sampleRateHz=%(sampleRate)s, maxRecordingSize=%(maxSize)s\n"
             ")\n"
+        )
+        buff.writeOnceIndentedLines(code % inits)
+
+    def writeInitCode(self, buff):
+        inits = getInitVals(self.params)
+        # Get device names
+        inits['deviceVarName'] = getDeviceVarName(inits['device'].val)
+        # Assign name to device var name
+        code = (
+            "# link %(name)s to device object\n"
+            "%(name)s = %(deviceVarName)s\n"
         )
         buff.writeIndentedLines(code % inits)
 
@@ -266,41 +317,44 @@ class MicrophoneComponent(BaseComponent):
         """Write the code that will be called every frame"""
         inits = getInitVals(self.params)
         inits['routine'] = self.parentName
+
+        # If stop time is blank, substitute max stop
+        if self.params['stopVal'] in ('', None, -1, 'None'):
+            self.params['stopVal'].val = at.audioMaxDuration(
+                bufferSize=float(self.params['maxSize'].val) * 1000,
+                freq=float(sampleRates[self.params['sampleRate'].val])
+            )
+            # Show alert
+            alert(4125, strFields={'name': self.params['name'].val, 'stopVal': self.params['stopVal'].val})
+
         # Start the recording
-        code = (
-            "\n"
-            "# %(name)s updates"
-        )
-        buff.writeIndentedLines(code % inits)
-        self.writeStartTestCode(buff)
-        code = (
+        indented = self.writeStartTestCode(buff)
+        if indented:
+            code = (
                 "# start recording with %(name)s\n"
                 "%(name)s.start()\n"
-                "%(name)s.status = STARTED\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-1, relative=True)
+            )
+            buff.writeIndentedLines(code % self.params)
+        buff.setIndentLevel(-indented, relative=True)
+
         # Get clip each frame
-        code = (
-            "if %(name)s.status == STARTED:\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(1, relative=True)
+        indented = self.writeActiveTestCode(buff)
         code = (
                 "# update recorded clip for %(name)s\n"
                 "%(name)s.poll()\n"
         )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-1, relative=True)
+        buff.writeIndentedLines(code % self.params)
+        buff.setIndentLevel(-indented, relative=True)
+
         # Stop recording
-        self.writeStopTestCode(buff)
-        code = (
-            "# stop recording with %(name)s\n"
-            "%(name)s.stop()\n"
-            "%(name)s.status = FINISHED\n"
-        )
-        buff.writeIndentedLines(code % inits)
-        buff.setIndentLevel(-2, relative=True)
+        indented = self.writeStopTestCode(buff)
+        if indented:
+            code = (
+                "# stop recording with %(name)s\n"
+                "%(name)s.stop()\n"
+            )
+            buff.writeIndentedLines(code % self.params)
+        buff.setIndentLevel(-indented, relative=True)
 
     def writeFrameCodeJS(self, buff):
         inits = getInitVals(self.params)
@@ -413,7 +467,7 @@ class MicrophoneComponent(BaseComponent):
             "// stop the microphone (make the audio data ready for upload)\n"
             "await %(name)s.stop();\n"
             "// construct a filename for this recording\n"
-            "thisFilename = 'recording_%(name)s_' + psychoJS.experiment.currentLoop.name + '_' + psychoJS.experiment.currentLoop.thisN\n"
+            "thisFilename = 'recording_%(name)s_' + currentLoop.name + '_' + currentLoop.thisN\n"
             "// get the recording\n"
             "%(name)s.lastClip = await %(name)s.getRecording({\n"
         )
@@ -499,3 +553,44 @@ class MicrophoneComponent(BaseComponent):
         )
         buff.writeIndentedLines(code % inits)
         buff.setIndentLevel(-2, relative=True)
+
+
+def getDeviceName(index):
+    """
+    Get device name from a given index
+
+    Parameters
+    ----------
+    index : int or None
+        Index of the device to use
+    """
+    # Alias None
+    if index not in deviceIndices:
+        index = None
+    # Get device name
+    i = deviceIndices.index(index)
+    name = deviceNames[i]
+
+    return name
+
+
+def getDeviceVarName(index, case="camel"):
+    """
+    Get device name from a given index and convert it to a valid variable name.
+
+    Parameters
+    ----------
+    index : int or None
+        Index of the device to use
+    case : str
+        Format of the variable name (see stringtools.makeValidVarName for info on accepted formats)
+    """
+    # Get device name
+    name = getDeviceName(index)
+    # If device name is just default, add "microphone" for clarity
+    if name == "default":
+        name += "_microphone"
+    # Make valid
+    varName = st.makeValidVarName(name, case=case)
+
+    return varName

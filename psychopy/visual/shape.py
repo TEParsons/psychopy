@@ -26,8 +26,9 @@ from psychopy.colors import Color
 from psychopy.tools.attributetools import (attributeSetter,  # logAttrib,
                                            setAttribute)
 from psychopy.tools.arraytools import val2array
-from psychopy.visual.basevisual import (BaseVisualStim, ColorMixin,
-                                        ContainerMixin, WindowMixin)
+from psychopy.visual.basevisual import (
+    BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin, WindowMixin
+)
 # from psychopy.visual.helpers import setColor
 import psychopy.visual
 from psychopy.contrib import tesselate
@@ -48,7 +49,7 @@ knownShapes = {
         [ .5, -.5],  # Bottom left
         [-.5, -.5],  # Bottom right
     ],
-    "circle": 100,  # Make 100 point equilateral
+    "circle": "circle",  # Placeholder, value calculated on set based on line width
     "cross": [
         (-0.1, +0.5),  # up
         (+0.1, +0.5),
@@ -78,11 +79,21 @@ knownShapes = {
         (-0.19, 0.04),
         (-0.39, 0.31),
         (-0.09, 0.18)
-    ]
+    ],
+    "arrow": [
+        (0.0, 0.5),
+        (-0.5, 0.0),
+        (-1/6, 0.0),
+        (-1/6, -0.5),
+        (1/6, -0.5),
+        (1/6, 0.0),
+        (0.5, 0.0)
+    ],
 }
+knownShapes['square'] = knownShapes['rectangle']
 
 
-class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
+class BaseShapeStim(BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin):
     """Create geometric (vector) shapes by defining vertex locations.
 
     Shapes can be outlines or filled, set lineColor and fillColor to
@@ -97,6 +108,10 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
     v1.84.00: ShapeStim became BaseShapeStim.
 
     """
+
+    _defaultFillColor = None
+    _defaultLineColor = "black"
+
     def __init__(self,
                  win,
                  units='',
@@ -114,6 +129,7 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
                  contrast=1.0,
                  depth=0,
                  interpolate=True,
+                 draggable=False,
                  name=None,
                  autoLog=None,
                  autoDraw=False,
@@ -132,8 +148,9 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
 
         # Initialize inheritance and remove unwanted methods; autoLog is set
         # later
-        super(BaseShapeStim, self).__init__(win, units=units,
-                                            name=name, autoLog=False)
+        super(BaseShapeStim, self).__init__(win, units=units, name=name,
+                                            autoLog=False)
+        self.draggable = draggable
 
         self.pos = pos
         self.closeShape = closeShape
@@ -149,7 +166,7 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
             self.fillColor = color
         else:
             # Default to None if neither are set
-            self.fillColor = None
+            self.fillColor = self._defaultFillColor
         if lineColor is not False:
             self.lineColor = lineColor
         elif color is not False:
@@ -157,7 +174,7 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
             self.lineColor = color
         else:
             # Default to black if neither are set
-            self.lineColor = 'black'
+            self.lineColor = self._defaultLineColor
         if lineRGB is not False:
             # Override with RGB if set
             logging.warning("Use of rgb arguments to stimuli are deprecated."
@@ -239,6 +256,24 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
         self.setLineColor(color, colorSpace, operation, log)
         self.setFillColor(color, colorSpace, operation, log)
 
+    @property
+    def vertices(self):
+        return BaseVisualStim.vertices.fget(self)
+
+    @vertices.setter
+    def vertices(self, value):
+        # check if this is a name of one of our known shapes
+        if isinstance(value, str) and value in knownShapes:
+            value = knownShapes[value]
+            if value == "circle":
+                # If circle is requested, calculate how many points are needed for the gap between line rects to be < 1px
+                value = self._calculateMinEdges(self.lineWidth, threshold=5)
+        if isinstance(value, int):
+            value = self._calcEquilateralVertices(value)
+        # Check shape
+        WindowMixin.vertices.fset(self, value)
+        self._needVertexUpdate = True
+
     def setVertices(self, value=None, operation='', log=None):
         """Usually you can use 'stim.attribute = value' syntax instead,
         but use this method if you need to suppress the log message
@@ -256,6 +291,31 @@ class BaseShapeStim(BaseVisualStim, ColorMixin, ContainerMixin):
             [numpy.asarray((numpy.sin(e * d), numpy.cos(e * d))) * radius
              for e in range(int(round(edges)))])
         return vertices
+
+    @staticmethod
+    def _calculateMinEdges(lineWidth, threshold=180):
+        """
+        Calculate how many points are needed in an equilateral polygon for the gap between line rects to be < 1px and
+        for corner angles to exceed a threshold.
+
+        In other words, how many edges does a polygon need to have to appear smooth?
+
+        lineWidth : int, float, np.ndarray
+            Width of the line in pixels
+
+        threshold : int
+            Maximum angle (degrees) for corners of the polygon, useful for drawing a circle. Supply 180 for no maximum
+            angle.
+        """
+        # sin(theta) = opp / hyp, we want opp to be 1/8 (meaning gap between rects is 1/4px, 1/2px in retina)
+        opp = 1/8
+        hyp = lineWidth / 2
+        thetaR = numpy.arcsin(opp / hyp)
+        theta = numpy.degrees(thetaR)
+        # If theta is below threshold, use threshold instead
+        theta = min(theta, threshold / 2)
+        # Angles in a shape add up to 360, so theta is 360/2n, solve for n
+        return int((360 / theta) / 2)
 
     def draw(self, win=None, keepMatrix=False):
         """Draw the stimulus in its relevant window.
@@ -406,6 +466,8 @@ class ShapeStim(BaseShapeStim):
     interpolate : bool
         Enable smoothing (anti-aliasing) when drawing shape outlines. This
         produces a smoother (less-pixelated) outline of the shape.
+    draggable : bool
+        Can this stimulus be dragged by a mouse click?
     name : str
         Optional name of the stimuli for logging.
     autoLog : bool
@@ -448,6 +510,7 @@ class ShapeStim(BaseShapeStim):
                  contrast=1.0,
                  depth=0,
                  interpolate=True,
+                 draggable=False,
                  name=None,
                  autoLog=None,
                  autoDraw=False,
@@ -481,6 +544,7 @@ class ShapeStim(BaseShapeStim):
                                         contrast=contrast,
                                         depth=depth,
                                         interpolate=interpolate,
+                                        draggable=draggable,
                                         name=name,
                                         autoLog=False,
                                         autoDraw=autoDraw)
@@ -551,6 +615,9 @@ class ShapeStim(BaseShapeStim):
         # check if this is a name of one of our known shapes
         if isinstance(value, str) and value in knownShapes:
             value = knownShapes[value]
+        if isinstance(value, str) and value == "circle":
+            # If circle is requested, calculate how many points are needed for the gap between line rects to be < 1px
+            value = self._calculateMinEdges(self.lineWidth, threshold=5)
         if isinstance(value, int):
             value = self._calcEquilateralVertices(value)
         # Check shape

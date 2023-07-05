@@ -18,9 +18,11 @@ Clock logic.
 # Part of the PsychoPy library
 # Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2022 Open Science Tools Ltd.
 # Distributed under the terms of the GNU General Public License (GPL).
-
+import logging
 import time
 import sys
+from datetime import datetime
+
 from pkg_resources import parse_version
 
 try:
@@ -108,6 +110,67 @@ else:
     getTime = timeit.default_timer
 
 
+class Timestamp(float):
+    """
+    Object to represent a timestamp, which can return itself in a variety of formats.
+
+    Parameters
+    ----------
+    value : float or str
+        Current time, as either:
+        - float : Seconds since arbitrary start time (if only using as a duration)
+        - float : Seconds since epoch (for an absolute time)
+        - str : Time string in the format specified by the parameter `format`
+
+    format : str or class
+        Time format string (as in time.strftime) indicated how to convert this timestamp to a string, and how to
+        interpret its value if given as a string. Use `float` (default) to always print timestamp as a float, or `str`
+        as
+
+    """
+    def __new__(cls, value, format=float):
+        return float.__new__(cls, value)
+
+    def __init__(self, value, format=float):
+        # if given a string, attempt to parse it using the given format
+        if isinstance(value, str):
+            value = time.strptime(value, format)
+        # create self as float representing the time
+        float.__init__(value)
+        # store default format
+        self.format = format
+
+    def __str__(self):
+        # use strftime to return with own format
+        return self.strftime(format=self.format)
+
+    def strftime(self, format="%Y-%m-%d_%H:%M:%S.%f%z"):
+        """
+        Format this timestamp into a string with the given format.
+
+        Parameters
+        ----------
+        format : str, class or None
+            Time format string, as in time.strftime, or `float` to print as a float. Defaults (None) to using the
+            format given when this timestamp was initialised.
+
+        Returns
+        -------
+        str
+            This timestamp as a string
+        """
+        # if format is unspecified, use own default
+        if format is None:
+            format = self.format
+        # if format is float, print using base method
+        if format == float:
+            return float.__str__(self)
+        # convert to datetime
+        now = datetime.fromtimestamp(self)
+        # format
+        return now.strftime(format)
+
+
 class MonotonicClock:
     """A convenient class to keep track of time in your experiments using a
     sub-millisecond timer.
@@ -124,28 +187,55 @@ class MonotonicClock:
     Version Notes: This class was added in PsychoPy 1.77.00
 
     """
-    def __init__(self, start_time=None):
+    def __init__(self, start_time=None, format=float):
         super(MonotonicClock, self).__init__()
         if start_time is None:
             # this is sub-millisecond timer in python
             self._timeAtLastReset = getTime()
         else:
             self._timeAtLastReset = start_time
+        self._epochTimeAtLastReset = time.time()
+        # store default format
+        self.format = format
 
-    def getTime(self, applyZero=True):
-        """Returns the current time on this clock in secs (sub-ms precision).
-
-        If applying zero then this will be the time since the clock was created
-        (typically the beginning of the script).
-
-        If not applying zero then it is whatever the underlying clock uses as
-        its base time but that is system dependent. e.g. can be time since
-        reboot, time since Unix Epoch etc
+    def getTime(self, applyZero=True, format=float):
         """
-        if applyZero:
-            return getTime() - self._timeAtLastReset
-        else:
-            return getTime()
+        Returns the current time on this clock in secs (sub-ms precision).
+
+        Parameters
+        ----------
+        applyZero : bool
+            If applying zero then this will be the time since the clock was created (typically the beginning of the
+            script). If not applying zero then it is whatever the underlying clock uses as its base time but that is
+            system dependent. e.g. can be time since reboot, time since Unix Epoch etc.
+
+            Only applies when format is `float`.
+        format : type, str or None
+            Format in which to show timestamp when converting to a string. Can be either:
+            - time format codes: Time will return as a string in that format, as in time.strftime
+            - `str`: Time will return as a string in ISO 8601 (YYYY-MM-DD_HH:MM:SS.mmmmmmZZZZ)
+            - `None`: Will use this clock's `format` attribute
+
+        Returns
+        -------
+        Timestamp
+            Time with format requested.
+        """
+
+        # substitute no format for default
+        if format is None:
+            format = self.format
+        # substitute nonspecified str format for ISO 8601
+        if format is str:
+            format = "%Y-%m-%d_%H:%M:%S.%f%z"
+
+        # get time since last reset
+        t = getTime() - self._timeAtLastReset
+        if not applyZero:
+            # if not applying zero, add epoch start time
+            t += self._epochTimeAtLastReset
+
+        return Timestamp(t, format)
 
     def getLastResetTime(self):
         """
@@ -167,8 +257,8 @@ class Clock(MonotonicClock):
     except that it can also be reset to 0 or another value at any point.
 
     """
-    def __init__(self):
-        super(Clock, self).__init__()
+    def __init__(self, format=float):
+        super(Clock, self).__init__(format=format)
 
     def reset(self, newT=0.0):
         """Reset the time on the clock. With no args time will be
@@ -176,22 +266,32 @@ class Clock(MonotonicClock):
         time on the clock
         """
         self._timeAtLastReset = getTime() + newT
+        self._epochTimeAtLastReset = time.time()
 
-    def add(self, t):
-        """Add more time to the clock's 'start' time (t0).
-
-        Note that, by adding time to t0, you make the current time
-        appear less. Can have the effect that getTime() returns a negative
-        number that will gradually count back up to zero.
+    def addTime(self, t):
+        """Add more time to the Clock/Timer
 
         e.g.::
 
             timer = core.Clock()
-            timer.add(5)
-            while timer.getTime()<0:
+            timer.addTime(5)
+            while timer.getTime() > 0:
                 # do something
         """
+        self._timeAtLastReset -= t
+        self._epochTimeAtLastReset -= t
+
+    def add(self, t):
+        """DEPRECATED: use .addTime() instead
+
+        This function adds time TO THE BASE (t0) which, counterintuitively,
+        reduces the apparent time on the clock
+        """
+        logging.warning("DEPRECATED: Clock.add() is deprecated in favor of .addTime() due to "
+                        "the counterintuitive design (it added time to the baseline, which "
+                        "reduced the values returned from getTime()")
         self._timeAtLastReset += t
+        self._epochTimeAtLastReset += t
 
 
 class CountdownTimer(Clock):
@@ -216,13 +316,27 @@ class CountdownTimer(Clock):
         super(CountdownTimer, self).__init__()
         self._countdown_duration = start
         if start:
-            self.add(start)
+            self.reset()
 
     def getTime(self):
         """Returns the current time left on this timer in seconds with sub-ms
         precision (`float`).
         """
         return self._timeAtLastReset - getTime()
+
+    def addTime(self, t):
+        """Add more time to the CountdownTimer
+        
+        e.g.:
+            countdownTimer = core.CountdownTimer()
+            countdownTimer.addTime(1)
+
+            while countdownTimer.getTime() > 0:
+                # do something
+        """
+
+        self._timeAtLastReset += t
+        self._epochTimeAtLastReset += t
 
     def reset(self, t=None):
         """Reset the time on the clock.
@@ -235,11 +349,9 @@ class CountdownTimer(Clock):
             received, this will be the new time on the clock.
 
         """
-        if t is None:
-            Clock.reset(self, self._countdown_duration)
-        else:
+        if t is not None:
             self._countdown_duration = t
-            Clock.reset(self, t)
+        Clock.reset(self, self._countdown_duration)
 
 
 class StaticPeriod:
@@ -333,8 +445,44 @@ class StaticPeriod:
         return 1
 
 
+def _dispatchWindowEvents():
+    """Helper function for :func:`~.psychopy.core.wait`. Handles window event if
+    needed or returns otherwise.
+    """
+    from . import core
+
+    if not (core.havePyglet and core.checkPygletDuringWait):
+        return  # nop
+
+    # let's see if pyglet collected any event in meantime
+    try:
+        # this takes focus away from command line terminal window:
+        if parse_version(pyglet.version) < parse_version('1.2'):
+            # events for sounds/video should run independently of wait()
+            pyglet.media.dispatch_events()
+    except AttributeError:
+        # see http://www.pyglet.org/doc/api/pyglet.media-module.html#dispatch_events
+        # Deprecated: Since pyglet 1.1, Player objects schedule themselves
+        # on the default clock automatically. Applications should not call
+        # pyglet.media.dispatch_events().
+        pass
+    for winWeakRef in core.openWindows:
+        win = winWeakRef()
+        if (win.winType == "pyglet" and
+                hasattr(win.winHandle, "dispatch_events")):
+            win.winHandle.dispatch_events()  # pump events
+
+
 def wait(secs, hogCPUperiod=0.2):
     """Wait for a given time period.
+
+    This function halts execution of the program for the specified duration.
+
+    Precision of this function is usually within 1 millisecond of the specified
+    time, this may vary depending on factors such as system load and the Python
+    version in use. Window events are periodically dispatched during the wait
+    to keep the application responsive, to avoid the OS complaining that the
+    process is unresponsive.
 
     If `secs=10` and `hogCPU=0.2` then for 9.8s Python's `time.sleep` function
     will be used, which is not especially precise, but allows the cpu to
@@ -342,8 +490,7 @@ def wait(secs, hogCPUperiod=0.2):
     method of constantly polling the clock is used for greater precision.
 
     If you want to obtain key-presses during the wait, be sure to use
-    pyglet and to hogCPU for the entire time, and then call
-    :func:`psychopy.event.getKeys()` after calling
+    pyglet and then call :func:`psychopy.event.getKeys()` after calling
     :func:`~.psychopy.core.wait()`
 
     If you want to suppress checking for pyglet events during the wait, do this
@@ -360,38 +507,34 @@ def wait(secs, hogCPUperiod=0.2):
     Parameters
     ----------
     secs : float or int
+        Number of seconds to wait before continuing the program.
     hogCPUperiod : float or int
+        Number of seconds to hog the CPU. This causes the thread to enter a
+        'tight' loop when the remaining wait time is less than the specified
+        interval. This is set to 200ms (0.2s) by default. It is recommended that
+        this interval is kept short to avoid stalling the processor for too
+        long which may result in poorer timing.
 
     """
-    from . import core
+    # Calculate the relaxed period which we periodically suspend the thread,
+    # this puts less load on the CPU during long wait intervals.
+    relaxedPeriod = secs - hogCPUperiod
 
-    # initial relaxed period, using sleep (better for system resources etc)
-    if secs > hogCPUperiod:
-        time.sleep(secs - hogCPUperiod)
-        secs = hogCPUperiod  # only this much is now left
-
-    # hog the cpu, checking time
+    # wait loop, suspends the thread periodically and consumes CPU resources
     t0 = getTime()
-    while (getTime() - t0) < secs:
-        if not (core.havePyglet and core.checkPygletDuringWait):
-            continue
-        # let's see if pyglet collected any event in meantime
-        try:
-            # this takes focus away from command line terminal window:
-            if parse_version(pyglet.version) < parse_version('1.2'):
-                # events for sounds/video should run independently of wait()
-                pyglet.media.dispatch_events()
-        except AttributeError:
-            # see http://www.pyglet.org/doc/api/pyglet.media-module.html#dispatch_events
-            # Deprecated: Since pyglet 1.1, Player objects schedule themselves
-            # on the default clock automatically. Applications should not call
-            # pyglet.media.dispatch_events().
-            pass
-        for winWeakRef in core.openWindows:
-            win = winWeakRef()
-            if (win.winType == "pyglet" and
-                    hasattr(win.winHandle, "dispatch_events")):
-                win.winHandle.dispatch_events()  # pump events
+    while True:
+        elapsed = getTime() - t0
+        if elapsed > secs:  # no more time left, break the loop
+            break
+
+        if elapsed > relaxedPeriod:  # hog period
+            sleepDur = 0.00001  # 0.1ms
+        else:
+            relaxedTimeLeft = relaxedPeriod - elapsed
+            sleepDur = 0.01 if relaxedTimeLeft > 0.01 else relaxedTimeLeft
+
+        time.sleep(sleepDur)
+        _dispatchWindowEvents()
 
 
 def getAbsTime():

@@ -40,13 +40,20 @@ class Preferences:
     or, within a script, preferences can be controlled like this::
 
         import psychopy
-        psychopy.prefs.hardware['audioLib'] = ['PTB', 'pyo','pygame']
+        psychopy.prefs.hardware['audioLib'] = ['ptb', 'pyo','pygame']
         print(prefs)
         # prints the location of the user prefs file and all the current vals
 
     Use the instance of `prefs`, as above, rather than the `Preferences` class
     directly if you want to affect the script that's running.
     """
+
+    # Names of legacy parameters which are needed for use version
+    legacy = [
+        "winType",  # 2023.1.0
+        "audioLib",  # 2023.1.0
+        "audioLatencyMode",  # 2023.1.0
+    ]
 
     def __init__(self):
         super(Preferences, self).__init__()
@@ -113,11 +120,14 @@ class Preferences:
         self.paths['resources'] = dirResources
         self.paths['tests'] = join(dirPsychoPy, 'tests')
         # path to libs/frameworks
-        if 'PsychoPy2.app/Contents' in exePath:
+        if 'PsychoPy.app/Contents' in exePath:
             self.paths['libs'] = exePath.replace("MacOS/python", "Frameworks")
         else:
             self.paths['libs'] = ''  # we don't know where else to look!
-
+        if not Path(self.paths['appDir']).is_dir():
+            # if there isn't an app folder at all then this is a lib-only psychopy
+            # so don't try to load app prefs etc
+            NO_APP = True
         if sys.platform == 'win32':
             self.paths['prefsSpecFile'] = join(prefSpecDir, 'Windows.spec')
             self.paths['userPrefsDir'] = join(os.environ['APPDATA'],
@@ -128,29 +138,31 @@ class Preferences:
             self.paths['userPrefsDir'] = join(os.environ['HOME'],
                                               '.psychopy3')
 
-        # Define theme path
-        self.paths['themes'] = join(self.paths['userPrefsDir'], 'themes')
-        # Find / copy fonts
-        self.paths['fonts'] = join(self.paths['userPrefsDir'], 'fonts')
-        # avoid silent fail-to-launch-app if bad permissions:
+        # directory for files created by the app at runtime needed for operation
+        self.paths['userCacheDir'] = join(self.paths['userPrefsDir'], 'cache')
 
-        try:
-            os.makedirs(self.paths['userPrefsDir'])
-        except OSError as err:
-            if err.errno != errno.EEXIST:
-                raise
-        # Create themes folder in user space if not one already
-        try:
-            os.makedirs(self.paths['themes'])
-        except OSError as err:
-            if err.errno != errno.EEXIST:
-                raise
-        # Make fonts folder in user space if not one already
-        try:
-            os.makedirs(self.paths['fonts'])
-        except OSError as err:
-            if err.errno != errno.EEXIST:
-                raise
+        # paths in user directory to create/check write access
+        userPrefsPaths = (
+            'userPrefsDir',  # root dir
+            'themes',  # define theme path
+            'fonts',  # find / copy fonts
+            'packages',  # packages and plugins
+            'cache',  # cache for downloaded and other temporary files
+        )
+
+        # build directory structure inside user directory
+        for userPrefPath in userPrefsPaths:
+            # define path
+            if userPrefPath != 'userPrefsDir':  # skip creating root, just check
+                self.paths[userPrefPath] = join(
+                    self.paths['userPrefsDir'],
+                    userPrefPath)
+            # avoid silent fail-to-launch-app if bad permissions:
+            try:
+                os.makedirs(self.paths[userPrefPath])
+            except OSError as err:
+                if err.errno != errno.EEXIST:
+                    raise
 
         # Get dir for base and user themes
         baseThemeDir = Path(self.paths['appDir']) / "themes" / "spec"
@@ -240,6 +252,11 @@ class Preferences:
         self.userPrefsCfg.write()
 
     def loadAppData(self):
+        """Fetch app data config (unless this is a lib-only installation)
+        """
+        appDir = Path(self.paths['appDir'])
+        if not appDir.is_dir():  # if no app dir this may be just lib install
+            return {}
         # fetch appData too against a config spec
         appDataSpec = ConfigObj(join(self.paths['appDir'], 'appData.spec'),
                                 encoding='UTF8', list_values=False)

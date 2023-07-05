@@ -46,14 +46,16 @@ class IndentingBuffer(io.StringIO):
             self.getvalue()[-1]=='\n'
 
         """
-        self.write(self.oneIndent * self.indentLevel + text)
+        for line in text.splitlines(keepends=True):
+            self.write(self.oneIndent * self.indentLevel + line)
 
     def writeIndentedLines(self, text):
         """As writeIndented(text) except that each line in text gets
         the indent level rather than the first line only.
         """
-        for line in text.splitlines():
-            self.write(self.oneIndent * self.indentLevel + line + '\n')
+        if not text.endswith("\n"):
+            text += "\n"
+        self.writeIndented(text)
 
     def writeOnceIndentedLines(self, text):
         """Add code to the experiment that is only run exactly once,
@@ -155,6 +157,47 @@ class NameSpace:
         if numpy_count_only:
             return "%s + [%d numpy]" % (str(varibs), len(self.numpy))
         return str(varibs + self.numpy)
+
+    @property
+    def all(self):
+        return (
+                self.builder +
+                self.constants +
+                self.keywords +
+                self.nonUserBuilder +
+                self.numpy +
+                self.psychopy +
+                self.user
+        )
+
+    def getCategories(self, name):
+        """
+        Get list of categories in which a given name is found.
+
+        Parameters
+        ----------
+        name : str
+            Name to look for
+        """
+        # Define possible categories
+        categories = (
+            "builder",
+            "constants",
+            "keywords",
+            "nonUserBuilder",
+            "numpy",
+            "psychopy",
+            "user"
+        )
+        # Check for name in each category
+        found = []
+        for cat in categories:
+            if name in getattr(self, cat):
+                found.append(cat)
+
+        return found
+
+
 
     def getDerived(self, basename):
         """ buggy

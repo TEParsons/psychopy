@@ -42,49 +42,17 @@ class MessageDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(self, -1, message), flag=wx.ALL, border=15)
         # add buttons
-        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
         if type == 'Warning':  # we need Yes,No,Cancel
-            self.yesBtn = wx.Button(self, wx.ID_YES, _translate('Yes'))
-            self.yesBtn.SetDefault()
-            self.cancelBtn = wx.Button(
-                self, wx.ID_CANCEL, _translate('Cancel'))
-            self.noBtn = wx.Button(self, wx.ID_NO, _translate('No'))
-            self.Bind(wx.EVT_BUTTON, self.onButton, id=wx.ID_CANCEL)
-            self.Bind(wx.EVT_BUTTON, self.onButton, id=wx.ID_YES)
-            self.Bind(wx.EVT_BUTTON, self.onButton, id=wx.ID_NO)
-#            self.Bind(wx.EVT_CLOSE, self.onEscape)
-            btnSizer.Add(self.cancelBtn, 0,
-                         wx.ALL | wx.LEFT | wx.ALIGN_CENTER_VERTICAL,
-                         border=3)
-            btnSizer.AddStretchSpacer()
-            btnSizer.Add(self.noBtn, 0,
-                         wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                         border=3)
-            btnSizer.Add(self.yesBtn, 0,
-                         wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                         border=3)
+            btnSizer = self.CreateStdDialogButtonSizer(flags=wx.YES | wx.NO | wx.CANCEL)
         elif type == 'Query':  # we need Yes,No
-            self.yesBtn = wx.Button(self, wx.ID_YES, _translate('Yes'))
-            self.yesBtn.SetDefault()
-            self.noBtn = wx.Button(self, wx.ID_NO, _translate('No'))
-            self.Bind(wx.EVT_BUTTON, self.onButton, id=wx.ID_YES)
-            self.Bind(wx.EVT_BUTTON, self.onButton, id=wx.ID_NO)
-#            self.Bind(wx.EVT_CLOSE, self.onEscape)
-            btnSizer.Add(self.noBtn, 0,
-                         wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                         border=3)
-            btnSizer.Add(self.yesBtn, 0,
-                         wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                         border=3)
+            btnSizer = self.CreateStdDialogButtonSizer(flags=wx.YES | wx.NO)
         elif type == 'Info':  # just an OK button
-            self.okBtn = wx.Button(self, wx.ID_OK, _translate('OK'))
-            self.okBtn.SetDefault()
-            self.Bind(wx.EVT_BUTTON, self.onButton, id=wx.ID_OK)
-            btnSizer.Add(self.okBtn, 0,
-                         wx.ALL | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
-                         border=3)
+            btnSizer = self.CreateStdDialogButtonSizer(flags=wx.OK)
         else:
             raise NotImplementedError('Message type %s unknown' % type)
+        for btn in btnSizer.GetChildren():
+            if hasattr(btn.Window, "Bind"):
+                btn.Window.Bind(wx.EVT_BUTTON, self.onButton)
         # configure sizers and fit
         sizer.Add(btnSizer,
                   flag=wx.ALL | wx.EXPAND, border=5)
@@ -532,7 +500,9 @@ class ListWidget(GlobSizer):
         """
         GlobSizer.__init__(self, hgap=2, vgap=2)
         self.parent = parent
-        self.value = value if value else [{"Field":"", "Default": ""}]
+        if value is None:
+            value = [{'Field': "", 'Default': ""}]
+        self.value = value
         if type(value) != list:
             msg = 'The initial value for a ListWidget must be a list of dicts'
             raise AttributeError(msg)
@@ -611,6 +581,23 @@ class ListWidget(GlobSizer):
                 ctrl = self.FindItemAtPosition((rowN, colN)).GetWindow()
                 thisEntry[fieldName] = ctrl.GetValue()
             currValue.append(thisEntry)
+        return currValue
+
+    def getValue(self):
+        """
+        Return value as a dict so it's label-agnostic.
+
+        Returns
+        -------
+        dict
+            key:value pairs represented by the two columns of this ctrl
+        """
+        currValue = {}
+        # skipping the first row (headers)
+        for rowN in range(self.GetRows())[1:]:
+            keyCtrl = self.FindItemAtPosition((rowN, 0)).GetWindow()
+            valCtrl = self.FindItemAtPosition((rowN, 1)).GetWindow()
+            currValue[keyCtrl.GetValue()] = valCtrl.GetValue()
         return currValue
 
     def GetValue(self):

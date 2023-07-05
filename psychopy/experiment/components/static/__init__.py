@@ -36,7 +36,12 @@ class StaticComponent(BaseComponent):
                  startType='time (s)', startVal=0.0,
                  stopType='duration (s)', stopVal=0.5,
                  startEstim='', durationEstim=''):
-        BaseComponent.__init__(self, exp, parentName, name=name)
+        BaseComponent.__init__(
+            self, exp, parentName, name=name,
+            startType=startType, startVal=startVal,
+            stopType=stopType, stopVal=stopVal,
+            startEstim=startEstim, durationEstim=durationEstim
+        )
         self.updatesList = []  # a list of dicts {compParams, fieldName}
         self.type = 'Static'
         self.url = "https://www.psychopy.org/builder/components/static.html"
@@ -44,7 +49,7 @@ class StaticComponent(BaseComponent):
             "Custom code to be run during the static period (after updates)")
         self.params['code'] = Param("", valType='code', inputType="multi", categ='Custom',
                                     hint=hnt,
-                                    label=_localized['Custom code'])
+                                    label=_translate("Custom code"))
 
     def addComponentUpdate(self, routine, compName, fieldName):
         self.updatesList.append({'compName': compName,
@@ -93,14 +98,14 @@ class StaticComponent(BaseComponent):
         buff.writeIndented(code % self.params)
 
     def writeFrameCode(self, buff):
-        self.writeStartTestCode(buff)
-        # to get out of the if statement
-        buff.setIndentLevel(-1, relative=True)
+        if self.writeStartTestCode(buff):
+            buff.setIndentLevel(-1, relative=True)
         self.writeStopTestCode(buff)
 
     def writeFrameCodeJS(self, buff):
         # Start test
         self.writeStartTestCodeJS(buff)
+        buff.writeIndentedLines("ISI.status = PsychoJS.Status.STARTED;\n")
         self.writeParamUpdates(buff, target="PsychoJS")
         buff.setIndentLevel(-1, relative=True)
         buff.writeIndentedLines("}\n")
@@ -145,6 +150,7 @@ class StaticComponent(BaseComponent):
                 buff.writeIndentedLines(code % self.params)
                 buff.setIndentLevel(-1, relative=True)
                 buff.writeIndentedLines("}\n")
+        buff.writeIndentedLines("ISI.status = PsychoJS.Status.FINISHED;\n")
         # Escape stop code indent
         buff.setIndentLevel(-1, relative=True)
         buff.writeIndentedLines("}\n")
@@ -153,7 +159,7 @@ class StaticComponent(BaseComponent):
         """This will be executed as the final component in the routine
         """
         buff.writeIndented("# *%s* period\n" % (self.params['name']))
-        BaseComponent.writeStartTestCode(self, buff)
+        needsUnindent = BaseComponent.writeStartTestCode(self, buff)
 
         if self.params['stopType'].val == 'time (s)':
             durationSecsStr = "%(stopVal)s-t" % (self.params)
@@ -169,6 +175,8 @@ class StaticComponent(BaseComponent):
             raise Exception(msg % self.params)
         vals = (self.params['name'], durationSecsStr)
         buff.writeIndented("%s.start(%s)\n" % vals)
+
+        return needsUnindent
 
     def writeStopTestCode(self, buff):
         """Test whether we need to stop
@@ -232,6 +240,7 @@ class StaticComponent(BaseComponent):
                     code = (
                         f"console.log('register and start downloading resources specified by component %(name)s');\n"
                         f"await psychoJS.serverManager.prepareResources(%({fieldName})s);\n"
+                        f"%(name)s.status = PsychoJS.Status.STARTED;\n"
                     )
                     buff.writeIndentedLines(code % prms)
                 # Set values

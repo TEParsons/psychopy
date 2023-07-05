@@ -75,9 +75,9 @@ class PolygonComponent(BaseVisualComponent):
         self.params['nVertices'] = Param(
             nVertices, valType='int', inputType="single", categ='Basic',
             updates='constant',
-            allowedUpdates=['constant'],
+            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
             hint=msg,
-            label=_localized['nVertices'])
+            label=_translate("Num. vertices"))
 
         msg = _translate("What are the vertices of your polygon? Should be an nx2 array or a list of [x, y] lists")
         self.params['vertices'] = Param(
@@ -108,7 +108,7 @@ class PolygonComponent(BaseVisualComponent):
                          "polygon...' you can set vertices")
         self.params['shape'] = Param(
             shape, valType='str', inputType="choice", categ='Basic',
-            allowedVals=["line", "triangle", "rectangle", "circle", "cross", "star",
+            allowedVals=["line", "triangle", "rectangle", "circle", "cross", "star", "arrow",
                          "regular polygon...", "custom polygon..."],
             hint=msg, direct=False,
             label=_translate("Shape"))
@@ -123,7 +123,7 @@ class PolygonComponent(BaseVisualComponent):
             updates='constant',
             allowedUpdates=['constant', 'set every repeat', 'set every frame'],
             hint=msg,
-            label=_localized['lineWidth'])
+            label=_translate("Line width"))
 
         msg = _translate(
             "How should the image be interpolated if/when rescaled")
@@ -131,7 +131,7 @@ class PolygonComponent(BaseVisualComponent):
             interpolate, valType='str', inputType="choice", allowedVals=['linear', 'nearest'], categ='Texture',
             updates='constant', allowedUpdates=[], direct=False,
             hint=msg,
-            label=_localized['interpolate'])
+            label=_translate("Interpolate"))
 
 
         self.params['size'].hint = _translate(
@@ -156,11 +156,11 @@ class PolygonComponent(BaseVisualComponent):
             inits['size'].val = '[1.0, 1.0]'
 
         if self.params['shape'] == 'regular polygon...':
-            vertices = self.params['nVertices']
+            vertices = inits['nVertices']
         elif self.params['shape'] == 'custom polygon...':
-            vertices = self.params['vertices']
+            vertices = inits['vertices']
         else:
-            vertices = self.params['shape']
+            vertices = inits['shape']
         if vertices in ['line', '2']:
             code = ("%s = visual.Line(\n" % inits['name'] +
                     "    win=win, name='%s',%s\n" % (inits['name'], unitsStr) +
@@ -266,10 +266,18 @@ class PolygonComponent(BaseVisualComponent):
             code = ("{name} = new visual.ShapeStim ({{\n"
                     "  win: psychoJS.window, name: '{name}', {unitsStr}\n"
                     "  vertices: 'cross', size:{size},\n")
-        else:
+        elif vertices in ['arrow']:
+            code = ("{name} = new visual.ShapeStim ({{\n"
+                    "  win: psychoJS.window, name: '{name}', {unitsStr}\n"
+                    "  vertices: 'arrow', size:{size},\n")
+        elif self.params['shape'] == 'regular polygon...':
             code = ("{name} = new visual.Polygon ({{\n"
                     "  win: psychoJS.window, name: '{name}', {unitsStr}\n"
                     "  edges: {nVertices}, size:{size},\n")
+        else:
+            code = ("{name} = visual.ShapeStim({{\n" +
+                    "  win: psychoJS.window, name: '{name}', {unitsStr}, \n"
+                    "  vertices={vertices}, size={size},\n")
 
         depth = -self.getPosInRoutine()
 
@@ -278,21 +286,27 @@ class PolygonComponent(BaseVisualComponent):
             interpolate = 'false'
 
         code += ("  ori: {ori}, pos: {pos},\n"
-                 "  lineWidth: {lineWidth}, lineColor: new util.Color({lineColor}),\n"
+                 "  anchor: {anchor},\n"
+                 "  lineWidth: {lineWidth}, \n"
+                 "  colorSpace: {colorSpace},\n"
+                 "  lineColor: new util.Color({lineColor}),\n"
                  "  fillColor: new util.Color({fillColor}),\n"
                  "  opacity: {opacity}, depth: {depth}, interpolate: {interpolate},\n"
                  "}});\n\n")
 
         buff.writeIndentedLines(code.format(name=inits['name'],
                                             unitsStr=unitsStr,
+                                            anchor=inits['anchor'],
                                             lineWidth=inits['lineWidth'],
                                             size=inits['size'],
                                             ori=inits['ori'],
                                             pos=inits['pos'],
+                                            colorSpace=inits['colorSpace'],
                                             lineColor=inits['lineColor'],
                                             fillColor=inits['fillColor'],
                                             opacity=inits['opacity'],
                                             depth=depth,
                                             interpolate=interpolate,
-                                            nVertices=inits['nVertices']
+                                            nVertices=inits['nVertices'],
+                                            vertices=inits['vertices']
                                             ))

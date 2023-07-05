@@ -35,7 +35,7 @@ class KeyboardComponent(BaseComponent):
     tooltip = _translate('Keyboard: check and record keypresses')
 
     def __init__(self, exp, parentName, name='key_resp',
-                 allowedKeys="'y','n','left','right','space'",
+                 allowedKeys="'y','n','left','right','space'", registerOn="press",
                  store='last key', forceEndRoutine=True, storeCorrect=False,
                  correctAns="", discardPrev=True,
                  startType='time (s)', startVal=0.0,
@@ -55,8 +55,8 @@ class KeyboardComponent(BaseComponent):
         # params
 
         # NB name and timing params always come 1st
-        self.order += ['forceEndRoutine',  # Basic tab
-                       'allowedKeys', 'store', 'storeCorrect', 'correctAns'  # Data tab
+        self.order += ['forceEndRoutine', 'registerOn', 'allowedKeys',  # Basic tab
+                       'store', 'storeCorrect', 'correctAns'  # Data tab
                        ]
 
         msg = _translate(
@@ -68,17 +68,27 @@ class KeyboardComponent(BaseComponent):
             updates='constant',
             allowedUpdates=['constant', 'set every repeat'],
             hint=(msg),
-            label=_localized['allowedKeys'])
+            label=_translate("Allowed keys"))
+
+        msg = _translate(
+            "When should the keypress be registered? As soon as pressed, or when released?")
+        self.params['registerOn'] = Param(
+            registerOn, valType='str', inputType='choice',
+            categ='Basic', updates='constant',
+            allowedVals=["press", "release"],
+            hint=msg,
+            label=_translate("Register keypress on...")
+        )
 
         # hints say 'responses' not 'key presses' because the same hint is
         # also used with button boxes
         msg = _translate("Do you want to discard all responses occurring "
-                         "before the onset of this component?")
+                         "before the onset of this Component?")
         self.params['discard previous'] = Param(
             discardPrev, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
             updates='constant',
             hint=msg,
-            label=_localized['discard previous'])
+            label=_translate("Discard previous"))
 
         msg = _translate("Choose which (if any) responses to store at the "
                          "end of a trial")
@@ -87,7 +97,7 @@ class KeyboardComponent(BaseComponent):
             allowedVals=['last key', 'first key', 'all keys', 'nothing'],
             updates='constant', direct=False,
             hint=msg,
-            label=_localized['store'])
+            label=_translate("Store"))
 
         msg = _translate("Should a response force the end of the Routine "
                          "(e.g end the trial)?")
@@ -95,7 +105,7 @@ class KeyboardComponent(BaseComponent):
             forceEndRoutine, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
             updates='constant',
             hint=msg,
-            label=_localized['forceEndRoutine'])
+            label=_translate("Force end of Routine"))
 
         msg = _translate("Do you want to save the response as "
                          "correct/incorrect?")
@@ -103,7 +113,7 @@ class KeyboardComponent(BaseComponent):
             storeCorrect, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
             updates='constant',
             hint=msg,
-            label=_localized['storeCorrect'])
+            label=_translate("Store correct"))
 
         self.depends += [  # allows params to turn each other off/on
             {"dependsOn": "storeCorrect",  # must be param name
@@ -122,7 +132,7 @@ class KeyboardComponent(BaseComponent):
             correctAns, valType='str', inputType="single", allowedTypes=[], categ='Data',
             updates='constant',
             hint=msg, direct=False,
-            label=_localized['correctAns'])
+            label=_translate("Correct answer"))
 
         msg = _translate(
             "A reaction time to a visual stimulus should be based on when "
@@ -131,7 +141,7 @@ class KeyboardComponent(BaseComponent):
             syncScreenRefresh, valType='bool', inputType="bool", categ='Data',
             updates='constant',
             hint=msg,
-            label=_localized['syncScreenRefresh'])
+            label=_translate("Sync timing with screen"))
 
     def writeInitCode(self, buff):
         code = "%(name)s = keyboard.Keyboard()\n"
@@ -167,62 +177,59 @@ class KeyboardComponent(BaseComponent):
         buff.writeIndented("# *%s* updates\n" % self.params['name'])
         if visualSync:
             buff.writeIndented("waitOnFlip = False\n")
+        allowedKeysIsVar = (valid_var_re.match(str(allowedKeys)) and not allowedKeys == 'None')
         # writes an if statement to determine whether to draw etc
-        self.writeStartTestCode(buff)
-        buff.writeIndented("%(name)s.status = STARTED\n" % self.params)
+        indented = self.writeStartTestCode(buff)
+        if indented:
+            if allowedKeysIsVar:
+                # if it looks like a variable, check that the variable is suitable
+                # to eval at run-time
+                stringType = 'str'
+                code = ("# AllowedKeys looks like a variable named `{0}`\n"
+                        "if not type({0}) in [list, tuple, np.ndarray]:\n"
+                        "    if not isinstance({0}, {1}):\n"
+                        "        logging.error('AllowedKeys variable `{0}` is "
+                        "not string- or list-like.')\n"
+                        "        core.quit()\n"
+                        .format(allowedKeys, stringType))
 
-        allowedKeysIsVar = (valid_var_re.match(str(allowedKeys)) and not
-                            allowedKeys == 'None')
+                code += (
+                    "    elif not ',' in {0}:\n"
+                    "        {0} = ({0},)\n"
+                    "    else:\n"
+                    "        {0} = eval({0})\n"
+                    .format(allowedKeys))
+                buff.writeIndentedLines(code)
 
-        if allowedKeysIsVar:
-            # if it looks like a variable, check that the variable is suitable
-            # to eval at run-time
-            stringType = 'str'
-            code = ("# AllowedKeys looks like a variable named `{0}`\n"
-                    "if not type({0}) in [list, tuple, np.ndarray]:\n"
-                    "    if not isinstance({0}, {1}):\n"
-                    "        logging.error('AllowedKeys variable `{0}` is "
-                    "not string- or list-like.')\n"
-                    "        core.quit()\n"
-                    .format(allowedKeys, stringType))
+                keyListStr = "list(%s)" % allowedKeys  # eval at run time
 
-            code += (
-                "    elif not ',' in {0}:\n"
-                "        {0} = ({0},)\n"
-                "    else:\n"
-                "        {0} = eval({0})\n"
-                .format(allowedKeys))
+            buff.writeIndented("# keyboard checking is just starting\n")
+
+            if visualSync:
+                code = ("waitOnFlip = True\n"
+                        "win.callOnFlip(%(name)s.clock.reset)  "
+                        "# t=0 on next screen flip\n") % self.params
+            else:
+                code = "%(name)s.clock.reset()  # now t=0\n" % self.params
             buff.writeIndentedLines(code)
 
-            keyListStr = "list(%s)" % allowedKeys  # eval at run time
-
-        buff.writeIndented("# keyboard checking is just starting\n")
-
-        if visualSync:
-            code = ("waitOnFlip = True\n"
-                    "win.callOnFlip(%(name)s.clock.reset)  "
-                    "# t=0 on next screen flip\n") % self.params
-        else:
-            code = "%(name)s.clock.reset()  # now t=0\n" % self.params
-        buff.writeIndentedLines(code)
-
-        if self.params['discard previous'].val:
-            if visualSync:
-                code = ("win.callOnFlip(%(name)s.clearEvents, eventType='keyboard')  "
-                        "# clear events on next screen flip\n") % self.params
-            else:
-                code = "%(name)s.clearEvents(eventType='keyboard')\n" % self.params
-            buff.writeIndented(code)
+            if self.params['discard previous'].val:
+                if visualSync:
+                    code = ("win.callOnFlip(%(name)s.clearEvents, eventType='keyboard')  "
+                            "# clear events on next screen flip\n") % self.params
+                else:
+                    code = "%(name)s.clearEvents(eventType='keyboard')\n" % self.params
+                buff.writeIndented(code)
 
         # to get out of the if statement
-        buff.setIndentLevel(-1, relative=True)
+        buff.setIndentLevel(-indented, relative=True)
+
         # test for stop (only if there was some setting for duration or stop)
-        if self.params['stopVal'].val not in ['', None, -1, 'None']:
-            # writes an if statement to determine whether to draw etc
-            self.writeStopTestCode(buff)
+        indented = self.writeStopTestCode(buff)
+        if indented:
             buff.writeIndented("%(name)s.status = FINISHED\n" % self.params)
-            # to get out of the if statement
-            buff.setIndentLevel(-2, relative=True)
+        # to get out of the if statement
+        buff.setIndentLevel(-indented, relative=True)
 
         buff.writeIndented("if %s.status == STARTED%s:\n"
                            % (self.params['name'], ['', ' and not waitOnFlip'][visualSync]))
@@ -235,13 +242,18 @@ class KeyboardComponent(BaseComponent):
             keyListStr = self.params['allowedKeys']
 
         # check for keypresses
-        code = ("theseKeys = {name}.getKeys(keyList={keyStr}, waitRelease=False)\n"
+        expEscape = "None"
+        if self.exp.settings.params['Enable Escape']:
+            expEscape = '["escape"]'
+        code = ("theseKeys = {name}.getKeys(keyList={keyStr}, ignoreKeys={expEscape}, waitRelease={waitRelease})\n"
                 "_{name}_allKeys.extend(theseKeys)\n"
                 "if len(_{name}_allKeys):\n")
         buff.writeIndentedLines(
             code.format(
                 name=self.params['name'],
-                keyStr=(keyListStr or None)
+                waitRelease=self.params['registerOn'] == "release",
+                keyStr=(keyListStr or None),
+                expEscape=expEscape
             )
         )
 
@@ -249,15 +261,18 @@ class KeyboardComponent(BaseComponent):
         dedentAtEnd += 1
         if store == 'first key':  # then see if a key has already been pressed
             code = ("{name}.keys = _{name}_allKeys[0].name  # just the first key pressed\n"
-                    "{name}.rt = _{name}_allKeys[0].rt\n")
+                    "{name}.rt = _{name}_allKeys[0].rt\n"
+                    "{name}.duration = _{name}_allKeys[0].duration\n")
             buff.writeIndentedLines(code.format(name=self.params['name']))
         elif store == 'last key' or store == "nothing":  # If store nothing, save last key for correct answer test
             code = ("{name}.keys = _{name}_allKeys[-1].name  # just the last key pressed\n"
-                    "{name}.rt = _{name}_allKeys[-1].rt\n")
+                    "{name}.rt = _{name}_allKeys[-1].rt\n"
+                    "{name}.duration = _{name}_allKeys[-1].duration\n")
             buff.writeIndentedLines(code.format(name=self.params['name']))
         elif store == 'all keys':
             code = ("{name}.keys = [key.name for key in _{name}_allKeys]  # storing all keys\n"
-                    "{name}.rt = [key.rt for key in _{name}_allKeys]\n")
+                    "{name}.rt = [key.rt for key in _{name}_allKeys]\n"
+                    "{name}.duration = [key.duration for key in _{name}_allKeys]\n")
             buff.writeIndentedLines(code.format(name=self.params['name']))
 
         if storeCorr:
@@ -373,12 +388,16 @@ class KeyboardComponent(BaseComponent):
             keyListStr = "%s" % repr(keyList)
 
         # check for keypresses
-        code = ("let theseKeys = {name}.getKeys({{keyList: {keyStr}, waitRelease: false}});\n"
+        waitRelease = "false"
+        if self.params['registerOn'] == "release":
+            waitRelease = "true"
+        code = ("let theseKeys = {name}.getKeys({{keyList: {keyStr}, waitRelease: {waitRelease}}});\n"
                 "_{name}_allKeys = _{name}_allKeys.concat(theseKeys);\n"
                 "if (_{name}_allKeys.length > 0) {{\n")
         buff.writeIndentedLines(
             code.format(
                 name=self.params['name'],
+                waitRelease=waitRelease,
                 keyStr=keyListStr
             )
         )
@@ -387,15 +406,18 @@ class KeyboardComponent(BaseComponent):
         # how do we store it?
         if store == 'first key':  # then see if a key has already been pressed
             code = ("{name}.keys = _{name}_allKeys[0].name;  // just the first key pressed\n"
-                    "{name}.rt = _{name}_allKeys[0].rt;\n")
+                    "{name}.rt = _{name}_allKeys[0].rt;\n"
+                    "{name}.duration = _{name}_allKeys[0].duration;\n")
             buff.writeIndentedLines(code.format(name=self.params['name']))
         elif store == 'last key' or store =='nothing':
             code = ("{name}.keys = _{name}_allKeys[_{name}_allKeys.length - 1].name;  // just the last key pressed\n"
-                    "{name}.rt = _{name}_allKeys[_{name}_allKeys.length - 1].rt;\n")
+                    "{name}.rt = _{name}_allKeys[_{name}_allKeys.length - 1].rt;\n"
+                    "{name}.duration = _{name}_allKeys[_{name}_allKeys.length - 1].duration;\n")
             buff.writeIndentedLines(code.format(name=self.params['name']))
         elif store == 'all keys':
             code = ("{name}.keys = _{name}_allKeys.map((key) => key.name);  // storing all keys\n"
-                    "{name}.rt = _{name}_allKeys.map((key) => key.rt);\n")
+                    "{name}.rt = _{name}_allKeys.map((key) => key.rt);\n" \
+                    "{name}.duration = _{name}_allKeys.map((key) => key.duration);\n")
             buff.writeIndentedLines(code.format(name=self.params['name']))
 
         if storeCorr:
@@ -470,10 +492,11 @@ class KeyboardComponent(BaseComponent):
                                    (currLoop.params['name'], name, name))
 
             # only add an RT if we had a response
-            code = ("if %(name)s.keys != None:  # we had a response\n" %
-                    self.params +
-                    "    %s.addData('%s.rt', %s.rt)\n" %
-                    (currLoop.params['name'], name, name))
+            code = (
+                    "if %(name)s.keys != None:  # we had a response\n" % self.params +
+                    "    %s.addData('%s.rt', %s.rt)\n" % (currLoop.params['name'], name, name) +
+                    "    %s.addData('%s.duration', %s.duration)\n" % (currLoop.params['name'], name, name)
+            )
             buff.writeIndentedLines(code)
 
         # get parent to write code too (e.g. store onset/offset times)
@@ -513,13 +536,13 @@ class KeyboardComponent(BaseComponent):
 
         code = (
             "// update the trial handler\n"
-            "if (psychoJS.experiment.currentLoop instanceof MultiStairHandler) {\n"
+            "if (currentLoop instanceof MultiStairHandler) {\n"
         )
         buff.writeIndentedLines(code % self.params)
 
         buff.setIndentLevel(1, relative=True)
         code = (
-                "psychoJS.experiment.currentLoop.addResponse(%(name)s.corr, level);\n"
+                "currentLoop.addResponse(%(name)s.corr, level);\n"
         )
         buff.writeIndentedLines(code % self.params)
 
@@ -537,7 +560,8 @@ class KeyboardComponent(BaseComponent):
 
         # only add an RT if we had a response
         code = ("if (typeof {name}.keys !== 'undefined') {{  // we had a response\n"
-                "    psychoJS.experiment.addData('{name}.rt', {name}.rt);\n")
+                "    psychoJS.experiment.addData('{name}.rt', {name}.rt);\n"
+                "    psychoJS.experiment.addData('{name}.duration', {name}.duration);\n")
         if forceEnd:
             code += ("    routineTimer.reset();\n"
                      "    }}\n\n")

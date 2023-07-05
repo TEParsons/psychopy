@@ -78,6 +78,8 @@ class Circle(Polygon):
     interpolate : bool
         Enable smoothing (anti-aliasing) when drawing shape outlines. This
         produces a smoother (less-pixelated) outline of the shape.
+    draggable : bool
+        Can this stimulus be dragged by a mouse click?
     lineRGB, fillRGB: array_like, :class:`~psychopy.colors.Color` or None
         *Deprecated*. Please use `lineColor` and `fillColor`. These
         arguments may be removed in a future version.
@@ -104,16 +106,19 @@ class Circle(Polygon):
         if radius != 0.5 which will result in undefined behavior.
 
     """
+
+    _defaultFillColor = "white"
+    _defaultLineColor = None
+
     def __init__(self,
                  win,
                  radius=.5,
-                 edges=32,
+                 edges="circle",
                  units='',
                  lineWidth=1.5,
-                 lineColor=None,
-                 lineColorSpace=None,
-                 fillColor='white',
-                 fillColorSpace=None,
+                 lineColor=False,
+                 fillColor=False,
+                 colorSpace='rgb',
                  pos=(0, 0),
                  size=1.0,
                  anchor=None,
@@ -122,13 +127,17 @@ class Circle(Polygon):
                  contrast=1.0,
                  depth=0,
                  interpolate=True,
+                 draggable=False,
                  lineRGB=False,
                  fillRGB=False,
                  name=None,
                  autoLog=None,
                  autoDraw=False,
-                 color=None,
-                 colorSpace='rgb'):
+                 # legacy
+                 color=False,
+                 fillColorSpace=None,
+                 lineColorSpace=None,
+                 ):
 
         # what local vars are defined (these are the init params) for use by
         # __repr__
@@ -154,6 +163,7 @@ class Circle(Polygon):
             contrast=contrast,
             depth=depth,
             interpolate=interpolate,
+            draggable=draggable,
             lineRGB=lineRGB,
             fillRGB=fillRGB,
             name=name,

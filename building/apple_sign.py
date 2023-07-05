@@ -12,14 +12,10 @@ import time, sys, os
 import argparse
 import shutil
 import dmgbuild
+import argparse
 
 thisFolder = Path(__file__).parent
 finalDistFolder = thisFolder.parent.parent/'dist'
-
-with Path().home()/ 'keys/apple_ost_id' as p:
-    IDENTITY = p.read_text().strip()
-with Path().home()/ 'keys/apple_psychopy_app_specific' as p:
-    PWORD = p.read_text().strip()
 
 ENTITLEMENTS = thisFolder / "entitlements.plist"
 BUNDLE_ID = "org.opensciencetools.psychopy"
@@ -29,6 +25,8 @@ SIGN_ALL = True
 
 # handy resources for info:
 #
+# to get a new APple app-specific password:
+#   https://appleid.apple.com/account/manage NOT developer.apple.com
 # why use zip file to notarize as well as dmg:
 #   https://deciphertools.com/blog/notarizing-dmg/
 # notarize from Python:
@@ -66,7 +64,7 @@ class AppSigner:
         # PyQt
         files.extend(self.appFile.glob('**/Versions/5/Qt*'))
         files.extend(self.appFile.glob('**/Contents/MacOS/QtWebEngineProcess'))
-        files.extend(self.appFile.glob('**/Resources/lib/python3.6/lib-dynload/*.so'))
+        files.extend(self.appFile.glob('**/Resources/lib/python3.8/lib-dynload/*.so'))
         files.extend(self.appFile.glob('**/Frameworks/Python.framework/Versions/3.6/Python'))
         files.extend(self.appFile.glob('**/Frameworks/Python.framework'))
         files.extend(self.appFile.glob('**/Contents/MacOS/python'))
@@ -285,7 +283,22 @@ class AppSigner:
                 break  # succeeded so stop
         if exitcode != 0:
             print(f'*********Failed to detach {volName} (wrong name?) *************')
-            exit(1)
+            time.sleep(10)  # wait for 10s and then try more forcefully
+            import diskutil_parser.cmd
+            import sh
+            disks = diskutil_parser.cmd.diskutil_list()
+            for disk in disks:
+                print(f"checking /dev/{disk.device_id} ({disk.partition_scheme})")
+                for part in disk.partitions:
+                    if "PsychoPy" in part.name:
+                        print("Ejecting - ", part.name, part.mount_point)
+                        try:
+                            sh.diskutil("unmountDisk", "force", f"/dev/{disk.device_id}")
+                            sh.diskutil("eject", f"/dev/{disk.device_id}")
+                        except sh.ErrorReturnCode_1:
+                            print("still can't eject that disk")
+                            exit(1)
+
 
     def dmgCompress(self):
         dmgFilename = str(self.appFile).replace(".app", "_rw.dmg")
@@ -325,6 +338,10 @@ def main():
                         action='store', required=False, default='true')
     parser.add_argument("--runPostDmgBuild", help="Runs up until dmg is built (and notarised) then exits",
                         action='store', required=False, default='true')
+    parser.add_argument("--id", help="ost id for codesigning",
+                        action='store', required=False, default=None)
+    parser.add_argument("--pwd", help="password for app-specific password",
+                        action='store', required=False, default=None)
     args = parser.parse_args()
     args.runPreDmgBuild = args.runPreDmgBuild.lower() in ['true', 'True', '1', 'y', 'yes']
     args.runDmgBuild = args.runDmgBuild.lower() in ['true', 'True', '1', 'y', 'yes']
@@ -335,6 +352,18 @@ def main():
     else:
         NOTARIZE = True
 
+    # codesigning identity from CLI args?
+    if args.id:
+        IDENTITY = args.id
+    else:
+        with Path().home()/ 'keys/apple_ost_id' as p:
+            IDENTITY = p.read_text().strip()
+    if args.pwd:
+        PWORD = args.pwd
+    else:
+        with Path().home()/ 'keys/apple_psychopy_app_specific' as p:
+            PWORD = p.read_text().strip()
+            
     if args.file:  # not the whole app - just sign one file
         distFolder = (thisFolder / '../dist').resolve()
         signer = AppSigner(appFile='',

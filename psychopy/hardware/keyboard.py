@@ -129,6 +129,7 @@ class Keyboard:
     _backend = None
     _iohubKeyboard = None
     _iohubOffset = 0.0
+    _ptbOffset = 0.0
 
     def __init__(self, device=-1, bufferSize=10000, waitForStart=False, clock=None, backend=None):
         """Create the device (default keyboard or select one)
@@ -192,6 +193,7 @@ class Keyboard:
 
         if Keyboard._backend in ['', 'ptb'] and havePTB:
             Keyboard._backend = 'ptb'
+            Keyboard._ptbOffset = self.clock.getLastResetTime()
             # get the necessary keyboard buffer(s)
             if sys.platform == 'win32':
                 self._ids = [-1]  # no indexing possible so get the combo keyboard
@@ -266,7 +268,7 @@ class Keyboard:
             for buffer in self._buffers.values():
                 buffer.stop()
 
-    def getKeys(self, keyList=None, waitRelease=True, clear=True):
+    def getKeys(self, keyList=None, ignoreKeys=None, waitRelease=True, clear=True):
         """
 
         Parameters
@@ -296,30 +298,48 @@ class Keyboard:
         keys = []
         if Keyboard._backend == 'ptb':
             for buffer in self._buffers.values():
-                for origKey in buffer.getKeys(keyList, waitRelease, clear):
+                for origKey in buffer.getKeys(
+                        keyList=keyList,
+                        ignoreKeys=ignoreKeys,
+                        waitRelease=waitRelease,
+                        clear=clear):
                     # calculate rt from time and self.timer
                     thisKey = copy.copy(origKey)  # don't alter the original
                     thisKey.rt = thisKey.tDown - self.clock.getLastResetTime()
+                    thisKey.tDown = thisKey.tDown - self._ptbOffset 
                     keys.append(thisKey)
         elif Keyboard._backend == 'iohub':
             watchForKeys = keyList
             if waitRelease:
-                key_events = Keyboard._iohubKeyboard.getReleases(keys=watchForKeys, clear=clear)
+                key_events = Keyboard._iohubKeyboard.getReleases(
+                    keys=watchForKeys,
+                    ignoreKeys=ignoreKeys,
+                    clear=clear
+                )
             else:
                 key_events = []
                 released_press_evt_ids = []
+                all_key_events = Keyboard._iohubKeyboard.getKeys(
+                    keys=watchForKeys,
+                    ignoreKeys=ignoreKeys,
+                    clear=clear
+                )
+                if all_key_events:
+                    all_key_events_ids = [k.id for k in all_key_events]
+                    all_key_events.reverse()
+                    for k in all_key_events:
+                        if hasattr(k, 'pressEventID'):
+                            if k.pressEventID in all_key_events_ids:
+                                # Only if press event also occurs,
+                                # use release key event so duration can be calculated.
+                                released_press_evt_ids.append(k.pressEventID)
+                                key_events.append(k)
+                        elif k.id not in released_press_evt_ids:
+                            # Add press key event as long as release key event has not already been
+                            # handled.
+                            key_events.append(k)
 
-                all_key_events = Keyboard._iohubKeyboard.getKeys(keys=watchForKeys, clear=clear)
-                all_key_events.reverse()
-
-                for k in all_key_events:
-                    if hasattr(k, 'pressEventID'):
-                        released_press_evt_ids.append(k.pressEventID)
-                        key_events.append(k)
-                    elif k.id not in released_press_evt_ids:
-                        key_events.append(k)
-
-                key_events.reverse()
+                    key_events.reverse()
 
             for k in key_events:
                 kname = k.key
@@ -388,7 +408,7 @@ class Keyboard:
         return None
 
     def clearEvents(self, eventType=None):
-        """"""
+        """Clear the events from the Keyboard such as previous key presses"""
         if Keyboard._backend == 'ptb':
             for buffer in self._buffers.values():
                 buffer.flush()  # flush the device events to the soft buffer
@@ -400,6 +420,7 @@ class Keyboard:
         else:
             global event
             event.clearEvents(eventType)
+        logging.info("Keyboard events cleared", obj=self)
 
 
 class KeyPress(object):
@@ -436,11 +457,9 @@ class KeyPress(object):
             self.name = name
             self.rt = tDown
         elif Keyboard._backend == 'ptb':
-            if code not in keyNames:
-                self.name = 'n/a'
-                logging.warning("Got keycode {} but that code isn't yet known")
-            else:
-                self.name = keyNames[code]
+            if code not in keyNames and code in keyNames.values():
+                i = list(keyNames.values()).index(code)
+                code = list(keyNames.keys())[i]
             if code not in keyNames:
                 logging.warning('Keypress was given unknown key code ({})'.format(code))
                 self.name = 'unknown'
@@ -525,12 +544,13 @@ class _KeyBuffer(object):
             key['time'] = evt['Time']
             self._evts.append(key)
 
-    def getKeys(self, keyList=[], waitRelease=True, clear=True):
+    def getKeys(self, keyList=[], ignoreKeys=[], waitRelease=True, clear=True):
         """Return the KeyPress objects from the software buffer
 
         Parameters
         ----------
         keyList : list of key(name)s of interest
+        ignoreKeys : list of keys(name)s to ignore if keylist is blank
         waitRelease : if True then only process keys that are also released
         clear : clear any keys (that have been returned in this call)
 
@@ -543,11 +563,12 @@ class _KeyBuffer(object):
         if not keyList and not waitRelease:
             keyPresses = list(self._keysStillDown)
             for k in list(self._keys):
-                if k not in keyPresses:
+                if not any(x.name == k.name and x.tDown == k.tDown  for x in keyPresses):
                     keyPresses.append(k)
             if clear:
                 self._keys = deque()
                 self._keysStillDown = deque()
+            keyPresses.sort(key=lambda x: x.tDown, reverse=False)
             return keyPresses
 
         # otherwise loop through and check each key
@@ -556,6 +577,8 @@ class _KeyBuffer(object):
             if waitRelease and not keyPress.duration:
                 continue
             if keyList and keyPress.name not in keyList:
+                continue
+            if ignoreKeys and keyPress.name in ignoreKeys:
                 continue
             keyPresses.append(keyPress)
 

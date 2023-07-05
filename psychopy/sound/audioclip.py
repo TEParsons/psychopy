@@ -23,13 +23,15 @@ __all__ = [
     'AUDIO_EAR_COUNT'
 ]
 
+from pathlib import Path
+
 import numpy as np
 import soundfile as sf
+from psychopy import prefs
 from psychopy.tools.audiotools import *
+from psychopy.tools import filetools as ft
 from .exceptions import *
 
-# supported formats for loading and saving audio samples to file
-AUDIO_SUPPORTED_CODECS = [s.lower() for s in sf.available_formats().keys()]
 
 # constants for specifying the number of channels
 AUDIO_CHANNELS_MONO = 1
@@ -266,7 +268,7 @@ class AudioClip:
 
         Examples
         --------
-        Generate 5 seconds of silence to enjoy::
+        Generate 10 seconds of silence to enjoy::
 
             import psychopy.sound as sound
             silence = sound.AudioClip.silence(10.)
@@ -580,6 +582,37 @@ class AudioClip:
         self._sampleRateHz = int(value)
         # recompute duration after updating sample rate
         self._duration = len(self._samples) / float(self._sampleRateHz)
+    
+    def resample(self, targetSampleRateHz, resampleType='soxr_hq', 
+                 equalEnergy=False):
+        """Resample audio to another sample rate.
+
+        Parameters
+        ----------
+        targetSampleRateHz : int
+            New sample rate.
+        resampleType : str or None
+            Method to use for resampling. 
+        equalEnergy : bool
+            Make the output have similar energy to the input.
+
+        Notes
+        -----
+        * Resampling audio clip may result in distortion which is exaserbated by 
+          successive resamplings.
+
+        """
+        import librosa
+
+        self.samples = librosa.resample(
+            self.samples, 
+            self._sampleRateHz, 
+            targetSampleRateHz,
+            res_type=resampleType,
+            scale=equalEnergy, 
+            axis=0)
+
+        self.sampleRateHz = targetSampleRateHz  # update
 
     @property
     def duration(self):
@@ -774,6 +807,9 @@ def load(filename, codec=None):
         Audio clip containing samples loaded from the file.
 
     """
+    # alias default names (so it always points to default.png)
+    if filename in ft.defaultStim:
+        filename = Path(prefs.paths['resources']) / ft.defaultStim[filename]
     return AudioClip.load(filename, codec)
 
 

@@ -54,7 +54,7 @@ class BrushComponent(BaseVisualComponent):
             updates='constant',
             allowedUpdates=['constant', 'set every repeat'],
             hint=msg,
-            label=_localized['lineColor'])
+            label= _translate("Brush color"))
 
         msg = _translate("Width of the brush's line (always in pixels and limited to 10px max width)")
         self.params['lineWidth'] = Param(
@@ -62,7 +62,7 @@ class BrushComponent(BaseVisualComponent):
             updates='constant',
             allowedUpdates=['constant', 'set every repeat'],
             hint=msg,
-            label=_localized['lineWidth'])
+            label= _translate("Brush size"))
 
         self.params['lineColorSpace'] = self.params['colorSpace']
         del self.params['colorSpace']
@@ -76,7 +76,7 @@ class BrushComponent(BaseVisualComponent):
             updates='constant',
             allowedUpdates=['constant', 'set every repeat'],
             hint=msg,
-            label=_localized['buttonRequired'])
+            label= _translate("Press button"))
 
         # Remove BaseVisual params which are not needed
         del self.params['color']  # because color is defined by lineColor
@@ -88,23 +88,24 @@ class BrushComponent(BaseVisualComponent):
         del self.params['units']  # always in pix
 
     def writeInitCode(self, buff):
-        params = getInitVals(self.params)
-        code = ("{name} = visual.Brush(win=win, name='{name}',\n"
-                "   lineWidth={lineWidth},\n"
-                "   lineColor={lineColor},\n"
-                "   lineColorSpace={lineColorSpace},\n"
-                "   opacity={opacity},\n"
-                "   buttonRequired={buttonRequired})").format(name=params['name'],
-                                                lineWidth=params['lineWidth'],
-                                                lineColor=params['lineColor'],
-                                                lineColorSpace=params['lineColorSpace'],
-                                                opacity=params['opacity'],
-                                                buttonRequired=params['buttonRequired'])
+        inits = getInitVals(self.params)
+        inits['depth'] = -self.getPosInRoutine()
+        code = (
+            "{name} = visual.Brush(win=win, name='{name}',\n"
+            "   lineWidth={lineWidth},\n"
+            "   lineColor={lineColor},\n"
+            "   lineColorSpace={lineColorSpace},\n"
+            "   opacity={opacity},\n"
+            "   buttonRequired={buttonRequired},\n"
+            "   depth={depth}\n"
+            ")"
+        ).format(**inits)
         buff.writeIndentedLines(code)
 
     def writeInitCodeJS(self, buff):
         # JS code does not use Brush class
         params = getInitVals(self.params)
+        params['depth'] = -self.getPosInRoutine()
 
         code = ("{name} = {{}};\n"
                 "get{name} = function() {{\n"
@@ -115,12 +116,10 @@ class BrushComponent(BaseVisualComponent):
                 "    lineColor: new util.Color({lineColor}),\n"
                 "    opacity: {opacity},\n"
                 "    closeShape: false,\n"
-                "    autoLog: false\n"
+                "    autoLog: false,\n"
+                "    depth: {depth}\n"
                 "    }}))\n"
-                "}}\n\n").format(name=params['name'],
-                                 lineWidth=params['lineWidth'],
-                                 lineColor=params['lineColor'],
-                                 opacity=params['opacity'])
+                "}}\n\n").format(**params)
 
         buff.writeIndentedLines(code)
         # add reset function
