@@ -156,7 +156,9 @@ class BaseCalibrationProcedure:
 
         def setDefaultCalibrationTarget():
             self.targetStim = visual.TargetStim(
-                self.window, name="CP", style="circles",
+                self.window, name="CP",
+                style=self.getCalibSetting(['target_attributes', 'style']),
+                image=self.getCalibSetting(['target_attributes', 'image']),
                 radius=self.getCalibSetting(['target_attributes', 'outer_diameter']) / 2.0,
                 fillColor=self.getCalibSetting(['target_attributes', 'outer_fill_color']),
                 borderColor=self.getCalibSetting(['target_attributes', 'outer_line_color']),

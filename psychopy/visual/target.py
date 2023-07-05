@@ -1,3 +1,4 @@
+from .image import ImageStim
 from .shape import ShapeStim
 from .basevisual import ColorMixin, WindowMixin, MinimalStim
 from psychopy.colors import Color
@@ -11,7 +12,7 @@ class TargetStim(MinimalStim, ColorMixin, WindowMixin):
     A target for use in eyetracker calibration, if converted to a dict will return in the correct format for ioHub
     """
     def __init__(self,
-                 win, name=None, style="circles",
+                 win, name=None, style="circles", image=None,
                  radius=.05, fillColor=(1, 1, 1, 0.1), borderColor="white", lineWidth=2,
                  innerRadius=.01, innerFillColor="red", innerBorderColor=None, innerLineWidth=None,
                  pos=(0, 0), units=None, anchor="center",
@@ -21,20 +22,32 @@ class TargetStim(MinimalStim, ColorMixin, WindowMixin):
         # Make sure name is a string
         if name is None:
             name = "target"
-        # Create shapes
-        self.outer = ShapeStim(win, name=name,
-                               vertices="circle",
-                               size=(radius*2, radius*2), pos=pos,
-                               lineWidth=lineWidth, units=units,
-                               fillColor=fillColor, lineColor=borderColor, colorSpace=colorSpace,
-                               autoLog=autoLog, autoDraw=autoDraw)
-        self.outerRadius = radius
+        if style == "image":
+            self.outer = ImageStim(
+                win, name=name,
+                image=image,
+                color=fillColor, colorSpace=colorSpace,
+                units=units,
+                autoLog=autoLog,
+            )
+        else:
+            # Create shapes
+            self.outer = ShapeStim(win, name=name,
+                                   vertices="circle",
+                                   size=(radius*2, radius*2), pos=pos,
+                                   lineWidth=lineWidth, units=units,
+                                   fillColor=fillColor, lineColor=borderColor, colorSpace=colorSpace,
+                                   autoLog=autoLog, autoDraw=autoDraw)
         self.inner = ShapeStim(win, name=name+"Inner",
                                vertices="circle",
                                size=(innerRadius*2, innerRadius*2), pos=pos, units=units,
                                lineWidth=(innerLineWidth or lineWidth),
                                fillColor=innerFillColor, lineColor=innerBorderColor, colorSpace=colorSpace,
                                autoLog=autoLog, autoDraw=autoDraw)
+        if style == "image":
+            self.inner.opacity = 0
+
+        self.outerRadius = radius
         self.innerRadius = innerRadius
 
         self.style = style
