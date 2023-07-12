@@ -23,7 +23,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from psychopy import experiment
-from psychopy.app.utils import FrameSwitcher, FileDropTarget
+from psychopy.app.utils import FrameSwitcher, FileDropTarget, ListCtrl
 from psychopy.localization import _translate
 from psychopy.projects.pavlovia import getProject
 from psychopy.scripts.psyexpCompile import generateScript
@@ -630,9 +630,19 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.expCtrl.InsertColumn(filenameColumn, _translate('File'))
         self.expCtrl.InsertColumn(folderColumn, _translate('Path'))
         self.topPanel.sizer.Add(self.expCtrl, proportion=1, border=6, flag=wx.ALL | wx.EXPAND)
+        self.ctrl = TasksCtrl(self.topPanel, file="W:\\My Drive\\Throwaway\\testPsyrun.psyrun")
+        self.topPanel.sizer.Add(
+            self.ctrl, proportion=1, flag=wx.EXPAND | wx.ALL
+        )
+        self.expCtrl.Hide()
 
         # Toolbar
         self.toolbar = self.RunnerToolbar(self.topPanel, runner=self)
+        self.tools = RunCtrls(self.topPanel, self.ctrl)
+        self.topPanel.sizer.Add(
+            self.tools, flag=wx.EXPAND | wx.ALL
+        )
+        self.toolbar.Hide()
         self.topPanel.sizer.Add(self.toolbar, proportion=0, border=12, flag=wx.LEFT | wx.RIGHT | wx.EXPAND)
 
         # Setup panel for bottom half (alerts and stdout)
@@ -662,7 +672,7 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.setStdoutVisible(True)
 
         # Assign to splitter
-        self.splitter.SplitHorizontally(
+        self.splitter.SplitVertically(
             window1=self.topPanel,
             window2=self.bottomPanel,
             sashPosition=0
@@ -1056,3 +1066,142 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
     @currentProject.setter
     def currentProject(self, project):
         self._currentProject = None
+
+
+class RunCtrls(wx.Panel, handlers.ThemeMixin):
+    def __init__(self, parent, ctrl):
+        # initialise
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        # setup sizer
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+
+        # run button
+        self.runBtn = wx.Button(self, size=(32, 32), style=wx.BORDER_NONE)
+        self.runBtn.SetToolTipString(_translate(
+            "Run selected experiment"
+        ))
+        self.runBtn.icon = "run"
+        self.sizer.Add(self.runBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        # debug button
+        self.debugBtn = wx.Button(self, size=(32, 32), style=wx.BORDER_NONE)
+        self.debugBtn.icon = "globe_bug"
+        self.sizer.Add(self.debugBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        # stop button
+        self.stopBtn = wx.Button(self, size=(32, 32), style=wx.BORDER_NONE)
+        self.stopBtn.icon = "stop"
+        self.sizer.Add(self.stopBtn, border=6, flag=wx.EXPAND | wx.ALL)
+
+        # spacer
+        self.sizer.AddStretchSpacer(1)
+
+        self._applyAppTheme()
+
+    def _applyAppTheme(self):
+        for btn in [self.runBtn, self.debugBtn, self.stopBtn]:
+            if hasattr(btn, "icon"):
+                btn.SetBitmap(
+                    icons.ButtonIcon(btn.icon, size=(32, 32)).bitmap
+                )
+
+
+class TasksCtrl(wx.Panel, handlers.ThemeMixin):
+    def __init__(self, parent, file=None):
+        # initialise
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        # setup sizer
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+
+        # make list ctrl
+        self.ctrl = ListCtrl(
+            self, style=wx.LC_REPORT | wx.BORDER_NONE | wx.LC_SINGLE_SEL
+        )
+        self.ctrl.SetMinSize((500, -1))
+        self.sizer.Add(self.ctrl, proportion=1, border=6, flag=wx.EXPAND | wx.ALL)
+        # make buttons sizer
+        self.btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.btnSizer, border=3, flag=wx.EXPAND | wx.ALL)
+        # add button
+        self.addBtn = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.addBtn.SetToolTipString(_translate(
+            "Add an experiment to task list."
+        ))
+        self.addBtn.icon = "addExp"
+        self.btnSizer.Add(self.addBtn, border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT)
+        # remove button
+        self.removeBtn = wx.Button(self, style=wx.BU_EXACTFIT)
+        self.removeBtn.SetToolTipString(_translate(
+            "Remove selected experiment from task list."
+        ))
+        self.removeBtn.icon = "removeExp"
+        self.btnSizer.Add(self.removeBtn, border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT)
+        # spacer
+        self.btnSizer.AddStretchSpacer(1)
+        # save btn
+        self.saveBtn = wx.Button(self, label=_translate("Save .psyrun"), style=wx.BU_EXACTFIT)
+        self.saveBtn.SetToolTipString(_translate(
+            "Save task list to a .psyrun file."
+        ))
+        self.saveBtn.icon = "filesaveas"
+        self.btnSizer.Add(self.saveBtn, border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT)
+        # load btn
+        self.loadBtn = wx.Button(self, label=_translate("Load .psyrun"), style=wx.BU_EXACTFIT)
+        self.loadBtn.SetToolTipString(_translate(
+            "Load task list from a .psyrun file."
+        ))
+        self.loadBtn.icon = "fileopen"
+        self.btnSizer.Add(self.loadBtn, border=3, flag=wx.EXPAND | wx.LEFT | wx.RIGHT)
+        # setup columns
+        self.populate(file=file)
+
+        self._applyAppTheme()
+
+    def _applyAppTheme(self):
+        for btn in [self.addBtn, self.removeBtn, self.saveBtn, self.loadBtn]:
+            if hasattr(btn, "icon"):
+                btn.SetBitmap(
+                    icons.ButtonIcon(btn.icon, size=(16, 16)).bitmap
+                )
+
+    def populate(self, file=None):
+        # clear
+        self.ctrl.ClearAll()
+        # setup columns
+        self.ctrl.InsertColumn(1, _translate("File"))
+        self.ctrl.setResizeColumn(1)
+        self.ctrl.InsertColumn(2, _translate("Path"), width=wx.LIST_AUTOSIZE)
+        self.ctrl.setResizeColumn(2)
+        self.ctrl.InsertColumn(3, _translate("Arguments"))
+        self.ctrl.setResizeColumn(3)
+        # if given a file, add items
+        if file is not None:
+            # make a Path object
+            file = Path(file)
+            # make sure we have a file extension
+            if not file.suffix:
+                file = file.parent / f"{file.stem}.psyrun"
+            # make sure file extension is psyrun
+            assert file.suffix == ".psyrun", _translate(
+                "Runner can only load .psyrun files, not {}"
+            ).format(file.suffix)
+            # get file contents
+            content = file.read_text(encoding="utf-8")
+            experiments = json.loads(content)
+            # add each experiment
+            for exp in experiments:
+                expFile = Path(exp['path']) / exp['file']
+                self.addExperiment(expFile)
+
+    def addExperiment(self, file, args=None):
+        # make a Path object
+        file = Path(file)
+        # if given no args, make blank
+        if args is None:
+            args = []
+        # make a list item
+        item = [file.name, str(file.parent), " ".join(args)]
+        # add list item
+        self.ctrl.Append(item)
