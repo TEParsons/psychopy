@@ -650,6 +650,8 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.bottomPanel.sizer = wx.BoxSizer(wx.VERTICAL)
         self.bottomPanel.SetSizer(self.bottomPanel.sizer)
 
+        self.bottomPanel.Hide()
+
         # Alerts
         self._selectedHiddenAlerts = False  # has user manually hidden alerts?
         self.alertsPnl = ScriptOutputPanel(parent=self.bottomPanel,
@@ -671,10 +673,12 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.stdoutCtrl = self.stdoutPnl.ctrl
         self.setStdoutVisible(True)
 
+        self.outputs = OutputNotebook(self.splitter)
+
         # Assign to splitter
         self.splitter.SplitVertically(
             window1=self.topPanel,
-            window2=self.bottomPanel,
+            window2=self.outputs,
             sashPosition=0
         )
         self.splitter.SetMinimumPaneSize(self.topPanel.GetBestSize()[1])
@@ -1066,6 +1070,26 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
     @currentProject.setter
     def currentProject(self, project):
         self._currentProject = None
+
+
+class OutputNotebook(wx.Notebook):
+    def __init__(self, parent):
+        # initialise
+        wx.Notebook.__init__(self, parent)
+        self.parent = parent
+
+        # add outputs tree
+        self.analysis = wx.TreeCtrl(self)
+        self.AddPage(
+            self.analysis, text=_translate("Analysis")
+        )
+
+        # add stdout tab
+        self.stdout = ScriptOutputPanel(
+            self, style=wx.TE_READONLY | wx.TE_MULTILINE | wx.BORDER_NONE)
+        self.AddPage(
+            self.stdout, text=_translate("Stdout")
+        )
 
 
 class RunCtrls(wx.Panel, handlers.ThemeMixin):
