@@ -19,6 +19,7 @@ import numpy
 import re
 import wx
 
+import psychopy.app.builder.paramCtrls
 import psychopy.experiment.utils
 from psychopy.experiment import Param
 
@@ -117,18 +118,21 @@ class ParamCtrls():
                     vc.availableVersions(local=False), wx.__version__)
                 param.allowedVals = (options + [''] + versions)
 
-        if param.inputType == "single":
+        if param.inputType == "name":
+            self.valueCtrl = psychopy.app.builder.paramCtrls.name.NameCtrl(
+                parent, param=param,
+                fieldName=fieldName
+            )
+        elif param.inputType == "single":
             # Create single line string control
-            self.valueCtrl = paramCtrls.SingleLineCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
+            self.valueCtrl = psychopy.app.builder.paramCtrls.single.SingleLineCtrl(
+                parent, param=param,
+                fieldName=fieldName
+            )
         elif param.inputType == 'multi':
             if param.valType == "extendedCode":
                 # Create multiline code control
-                self.valueCtrl = paramCtrls.CodeCtrl(
+                self.valueCtrl = psychopy.app.builder.paramCtrls.multi.CodeCtrl(
                     parent, 
                     val=str(param.val), 
                     valType=param.valType, 
@@ -136,7 +140,7 @@ class ParamCtrls():
                     size=wx.Size(int(self.valueWidth), 144))
             else:
                 # Create multiline string control
-                self.valueCtrl = paramCtrls.MultiLineCtrl(
+                self.valueCtrl = psychopy.app.builder.paramCtrls.multi.MultiLineCtrl(
                     parent, 
                     val=str(param.val),
                     valType=param.valType,
@@ -147,19 +151,17 @@ class ParamCtrls():
                 self.valueCtrl.SetFocus()
         elif param.inputType == 'spin':
             # Create single line string control
-            self.valueCtrl = paramCtrls.SingleLineCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.single.SingleLineCtrl(
                 parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
+                param=param, fieldName=fieldName
+            )
             # Will have to disable spinCtrl until we have a dropdown for inputType, sadly
             # self.valueCtrl = paramCtrls.IntCtrl(parent,
             #                                     val=param.val, valType=param.valType,
             #                                     fieldName=fieldName,size=wx.Size(self.valueWidth, 24),
             #                                     limits=param.allowedVals)
         elif param.inputType == 'choice':
-            self.valueCtrl = paramCtrls.ChoiceCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.choice.ChoiceCtrl(
                 parent, 
                 val=str(param.val), 
                 valType=param.valType,
@@ -168,7 +170,7 @@ class ParamCtrls():
                 fieldName=fieldName, 
                 size=wx.Size(int(self.valueWidth), 24))
         elif param.inputType == 'multiChoice':
-            self.valueCtrl = paramCtrls.MultiChoiceCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.multiChoice.MultiChoiceCtrl(
                 parent, 
                 valType=param.valType, 
                 vals=param.val, 
@@ -176,7 +178,7 @@ class ParamCtrls():
                 fieldName=fieldName,
                 size=wx.Size(int(self.valueWidth), -1))
         elif param.inputType == 'richChoice':
-            self.valueCtrl = paramCtrls.RichChoiceCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.richChoice.RichChoiceCtrl(
                 parent, 
                 valType=param.valType,
                 vals=param.val,
@@ -185,13 +187,13 @@ class ParamCtrls():
                 fieldName=fieldName,
                 size=wx.Size(int(self.valueWidth), -1))
         elif param.inputType == 'bool':
-            self.valueCtrl = paramCtrls.BoolCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.bool.BoolCtrl(
                 parent, 
                 name=fieldName, 
                 size=wx.Size(int(self.valueWidth), 24))
             self.valueCtrl.SetValue(bool(param))
         elif param.inputType == 'file' or browse:
-            self.valueCtrl = paramCtrls.FileCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.file.FileCtrl(
                 parent, 
                 val=str(param.val),
                 valType=param.valType,
@@ -199,7 +201,7 @@ class ParamCtrls():
                 size=wx.Size(int(self.valueWidth), 24))
             self.valueCtrl.allowedVals = param.allowedVals
         elif param.inputType == 'survey':
-            self.valueCtrl = paramCtrls.SurveyCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.survey.SurveyCtrl(
                 parent, 
                 val=str(param.val), 
                 valType=param.valType,
@@ -207,47 +209,42 @@ class ParamCtrls():
                 size=wx.Size(int(self.valueWidth), 24))
             self.valueCtrl.allowedVals = param.allowedVals
         elif param.inputType == 'fileList':
-            self.valueCtrl = paramCtrls.FileListCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.fileList.FileListCtrl(
                 parent, 
                 choices=param.val, 
                 valType=param.valType,
                 size=wx.Size(int(self.valueWidth), 100), 
                 pathtype="rel")
         elif param.inputType == 'table':
-            self.valueCtrl = paramCtrls.TableCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.table.TableCtrl(
                 parent, 
                 val=param.val, 
                 valType=param.valType,
                 fieldName=fieldName, 
                 size=wx.Size(int(self.valueWidth), 24))
         elif param.inputType == 'color':
-            self.valueCtrl = paramCtrls.ColorCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.color.ColorCtrl(
                 parent,
                 val=param.val, 
                 valType=param.valType,
                 fieldName=fieldName, 
                 size=wx.Size(int(self.valueWidth), 24))
         elif param.inputType == 'dict':
-            self.valueCtrl = paramCtrls.DictCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.dict.DictCtrl(
                 parent,
                 val=param.val,
                 labels=param.allowedLabels,
                 valType=param.valType,
                 fieldName=fieldName)
         elif param.inputType == 'inv':
-            self.valueCtrl = paramCtrls.InvalidCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.invalid.InvalidCtrl(
                 parent,
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
+                param=param, fieldName=fieldName,
                 size=wx.Size(int(self.valueWidth), 24))
         else:
-            self.valueCtrl = paramCtrls.SingleLineCtrl(
+            self.valueCtrl = psychopy.app.builder.paramCtrls.single.SingleLineCtrl(
                 parent,
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), 24))
+                param=param, fieldName=fieldName)
             logging.warn(
                 f"Parameter {fieldName} has unrecognised inputType \"{param.inputType}\"")
 
@@ -448,15 +445,16 @@ class ParamCtrls():
             self.valueCtrl.Bind(wx.stc.EVT_STC_CHANGE, callbackFunction)
         elif isinstance(self.valueCtrl, wx.ComboBox):
             self.valueCtrl.Bind(wx.EVT_COMBOBOX, callbackFunction)
-        elif isinstance(self.valueCtrl, (wx.Choice, paramCtrls.RichChoiceCtrl)):
+        elif isinstance(self.valueCtrl, (wx.Choice, psychopy.app.builder.paramCtrls.richChoice.RichChoiceCtrl)):
             self.valueCtrl.Bind(wx.EVT_CHOICE, callbackFunction)
         elif isinstance(self.valueCtrl, wx.CheckListBox):
             self.valueCtrl.Bind(wx.EVT_CHECKLISTBOX, callbackFunction)
         elif isinstance(self.valueCtrl, wx.CheckBox):
             self.valueCtrl.Bind(wx.EVT_CHECKBOX, callbackFunction)
-        elif isinstance(self.valueCtrl, paramCtrls.CodeCtrl):
+        elif isinstance(self.valueCtrl, psychopy.app.builder.paramCtrls.multi.CodeCtrl):
             self.valueCtrl.Bind(wx.EVT_KEY_UP, callbackFunction)
-        elif isinstance(self.valueCtrl, (paramCtrls.DictCtrl, paramCtrls.FileListCtrl)):
+        elif isinstance(self.valueCtrl, (
+        psychopy.app.builder.paramCtrls.dict.DictCtrl, psychopy.app.builder.paramCtrls.fileList.FileListCtrl)):
             pass
         else:
             print("setChangesCallback doesn't know how to handle ctrl {}"
@@ -792,7 +790,8 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
                                                   param.updates, updates)
                         param.updates = updates
             # If requested, mark param for deletion
-            if hasattr(ctrl, "valueCtrl") and isinstance(ctrl.valueCtrl, paramCtrls.InvalidCtrl) and ctrl.valueCtrl.forDeletion:
+            if hasattr(ctrl, "valueCtrl") and isinstance(ctrl.valueCtrl,
+                                                         psychopy.app.builder.paramCtrls.invalid.InvalidCtrl) and ctrl.valueCtrl.forDeletion:
                 killList.append(fieldName)
         # Delete params on kill list
         for fieldName in killList:

@@ -373,7 +373,10 @@ class NameValidator(BaseValidator):
 
         """
         control = self.GetWindow()
-        newName = control.GetValue()
+        if hasattr(control, "getValue"):
+            newName = control.getValue()
+        else:
+            newName = control.GetValue()
         msg, OK = '', True  # until we find otherwise
         if newName == '':
             msg = _translate("Missing name")
