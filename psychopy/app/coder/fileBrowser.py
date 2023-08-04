@@ -115,24 +115,24 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
     """Panel for a file browser.
     """
     fileImgExt = {
-            "..": 'dirup16',
-            "\\": 'folder16',
-            ".?": 'fileunknown16',
-            ".csv": 'filecsv16',
-            ".xlsx": 'filecsv16',
-            ".xls": 'filecsv16',
-            ".tsv": 'filecsv16',
-            ".png": 'fileimage16',
-            ".jpeg": 'fileimage16',
-            ".jpg": 'fileimage16',
-            ".bmp": 'fileimage16',
-            ".tiff": 'fileimage16',
-            ".tif": 'fileimage16',
-            ".ppm": 'fileimage16',
-            ".gif": 'fileimage16',
-            ".py": 'coderpython',
-            ".js": 'coderjs'
-        }
+        "..": 'dirup',
+        "\\": 'folder',
+        ".?": 'fileunknown',
+        ".csv": 'filecsv',
+        ".xlsx": 'filecsv',
+        ".xls": 'filecsv',
+        ".tsv": 'filecsv',
+        "image/*": 'fileimage',
+        "video/*": 'filevideo',
+        "audio/*": 'fileaudio',
+        "text/*": 'fileunknown',
+        ".ttf": 'filefont',
+        ".gitignore": 'filegit',
+        ".psyexp": 'filepsyexp',
+        ".py": 'filepy',
+        ".js": 'filejs',
+        ".html": 'filehtml',
+    }
 
     def __init__(self, parent, frame):
         wx.Panel.__init__(self, parent, -1, style=wx.BORDER_NONE)
@@ -609,8 +609,14 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
                     self.fileList.GetItemCount(), obj.name, img)
             elif isinstance(obj, FileItemData):
                 ext = os.path.splitext(obj.name)[1]
+                fullmime = mimetypes.guess_type(obj.name)[0]
+                mime = str(fullmime).split("/")[0] + "/*"
                 if ext in self.fileImgInds:
                     img = self.fileImgInds[ext]
+                elif fullmime in self.fileImgInds:
+                    img = self.fileImgInds[fullmime]
+                elif mime in self.fileImgInds:
+                    img = self.fileImgInds[mime]
                 else:
                     img = self.fileImgInds['.?']
                 self.fileList.InsertItem(
