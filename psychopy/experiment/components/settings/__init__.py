@@ -361,17 +361,8 @@ class SettingsComponent:
         self.params['Save wide csv file'] = Param(
             saveWideCSVFile, valType='bool', inputType="bool", allowedTypes=[],
             hint=_translate("Save data from loops in comma-separated-value "
-                            "(.csv) format for maximum portability"),
-            label=_translate("Save csv file (trial-by-trial)"), categ='Data')
-        self.params['Save csv file'] = Param(
-            saveCSVFile, valType='bool', inputType="bool", allowedTypes=[],
-            hint=_translate("Save data from loops in comma-separated-value "
-                            "(.csv) format for maximum portability"),
-            label=_translate("Save csv file (summaries)"), categ='Data')
-        self.params['Save excel file'] = Param(
-            saveXLSXFile, valType='bool', inputType="bool", allowedTypes=[],
-            hint=_translate("Save data from loops in Excel (.xlsx) format"),
-            label=_translate("Save Excel file"), categ='Data')
+                            "(.csv) format, to view in e.g. Excel."),
+            label=_translate("Save csv file"), categ='Data')
         self.params['Save psydat file'] = Param(
             savePsydatFile, valType='bool', inputType="bool", allowedVals=[True],
             hint=_translate("Save data from loops in psydat format. This is "
