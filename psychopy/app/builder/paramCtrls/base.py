@@ -7,6 +7,8 @@ from psychopy.localization import _translate
 
 
 class BaseParamCtrl(wx.Panel):
+    tag = None
+
     def __init__(self, parent, param, fieldName=""):
         # initialise
         wx.Panel.__init__(self, parent)
@@ -16,6 +18,8 @@ class BaseParamCtrl(wx.Panel):
         # store info about param
         self.param = param
         self.fieldName = fieldName
+        # placeholder for ctrl
+        self.ctrl = None
 
     def getValue(self):
         raise NotImplementedError("A param ctrl derived from BaseParamCtrl must have a getValue method!")
@@ -34,6 +38,35 @@ class BaseParamCtrl(wx.Panel):
         # apply visibility to children
         for child in self.GetChildren():
             child.Show(visible)
+
+
+# --- Template for subclassing BaseParamCtrl: ---
+'''
+class ExampleCtrl(BaseParamCtrl):
+    tag = "example"
+
+    def __init__(self, parent, param, fieldName=""):
+        # initialise
+        BaseParamCtrl.__init__(self, parent, fieldName=fieldName)
+        # add a simple text ctrl
+        self.ctrl = wx.TextCtrl(self, str(param.val), name=fieldName)
+        self.sizer.Add(self.ctrl, proportion=1, border=3, flag=wx.EXPAND | wx.ALL)
+
+    def getValue(self):
+        return self.ctrl.GetValue()
+
+    def setValue(self, value):
+        self.ctrl.SetValue()
+
+    def validate(self):
+        return True
+
+    def showValid(self, valid):
+        if valid:
+            self.ctrl.SetForegroundColour("red")
+        else:
+            self.ctrl.SetForegroundColour("black")
+'''
 
 
 class _FrameMixin:
