@@ -22,22 +22,116 @@ class BaseParamCtrl(wx.Panel):
         self.ctrl = None
 
     def getValue(self):
+        """
+        Get the value of this ctrl.
+
+        Returns
+        -------
+        object
+            Value of this ctrl.
+        """
         raise NotImplementedError("A param ctrl derived from BaseParamCtrl must have a getValue method!")
 
     def setValue(self, value):
+        """
+        Set the value of this ctrl.
+
+        Note: This won't automatically call `.onChange`, you still need to bind it to an event!
+
+        Parameters
+        ----------
+        value
+            Value of this ctrl.
+        """
         raise NotImplementedError("A param ctrl derived from BaseParamCtrl must have a getValue method!")
 
-    def validate(self):
-        raise NotImplementedError("A param ctrl derived from BaseParamCtrl must have a validate method!")
+    def isValid(self):
+        """
+        Method to assess validity of ctrl contents.
+
+        Returns
+        -------
+        bool
+            True if contents are valid, False if invalid.
+        """
+        # if not implemented, assume valid
+        return True
 
     def showValid(self, valid):
-        raise NotImplementedError("A param ctrl derived from BaseParamCtrl must have a showValid method!")
+        """
+        Method to change this ctrl's appearance to show whether it is valid.
+
+        Parameters
+        ----------
+        valid : bool
+            True if contents are valid, False if invalid.
+        """
+        # if not implemented, do nothing
+        return
+
+    def isCode(self):
+        """
+        Method to assess whether ctrl contents are code.
+
+        Returns
+        -------
+        bool
+            True if contents are code, False if otherwise.
+        """
+        # if not implemented, just set param value and use its dollar syntax method
+        self.param.val = self.getValue()
+        code, _ = self.param.dollarSyntax
+
+        return code
+
+    def showCode(self, code):
+        """
+        Method to change this ctrl's appearance to show whether it is code.
+
+        Parameters
+        ----------
+        code : bool
+            True if contents are code, False if otherwise.
+        """
+        # if not implemented, do nothing
+        return
+
+    def onChange(self, evt):
+        """
+        Method called when the value of this parameter changes.
+
+        Note: Not automatically bound to any events, you need to bind it yourself!
+
+        Parameters
+        ----------
+        evt : wx.Event
+            Event which triggered this method.
+        """
+        # show whether value is valid
+        self.showValid(self.isValid())
+        # show whether value is code
+        self.showCode(self.isCode())
 
     def showAll(self, visible=True):
+        """
+        Set visibility for this ctrl and all its children.
+
+        Parameters
+        ----------
+        visible : bool
+            True to show, False to hide.
+        """
+        # show/hide self
         self.Show(visible)
         # apply visibility to children
         for child in self.GetChildren():
             child.Show(visible)
+
+    def hideAll(self):
+        """
+        Wrapper around `showAll` to call it with visible=False.
+        """
+        self.showAll(False)
 
 
 # --- Template for subclassing BaseParamCtrl: ---
@@ -51,21 +145,82 @@ class ExampleCtrl(BaseParamCtrl):
         # add a simple text ctrl
         self.ctrl = wx.TextCtrl(self, str(param.val), name=fieldName)
         self.sizer.Add(self.ctrl, proportion=1, border=3, flag=wx.EXPAND | wx.ALL)
-
+    
     def getValue(self):
-        return self.ctrl.GetValue()
+        """
+        Get the value of this ctrl.
+
+        Returns
+        -------
+        object
+            Value of this ctrl.
+        """
+        self.ctrl.GetValue()
 
     def setValue(self, value):
-        self.ctrl.SetValue()
+        """
+        Set the value of this ctrl.
 
-    def validate(self):
+        Parameters
+        ----------
+        value
+            Value of this ctrl.
+        """
+        self.ctrl.SetValue(value)
+
+    def isValid(self):
+        """
+        Method to assess validity of ctrl contents.
+
+        Returns
+        -------
+        bool
+            True if contents are valid, False if invalid.
+        """
+        # this is just an example, so is always valid
         return True
 
     def showValid(self, valid):
+        """
+        Method to change this ctrl's appearance to show whether it is valid.
+
+        Parameters
+        ----------
+        valid : bool
+            True if contents are valid, False if invalid.
+        """
         if valid:
-            self.ctrl.SetForegroundColour("red")
-        else:
+            # black text for valid
             self.ctrl.SetForegroundColour("black")
+        else:
+            # red text for invalid
+            self.ctrl.SetForegroundColour("black")
+
+    def showCode(self, code):
+        """
+        Method to change this ctrl's appearance to show whether it is code.
+
+        Parameters
+        ----------
+        code : bool
+            True if contents are code, False if otherwise.
+        """
+        # get font
+        if code:
+            # monospace bold for code
+            font = self.GetTopLevelParent().app._codeFont.Bold()
+        else:
+            # sans regular for not
+            font = self.GetTopLevelParent().app._mainFont
+        
+        # set font
+        if sys.platform == "linux":
+            # have to go via SetStyle on Linux
+            style = wx.TextAttr(self.ctrl.GetForegroundColour(), font=font)
+            self.ctrl.SetStyle(0, len(self.ctrl.GetValue()), style)
+        else:
+            # otherwise SetFont is fine
+            self.ctrl.SetFont(font)
 '''
 
 
