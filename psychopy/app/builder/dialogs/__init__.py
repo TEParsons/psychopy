@@ -29,7 +29,7 @@ from .. validators import NameValidator, CodeSnippetValidator, WarningManager
 from .dlgsConditions import DlgConditions
 from .dlgsCode import DlgCodeComponentProperties, CodeBox
 from .findDlg import BuilderFindDlg
-from . import paramCtrls
+from .. import paramCtrls
 from psychopy import data, logging, exceptions
 from psychopy.localization import _translate
 from psychopy.tools import versionchooser as vc
@@ -118,143 +118,31 @@ class ParamCtrls():
                     vc.availableVersions(local=False), wx.__version__)
                 param.allowedVals = (options + [''] + versions)
 
-        if param.inputType == "name":
-            self.valueCtrl = psychopy.app.builder.paramCtrls.name.NameCtrl(
-                parent, param=param,
-                fieldName=fieldName
-            )
-        elif param.inputType == "single":
-            # Create single line string control
-            self.valueCtrl = psychopy.app.builder.paramCtrls.single.SingleLineCtrl(
-                parent, param=param,
-                fieldName=fieldName
-            )
-        elif param.inputType == 'multi':
-            if param.valType == "extendedCode":
-                # Create multiline code control
-                self.valueCtrl = psychopy.app.builder.paramCtrls.multi.CodeCtrl(
-                    parent, 
-                    val=str(param.val), 
-                    valType=param.valType, 
-                    fieldName=fieldName, 
-                    size=wx.Size(int(self.valueWidth), 144))
-            else:
-                # Create multiline string control
-                self.valueCtrl = psychopy.app.builder.paramCtrls.multi.MultiLineCtrl(
-                    parent, 
-                    val=str(param.val),
-                    valType=param.valType,
-                    fieldName=fieldName, 
-                    size=wx.Size(int(self.valueWidth), 144))
-            # Set focus if field is text of a Textbox or Text component
-            if fieldName == 'text':
-                self.valueCtrl.SetFocus()
-        elif param.inputType == 'spin':
-            # Create single line string control
-            self.valueCtrl = psychopy.app.builder.paramCtrls.single.SingleLineCtrl(
-                parent, 
-                param=param, fieldName=fieldName
-            )
-            # Will have to disable spinCtrl until we have a dropdown for inputType, sadly
-            # self.valueCtrl = paramCtrls.IntCtrl(parent,
-            #                                     val=param.val, valType=param.valType,
-            #                                     fieldName=fieldName,size=wx.Size(self.valueWidth, 24),
-            #                                     limits=param.allowedVals)
-        elif param.inputType == 'choice':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.choice.ChoiceCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                choices=param.allowedVals, 
-                labels=param.allowedLabels,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'multiChoice':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.multiChoice.MultiChoiceCtrl(
-                parent, 
-                valType=param.valType, 
-                vals=param.val, 
-                choices=param.allowedVals, 
-                fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), -1))
-        elif param.inputType == 'richChoice':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.richChoice.RichChoiceCtrl(
-                parent, 
-                valType=param.valType,
-                vals=param.val,
-                choices=param.allowedVals, 
-                labels=param.allowedLabels,
-                fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), -1))
-        elif param.inputType == 'bool':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.bool.BoolCtrl(
-                parent, 
-                name=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            self.valueCtrl.SetValue(bool(param))
-        elif param.inputType == 'file' or browse:
-            self.valueCtrl = psychopy.app.builder.paramCtrls.file.FileCtrl(
-                parent, 
-                val=str(param.val),
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            self.valueCtrl.allowedVals = param.allowedVals
-        elif param.inputType == 'survey':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.survey.SurveyCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            self.valueCtrl.allowedVals = param.allowedVals
-        elif param.inputType == 'fileList':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.fileList.FileListCtrl(
-                parent, 
-                choices=param.val, 
-                valType=param.valType,
-                size=wx.Size(int(self.valueWidth), 100), 
-                pathtype="rel")
-        elif param.inputType == 'table':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.table.TableCtrl(
-                parent, 
-                val=param.val, 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'color':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.color.ColorCtrl(
-                parent,
-                val=param.val, 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'dict':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.dict.DictCtrl(
-                parent,
-                val=param.val,
-                labels=param.allowedLabels,
-                valType=param.valType,
-                fieldName=fieldName)
-        elif param.inputType == 'inv':
-            self.valueCtrl = psychopy.app.builder.paramCtrls.invalid.InvalidCtrl(
-                parent,
-                param=param, fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), 24))
-        else:
-            self.valueCtrl = psychopy.app.builder.paramCtrls.single.SingleLineCtrl(
-                parent,
-                param=param, fieldName=fieldName)
-            logging.warn(
-                f"Parameter {fieldName} has unrecognised inputType \"{param.inputType}\"")
+        # get mapping of inputTypes -> ParamCtrl
+        ctrlClasses = paramCtrls.getAllParamCtrls()
+        # get input type
+        inputType = param.inputType
+        # default to single if not recognised
+        if inputType not in ctrlClasses:
+            inputType = "single"
+            logging.warn(f"Parameter {fieldName} has unrecognised inputType \"{param.inputType}\"")
+        # if inputType is multi and valType is code, use multiline code ctrl
+        if inputType == "multi" and param.valType == "code":
+            inputType = "multiCode"
+        # make ctrl
+        self.valueCtrl = ctrlClasses[inputType](
+            parent, param=param,
+            fieldName=fieldName
+        )
 
-        # if fieldName == 'Experiment info':
-        #     # for expInfo convert from a string to the list-of-dicts
-        # val = self.expInfoToListWidget(param.val)
-        #     self.valueCtrl = dialogs.ListWidget(
-        #         parent, val, order=['Field', 'Default'])
+        # set focus if field is text of a Textbox or Text component
+        if fieldName == 'text':
+            self.valueCtrl.SetFocus()
+
+        # set tooltip
         if hasattr(self.valueCtrl, 'SetToolTip'):
             self.valueCtrl.SetToolTip(wx.ToolTip(_translate(param.hint)))
+        # disable choice ctrl if there's only 1 allowed value
         if not isinstance(param.allowedVals, functools.partial) and len(param.allowedVals) == 1 or param.readOnly:
             self.valueCtrl.Disable()  # visible but can't be changed
 
