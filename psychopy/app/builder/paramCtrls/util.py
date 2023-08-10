@@ -5,7 +5,7 @@ from .base import BaseParamCtrl
 def getAllParamCtrls():
     from .. import paramCtrls
     # define global variable to store all subclasses in
-    subclasses = []
+    subclasses = {}
     # define recursive function to get all subclasses
     def getSubclasses(cls):
         """
@@ -18,8 +18,11 @@ def getAllParamCtrls():
         """
         # iterate through subclasses
         for subcls in cls.__subclasses__():
+            # skip untagged
+            if subcls.tag is None:
+                return
             # append each to global list
-            subclasses.append(subcls)
+            subclasses[subcls.tag] = subcls
             # recur
             getSubclasses(subcls)
     # call recursive subclass function on BaseParamCtrl class
