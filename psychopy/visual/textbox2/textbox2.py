@@ -83,6 +83,7 @@ class TextBox2(BaseVisualStim, DraggingMixin, ContainerMixin, ColorMixin):
                  placeholder="Type here...",
                  lineSpacing=None,
                  letterSpacing=None,
+                 letterSpacingStyle="prop",
                  padding=None,  # gap between box and text
                  speechPoint=None,
                  anchor='center',
@@ -120,6 +121,16 @@ class TextBox2(BaseVisualStim, DraggingMixin, ContainerMixin, ColorMixin):
         bold
         italic
         lineSpacing
+        letterSpacing : float
+            Proportion of spacing between characters, with 1 being the default spacing
+            from the given font. Higher values mean more spacing, lower mean less.
+        letterSpacingStyle : str
+            How to lay out letters. Can be:
+            - "prop" (proportional): Letters are laid out with variable spacing as
+              defined by the given font. This is the default.
+            - "mono" (monospaced): Letters are laid out in a grid with uniform
+              spacing, regardless of font-defined spacing. Recommended if layout
+              speed is a priority over appearance.
         padding
         speechPoint : list, tuple, np.ndarray or None
             Location of the end of a speech bubble tail on the textbox, in the same
@@ -197,6 +208,7 @@ class TextBox2(BaseVisualStim, DraggingMixin, ContainerMixin, ColorMixin):
         if lineSpacing is not None:
             self.lineSpacing = lineSpacing
         self.letterSpacing = letterSpacing
+        self.letterSpacingStyle = letterSpacingStyle
         # If font not found, default to Open Sans Regular and raise alert
         if not self.glFont:
             alerts.alert(4325, self, {
@@ -982,6 +994,34 @@ class TextBox2(BaseVisualStim, DraggingMixin, ContainerMixin, ColorMixin):
             # add length of this (unfinished) line
             _lineWidths.append(current[0])
             self._lineLenChars.append(charsThisLine)
+
+            if self.letterSpacingStyle == "mono":
+                # get char size
+                charSz = [self.letterHeightPix]*2
+                # get size for grid
+                lines = self._text.splitlines(keepends=True)
+                nLines = len(lines)
+                nChars = max(len(line) for line in lines)
+                # make uniform grid
+                x = np.linspace(0, charSz[0]*(nChars-1)*self.letterSpacing, nChars)
+                y = np.linspace(0, -charSz[1]*(nLines-1)*self.lineSpacing, nLines)
+                grid = np.dstack(np.meshgrid(x, y))
+                grid = np.transpose(grid, (0, 1, 2))
+
+                # get top left coords per line
+                tl = np.empty((0, 2))
+                for i in range(nLines):
+                    tl = np.concatenate([tl, grid[i, :len(lines[i]), :]])
+                # other coords from top left
+                tr = tl + [charSz[0], 0]
+                # get bottom left coords
+                bl = tl + [0, -charSz[1]]
+                # get bottom right coords
+                br = tl + [charSz[0], -charSz[1]]
+
+                # make flat array of coords
+                vertices = np.stack([tl, bl, br, tr])
+                vertices = np.reshape(vertices, (-1, 2), order="F")
 
         elif self._lineBreaking == 'uax14':
 
