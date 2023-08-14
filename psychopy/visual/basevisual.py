@@ -44,6 +44,7 @@ from psychopy.visual.helpers import (pointInPolygon, polygonsOverlap,
                                      setColor, findImageFile)
 from psychopy.tools.typetools import float_uint8
 from psychopy.tools.arraytools import makeRadialMatrix, createLumPattern
+from psychopy.tools import mathtools as mt
 from psychopy.event import Mouse
 from psychopy.tools.colorspacetools import dkl2rgb, lms2rgb  # pylint: disable=W0611
 
@@ -1407,20 +1408,28 @@ class WindowMixin:
             return getattr(self._pos, self.units)
 
     @pos.setter
-    def pos(self, value):
-        # If no autolog attribute, assume silent
+    def pos(self, value, handleCollision=True):
+        # if no autolog attribute, assume silent
         if hasattr(self, "autoLog"):
             log = self.autoLog
         else:
             log = False
-        # Do attribute setting
-        setAttribute(self, '_pos', Position(value, units=self.units, win=self.win), log)
+        # get start pos
+        if hasattr(self, "_pos"):
+            startPos = self._pos
+        else:
+            startPos = Position((0, 0), units="pix", win=self.win)
+        # get new pos
+        newPos = Position(value, units=self.units, win=self.win)
 
+        # do attribute setting
+        setAttribute(self, '_pos', newPos, log)
+        # update pos reference in vertex array
         if hasattr(self, "_vertices"):
             self._vertices._pos = self._pos
-
-        if hasattr(self, "_vertices"):
-            self._vertices._pos = self._pos
+        # handle collision (if relevant)
+        if handleCollision and getattr(self, "collision", False):
+            self.handleCollision(startPos, newPos)
 
     @property
     def size(self):
@@ -1730,7 +1739,58 @@ class DraggingMixin:
         self.__dict__['draggable'] = value
 
 
-class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
+class CollisionMixin:
+    def handleCollision(self, startPos, newPos):
+        # if collision is disabled, do nothing
+        if not self.collision:
+            return
+        # if still initialising, do nothing
+        if not hasattr(self, "_pos") or not hasattr(self, "_size"):
+            return
+        # get vector from self pos to new pos
+        vector = newPos - startPos
+        # work out granularity such that we're trying each full pixel
+        gran = mt.distance(startPos.pix, newPos.pix)
+        gran = int(max(gran, 1))
+        # try each granularity point along vector
+        for i in range(gran + 2):
+            # relativise and flip
+            i = 1 - (i / gran)
+            # express as proportion of vector
+            delta = vector * i
+            # set pos
+            WindowMixin.pos.fset(self, startPos + delta, handleCollision=False)
+            # iterate through all other drawable stim
+            _overlaps = False
+            for other in self.win._toDraw:
+                # skip self
+                if other == self:
+                    continue
+                # if stim isn't collidable, skip it
+                if not getattr(other, "collision", False):
+                    continue
+                # if stim is still initialising, skip it
+                if not hasattr(other, "_pos") or not hasattr(other, "_size"):
+                    continue
+                # if it no longer overlaps, we're done
+                if polygonsOverlap(self._vertices.pix, other._vertices.pix):
+                    _overlaps = True
+            # if there's no overlap, we're good!
+            if not _overlaps:
+                return
+
+    @attributeSetter
+    def collision(self, value: bool):
+        """
+        Should this stimulus handle collision with other collision-enabled
+        stimuli? If True, then moving this stimulus to overlap with other
+        collision-enabled stimuli will set its position to the nearest
+        non-overlapping position.
+        """
+        self.__dict__['collision'] = value
+
+
+class BaseVisualStim(MinimalStim, CollisionMixin, WindowMixin, LegacyVisualMixin):
     """A template for a visual stimulus class.
 
     Actual visual stim like GratingStim, TextStim etc... are based on this.
