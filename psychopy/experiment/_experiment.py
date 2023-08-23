@@ -276,18 +276,15 @@ class Experiment:
 
         if target == "PsychoPy":
             # Imports
-            self_copy.settings.writeInitCode(script, self_copy.psychopyVersion,
-                                             localDateTime)
-            # Global variables
-            self_copy.settings.writeGlobals(script, version=self_copy.psychopyVersion)
-
+            self_copy.settings.writeInitCode(script, self_copy.psychopyVersion, localDateTime)
             # Write "run once" code sections
             for entry in self_copy.flow:
                 # NB each entry is a routine or LoopInitiator/Terminator
                 self_copy._currentRoutine = entry
                 if hasattr(entry, 'writePreCode'):
                     entry.writePreCode(script)
-
+            # global variables
+            self_copy.settings.writeGlobals(script, version=self_copy.psychopyVersion)
             # present info
             self_copy.settings.writeExpInfoDlgCode(script)
             # setup data and saving
@@ -686,9 +683,14 @@ class Experiment:
                     params[name].allowedTypes = paramNode.get('allowedTypes')
                     if params[name].allowedTypes is None:
                         params[name].allowedTypes = []
-                    if name not in legacyParams + ['JS libs', 'OSF Project ID']:
+                    if name in legacyParams + ['JS libs', 'OSF Project ID']:
                         # don't warn people if we know it's OK (e.g. for params
                         # that have been removed
+                        pass
+                    elif componentNode is not None and componentNode.get("plugin") not in ("None", None):
+                        # don't warn people if param is from a plugin
+                        pass
+                    else:
                         msg = _translate(
                             "Parameter %r is not known to this version of "
                             "PsychoPy but has come from your experiment file "
