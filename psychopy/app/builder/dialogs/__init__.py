@@ -115,139 +115,18 @@ class ParamCtrls():
                     vc.availableVersions(local=False), wx.__version__)
                 param.allowedVals = (options + [''] + versions)
 
-        if param.inputType == "single":
-            # Create single line string control
-            self.valueCtrl = paramCtrls.SingleLineCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'multi':
-            if param.valType == "extendedCode":
-                # Create multiline code control
-                self.valueCtrl = paramCtrls.CodeCtrl(
-                    parent, 
-                    val=str(param.val), 
-                    valType=param.valType, 
-                    fieldName=fieldName, 
-                    size=wx.Size(int(self.valueWidth), 144))
-            else:
-                # Create multiline string control
-                self.valueCtrl = paramCtrls.MultiLineCtrl(
-                    parent, 
-                    val=str(param.val),
-                    valType=param.valType,
-                    fieldName=fieldName, 
-                    size=wx.Size(int(self.valueWidth), 144))
-            # Set focus if field is text of a Textbox or Text component
-            if fieldName == 'text':
-                self.valueCtrl.SetFocus()
-        elif param.inputType == 'spin':
-            # Create single line string control
-            self.valueCtrl = paramCtrls.SingleLineCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            # Will have to disable spinCtrl until we have a dropdown for inputType, sadly
-            # self.valueCtrl = paramCtrls.IntCtrl(parent,
-            #                                     val=param.val, valType=param.valType,
-            #                                     fieldName=fieldName,size=wx.Size(self.valueWidth, 24),
-            #                                     limits=param.allowedVals)
-        elif param.inputType == 'choice':
-            self.valueCtrl = paramCtrls.ChoiceCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                choices=param.allowedVals, 
-                labels=param.allowedLabels,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'multiChoice':
-            self.valueCtrl = paramCtrls.MultiChoiceCtrl(
-                parent, 
-                valType=param.valType, 
-                vals=param.val, 
-                choices=param.allowedVals, 
-                fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), -1))
-        elif param.inputType == 'richChoice':
-            self.valueCtrl = paramCtrls.RichChoiceCtrl(
-                parent, 
-                valType=param.valType,
-                vals=param.val,
-                choices=param.allowedVals, 
-                labels=param.allowedLabels,
-                fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), -1))
-        elif param.inputType == 'bool':
-            self.valueCtrl = paramCtrls.BoolCtrl(
-                parent, 
-                name=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            self.valueCtrl.SetValue(bool(param))
-        elif param.inputType == 'file' or browse:
-            self.valueCtrl = paramCtrls.FileCtrl(
-                parent, 
-                val=str(param.val),
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            self.valueCtrl.allowedVals = param.allowedVals
-        elif param.inputType == 'survey':
-            self.valueCtrl = paramCtrls.SurveyCtrl(
-                parent, 
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-            self.valueCtrl.allowedVals = param.allowedVals
-        elif param.inputType == 'fileList':
-            self.valueCtrl = paramCtrls.FileListCtrl(
-                parent, 
-                choices=param.val, 
-                valType=param.valType,
-                size=wx.Size(int(self.valueWidth), 100), 
-                pathtype="rel")
-        elif param.inputType == 'table':
-            self.valueCtrl = paramCtrls.TableCtrl(
-                parent, 
-                val=param.val, 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'color':
-            self.valueCtrl = paramCtrls.ColorCtrl(
-                parent,
-                val=param.val, 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        elif param.inputType == 'dict':
-            self.valueCtrl = paramCtrls.DictCtrl(
-                parent,
-                val=param.val,
-                labels=param.allowedLabels,
-                valType=param.valType,
-                fieldName=fieldName)
-        elif param.inputType == 'inv':
-            self.valueCtrl = paramCtrls.InvalidCtrl(
-                parent,
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName, 
-                size=wx.Size(int(self.valueWidth), 24))
-        else:
-            self.valueCtrl = paramCtrls.SingleLineCtrl(
-                parent,
-                val=str(param.val), 
-                valType=param.valType,
-                fieldName=fieldName,
-                size=wx.Size(int(self.valueWidth), 24))
-            logging.warn(
-                f"Parameter {fieldName} has unrecognised inputType \"{param.inputType}\"")
+        # get ctrl class from param's input type
+        cls = paramCtrls.inputTypes.get(param.inputType, paramCtrls.inputTypes["single"])
+        # if class is conditional, resolve it from param's val type
+        if isinstance(cls, dict) and "else" in cls:
+            cls = cls.get(param.valType, cls["else"])
+
+        # make ctrl
+        self.valueCtrl = cls(parent, param=param, fieldName=fieldName)
+
+        # Set focus if field is text of a Textbox or Text component
+        if fieldName == 'text':
+            self.valueCtrl.SetFocus()
 
         # if fieldName == 'Experiment info':
         #     # for expInfo convert from a string to the list-of-dicts

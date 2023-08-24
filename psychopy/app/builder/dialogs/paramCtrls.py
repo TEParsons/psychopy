@@ -162,9 +162,12 @@ class _HideMixin:
 
 
 class SingleLineCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24), style=wx.TE_LEFT):
+        # get values from param
+        val = str(param.val)
+        valType = param.valType
+
         # Create self
         wx.TextCtrl.__init__(self)
         self.Create(parent, -1, val, name=fieldName, size=size, style=style)
@@ -196,18 +199,19 @@ class SingleLineCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
 
 
 class MultiLineCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 144)):
-        SingleLineCtrl.__init__(self, parent, valType,
-                                val=val, fieldName=fieldName,
+        SingleLineCtrl.__init__(self, parent, param, fieldName=fieldName,
                                 size=size, style=wx.TE_MULTILINE)
 
 
 class CodeCtrl(BaseCodeEditor, handlers.ThemeMixin, _ValidatorMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 144)):
+        # get values from param
+        val = param.val
+        valType = param.valType
+
         BaseCodeEditor.__init__(self, parent,
                                 ID=wx.ID_ANY, pos=wx.DefaultPosition, size=size,
                                 style=0)
@@ -245,11 +249,13 @@ class CodeCtrl(BaseCodeEditor, handlers.ThemeMixin, _ValidatorMixin):
 
 
 class InvalidCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24), style=wx.DEFAULT):
-        SingleLineCtrl.__init__(self, parent, valType,
-                                val=val, fieldName=fieldName,
+        # get values from param
+        val = param.val
+        valType = param.valType
+
+        SingleLineCtrl.__init__(self, parent, param, fieldName=fieldName,
                                 size=size, style=style)
         self.Disable()
         # Add delete button
@@ -308,11 +314,14 @@ class InvalidCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
 
 
 class IntCtrl(wx.SpinCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24), limits=None):
+        # get values from param
+        val = param.val
+        valType = param.valType
+
         wx.SpinCtrl.__init__(self)
-        limits = limits or (-100,100)
+        limits = limits or (-100, 100)
         self.Create(parent, -1, str(val), name=fieldName, size=size, min=min(limits), max=max(limits))
         self.valType = valType
         self.Bind(wx.EVT_SPINCTRL, self.spin)
@@ -326,13 +335,22 @@ class IntCtrl(wx.SpinCtrl, _ValidatorMixin, _HideMixin):
         validate(self, "int")
 
 
-BoolCtrl = wx.CheckBox
+class BoolCtrl(wx.CheckBox):
+    def __init__(self, parent, param, fieldName="",
+                 size=(-1, 24)):
+        wx.CheckBox.__init__(self, parent, name=fieldName, size=size)
+        self.SetValue(bool(param))
 
 
 class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", choices=[], labels=[], fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24)):
+        # get values from param
+        val = param.val
+        valType = param.valType
+        choices = param.allowedVals
+        labels = param.allowedLabels
+
         self._choices = choices
         self._labels = labels
         # Create choice ctrl from labels
@@ -399,9 +417,13 @@ class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
 
 
 class MultiChoiceCtrl(wx.CheckListBox, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 vals="", choices=[], fieldName="",
+    def __init__(self, parent, param, choices=[], fieldName="",
                  size=wx.Size(-1, -1)):
+        # get values from param
+        vals = param.val
+        valType = param.valType
+        choices = param.allowedVals
+
         wx.CheckListBox.__init__(self)
         self.Create(parent, id=wx.ID_ANY, size=size, choices=choices, name=fieldName, style=wx.LB_MULTIPLE)
         self.valType = valType
@@ -520,11 +542,14 @@ class RichChoiceCtrl(wx.Panel, _ValidatorMixin, _HideMixin):
             self.Layout()
             self.parent.parent.Layout()  # layout params notebook page
 
-    def __init__(self, parent, valType,
-                 vals="", fieldName="",
-                 choices=[], labels=[],
-                 size=wx.Size(-1, -1),
-                 viewToggle=True):
+    def __init__(self, parent, param, fieldName="",
+                 size=wx.Size(-1, -1), viewToggle=True):
+        # get values from param
+        vals = param.val
+        valType = param.valType
+        choices = param.allowedVals
+        labels = param.allowedLabels
+
         # Initialise
         wx.Panel.__init__(self, parent, size=size)
         self.parent = parent
@@ -617,9 +642,13 @@ class RichChoiceCtrl(wx.Panel, _ValidatorMixin, _HideMixin):
 
 
 class FileCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24)):
+        # get values from param
+        val = param.val
+        valType = param.valType
+        self.allowedVals = param.allowedVals
+
         # Create self
         wx.TextCtrl.__init__(self)
         self.Create(parent, -1, val, name=fieldName, size=size)
@@ -657,8 +686,13 @@ class FileCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
 
 
 class FileListCtrl(wx.ListBox, _ValidatorMixin, _HideMixin, _FileMixin):
-    def __init__(self, parent, valType,
-                 choices=[], size=None, pathtype="rel"):
+    def __init__(self, parent, param, fieldName="",
+                 size=None, pathtype="rel"):
+        # get values from param
+        vals = param.val
+        valType = param.valType
+        choices = param.allowedVals
+
         wx.ListBox.__init__(self)
         self.valType = valType
         parent.Bind(wx.EVT_DROP_FILES, self.addItem)
@@ -807,9 +841,13 @@ class SurveyCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
             else:
                 return ""
 
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24)):
+        # get values from param
+        val = param.val
+        valType = param.valType
+        self.allowedVals = param.allowedVals
+
         # Create self
         wx.TextCtrl.__init__(self)
         self.Create(parent, -1, val, name=fieldName, size=size)
@@ -899,9 +937,13 @@ class SurveyCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
 
 
 class TableCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24)):
+        # get values from param
+        val = param.val
+        valType = param.valType
+        self.allowedVals = param.allowedVals
+
         # Create self
         wx.TextCtrl.__init__(self)
         self.Create(parent, -1, val, name=fieldName, size=size)
@@ -992,9 +1034,12 @@ class TableCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin, _FileMixin):
 
 
 class ColorCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, 24)):
+        # get values from param
+        val = param.val
+        valType = param.valType
+
         # Create self
         wx.TextCtrl.__init__(self)
         self.Create(parent, -1, val, name=fieldName, size=size)
@@ -1112,9 +1157,11 @@ def validate(obj, valType):
 
 
 class DictCtrl(ListWidget, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent,
-                 val={}, labels=(_translate("Field"), _translate("Default")), valType='dict',
-                 fieldName=""):
+    def __init__(self, parent, param, fieldName=""):
+        # get values from param
+        val = param.val
+        labels = param.allowedLabels
+
         # try to convert to a dict if given a string
         if isinstance(val, str):
             try:
@@ -1183,3 +1230,20 @@ class DictCtrl(ListWidget, _ValidatorMixin, _HideMixin):
         Hide all items in the dict ctrl
         """
         self.Show(False)
+
+
+inputTypes = {
+    'single': SingleLineCtrl,
+    'multi': {'extendedCode': CodeCtrl, 'else': MultiLineCtrl},
+    'choice': ChoiceCtrl,
+    'multiChoice': MultiChoiceCtrl,
+    'richChoice': RichChoiceCtrl,
+    'bool': BoolCtrl,
+    'file': FileCtrl,
+    'survey': SurveyCtrl,
+    'fileList': FileListCtrl,
+    'table': TableCtrl,
+    'color': ColorCtrl,
+    'dict': DictCtrl,
+    'inv': InvalidCtrl,
+}
