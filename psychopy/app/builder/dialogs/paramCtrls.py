@@ -417,7 +417,7 @@ class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
 
 
 class MultiChoiceCtrl(wx.CheckListBox, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, param, choices=[], fieldName="",
+    def __init__(self, parent, param, fieldName="",
                  size=wx.Size(-1, -1)):
         # get values from param
         vals = param.val
