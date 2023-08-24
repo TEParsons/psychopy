@@ -4,6 +4,8 @@
 import os
 import pytest
 import numpy as np
+import tempfile
+from pathlib import Path
 
 from psychopy import exceptions
 from psychopy.data import utils
@@ -69,6 +71,62 @@ class TestImportConditions:
                 ([0.9], np.random.random(num_selected_conditions - 1)*len(all_conditions)))))
         assert selected_conditions[0] == expected_cond
         assert len(selected_conditions) == num_selected_conditions
+
+    def test_value_parse(self):
+        """
+        Test that values are parsed correctly from the string value read from the file.
+        """
+        # define some values to test varname references
+        val1 = 111
+        val2 = 222
+        # define cases
+        cases = [
+            # lists vs lists of strings
+            {'val': "['val1', 'val2']", 'ans': ['val1', 'val2']},
+            # {'val': "[val1, val2]", 'ans': [val1, val2]},
+            {'val': "('val1', 'val2')", 'ans': "('val1', 'val2')"},
+            # {'val': "(val1, val2)", 'ans': (val1, val2)},
+            {'val': "'val1', 'val2'", 'ans': "'val1', 'val2'"},
+            # {'val': "val1, val2", 'ans': [val1, val2]},
+            # varnames vs strings
+            {'val': "'val1'", 'ans': "'val1'"},
+            # {'val': "val1", 'ans': val1},
+            # {'val': "'val1', val2", 'ans': ['val1', val2]},
+            # numbers
+            {'val': "1", 'ans': 1},
+            {'val': "-1", 'ans': -1},
+            {'val': "1.0", 'ans': 1.0},
+            {'val': "1.1", 'ans': 1.1},
+            {'val': "'1'", 'ans': "'1'"},
+            # keywords
+            {'val': "None", 'ans': None},
+            {'val': "'None'", 'ans': "'None'"},
+            {'val': "None, 'None'", 'ans': "None, 'None'"},
+            {'val': "True", 'ans': "True"},
+            {'val': "'True'", 'ans': "'True'"},
+            {'val': "True, 'True'", 'ans': "True, 'True'"},
+            {'val': "False", 'ans': "False"},
+            {'val': "'False'", 'ans': "'False'"},
+            {'val': "False, 'False'", 'ans': "False, 'False'"},
+            # blank
+            {'val': "", 'ans': None},
+        ]
+        # format values as a csv string
+        valStr = "val"
+        for case in cases:
+            valStr += "\n\"{val}\"".format(**case)
+        # write values to csv
+        tmp = Path(tempfile.mkdtemp()) / "temp.tsv"
+        tmp.write_text(valStr)
+        # read values back using importConditions
+        vals = utils.importConditions(str(tmp))
+        # check that each value matches the corresponding case
+        for i, case in enumerate(cases):
+            wanted = case['ans']
+            actual = vals[i]['val']
+            assert actual == wanted, (
+                "{val} should evaluate to {ans}, but instead was {actual}"
+            ).format(**case, actual=actual)
 
 
 def test_isValidVariableName():
