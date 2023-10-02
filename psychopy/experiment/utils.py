@@ -14,6 +14,7 @@ scriptTarget = "PsychoPy"
 
 # predefine some regex's; deepcopy complains if do in NameSpace.__init__()
 unescapedDollarSign_re = re.compile(r"^\$|[^\\]\$")  # detect "code wanted"
+unescaped_re = r"(?<!\\)"  # append a character or regex string to check for it unescaped
 valid_var_re = re.compile(r"^[a-zA-Z_][\w]*$")  # filter for legal var names
 nonalphanumeric_re = re.compile(r'\W')  # will match all bad var name chars
 list_like_re = re.compile(r"(?<!\\),")  # will match for strings which could be a list
