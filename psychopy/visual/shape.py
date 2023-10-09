@@ -25,6 +25,7 @@ from psychopy.colors import Color
 # from psychopy.tools.monitorunittools import cm2pix, deg2pix
 from psychopy.tools.attributetools import (attributeSetter,  # logAttrib,
                                            setAttribute)
+from psychopy.tools import shapetools as st
 from psychopy.tools.arraytools import val2array
 from psychopy.visual.basevisual import (
     BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin, WindowMixin
@@ -37,60 +38,7 @@ pyglet.options['debug_gl'] = False
 GL = pyglet.gl
 
 
-knownShapes = {
-    "triangle": [
-        (+0.0, 0.5),  # Point
-        (-0.5, -0.5),  # Bottom left
-        (+0.5, -0.5),  # Bottom right
-    ],
-    "rectangle": [
-        [-.5,  .5],  # Top left
-        [ .5,  .5],  # Top right
-        [ .5, -.5],  # Bottom left
-        [-.5, -.5],  # Bottom right
-    ],
-    "circle": "circle",  # Placeholder, value calculated on set based on line width
-    "cross": [
-        (-0.1, +0.5),  # up
-        (+0.1, +0.5),
-        (+0.1, +0.1),
-        (+0.5, +0.1),  # right
-        (+0.5, -0.1),
-        (+0.1, -0.1),
-        (+0.1, -0.5),  # down
-        (-0.1, -0.5),
-        (-0.1, -0.1),
-        (-0.5, -0.1),  # left
-        (-0.5, +0.1),
-        (-0.1, +0.1),
-    ],
-    "star7": [
-        (0.0, 0.5),
-        (0.09, 0.18),
-        (0.39, 0.31),
-        (0.19, 0.04),
-        (0.49, -0.11),
-        (0.16, -0.12),
-        (0.22, -0.45),
-        (0.0, -0.2),
-        (-0.22, -0.45),
-        (-0.16, -0.12),
-        (-0.49, -0.11),
-        (-0.19, 0.04),
-        (-0.39, 0.31),
-        (-0.09, 0.18)
-    ],
-    "arrow": [
-        (0.0, 0.5),
-        (-0.5, 0.0),
-        (-1/6, 0.0),
-        (-1/6, -0.5),
-        (1/6, -0.5),
-        (1/6, 0.0),
-        (0.5, 0.0)
-    ],
-}
-knownShapes['square'] = knownShapes['rectangle']
+knownShapes = st.knownShapes
 
 
 class BaseShapeStim(BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin):
@@ -261,18 +209,26 @@ class BaseShapeStim(BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin):
 
     @property
     def vertices(self):
-        return BaseVisualStim.vertices.fget(self)
+        """A list of lists or a numpy array (Nx2) specifying xy positions of
+        each vertex, relative to the center of the field.
+
+        Assigning to vertices can be slow if there are many vertices.
+
+        :ref:`Operations <attrib-operations>` supported with `.setVertices()`.
+        """
+        return WindowMixin.vertices.fget(self)
 
     @vertices.setter
     def vertices(self, value):
         if value is None:
             value = "rectangle"
-        # check if this is a name of one of our known shapes
+        # if shape is known, use known vertices
         if isinstance(value, str) and value in knownShapes:
             value = knownShapes[value]
-            if value == "circle":
-                # If circle is requested, calculate how many points are needed for the gap between line rects to be < 1px
-                value = self._calculateMinEdges(self.lineWidth, threshold=5)
+        # if shape is a method, call it with self
+        if callable(value):
+            value = value(self)
+        # if shape is an integer, make an equilateral
         if isinstance(value, int):
             value = self._calcEquilateralVertices(value)
         # Check shape
@@ -287,40 +243,11 @@ class BaseShapeStim(BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin):
 
     @staticmethod
     def _calcEquilateralVertices(edges, radius=0.5):
-        """
-        Get vertices for an equilateral shape with a given number of sides, will assume radius is 0.5 (relative) but
-        can be manually specified
-        """
-        d = numpy.pi * 2 / edges
-        vertices = numpy.asarray(
-            [numpy.asarray((numpy.sin(e * d), numpy.cos(e * d))) * radius
-             for e in range(int(round(edges)))])
-        return vertices
+        return st.calculateEquilateralVertices(edges, radius=radius)
 
     @staticmethod
     def _calculateMinEdges(lineWidth, threshold=180):
-        """
-        Calculate how many points are needed in an equilateral polygon for the gap between line rects to be < 1px and
-        for corner angles to exceed a threshold.
-
-        In other words, how many edges does a polygon need to have to appear smooth?
-
-        lineWidth : int, float, np.ndarray
-            Width of the line in pixels
-
-        threshold : int
-            Maximum angle (degrees) for corners of the polygon, useful for drawing a circle. Supply 180 for no maximum
-            angle.
-        """
-        # sin(theta) = opp / hyp, we want opp to be 1/8 (meaning gap between rects is 1/4px, 1/2px in retina)
-        opp = 1/8
-        hyp = lineWidth / 2
-        thetaR = numpy.arcsin(opp / hyp)
-        theta = numpy.degrees(thetaR)
-        # If theta is below threshold, use threshold instead
-        theta = min(theta, threshold / 2)
-        # Angles in a shape add up to 360, so theta is 360/2n, solve for n
-        return int((360 / theta) / 2)
+        return st.calculateMinEdges(lineWidth, threshold=threshold)
 
     def draw(self, win=None, keepMatrix=False):
         """Draw the stimulus in its relevant window.
@@ -609,28 +536,11 @@ class ShapeStim(BaseShapeStim):
 
     @property
     def vertices(self):
-        """A list of lists or a numpy array (Nx2) specifying xy positions of
-        each vertex, relative to the center of the field.
-
-        Assigning to vertices can be slow if there are many vertices.
-
-        :ref:`Operations <attrib-operations>` supported with `.setVertices()`.
-        """
-        return WindowMixin.vertices.fget(self)
+        return BaseShapeStim.vertices.fget(self)
 
     @vertices.setter
     def vertices(self, value):
-        # check if this is a name of one of our known shapes
-        if isinstance(value, str) and value in knownShapes:
-            value = knownShapes[value]
-        if isinstance(value, str) and value == "circle":
-            # If circle is requested, calculate how many points are needed for the gap between line rects to be < 1px
-            value = self._calculateMinEdges(self.lineWidth, threshold=5)
-        if isinstance(value, int):
-            value = self._calcEquilateralVertices(value)
-        # Check shape
-        WindowMixin.vertices.fset(self, value)
-        self._needVertexUpdate = True
+        BaseShapeStim.vertices.fset(self, value)
         self._tesselate(self.vertices)
 
     def draw(self, win=None, keepMatrix=False):
