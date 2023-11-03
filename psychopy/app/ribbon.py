@@ -175,6 +175,9 @@ class FrameRibbon(wx.Panel, handlers.ThemeMixin):
 
     def _applyAppTheme(self):
         self.SetBackgroundColour(colors.app['frame_bg'])
+        self.SetForegroundColour(colors.app['text'])
+        self.Update()
+        self.Refresh()
 
 
 class FrameRibbonSection(wx.Panel, handlers.ThemeMixin):
@@ -206,9 +209,9 @@ class FrameRibbonSection(wx.Panel, handlers.ThemeMixin):
             self.labelSizer, border=6, flag=wx.ALIGN_CENTRE | wx.TOP
         )
         # add label icon
-        self._icon = icons.ButtonIcon(icon, size=16)
+        self._icon = icon
         self.icon = wx.StaticBitmap(
-            self, bitmap=self._icon.bitmap
+            self, bitmap=icons.ButtonIcon(self._icon, size=16).bitmap
         )
         if icon is None:
             self.icon.Hide()
@@ -324,8 +327,11 @@ class FrameRibbonSection(wx.Panel, handlers.ThemeMixin):
 
     def _applyAppTheme(self):
         self.SetBackgroundColour(colors.app['frame_bg'])
-
-        self.icon.SetBitmap(self._icon.bitmap)
+        self.SetForegroundColour(colors.app['text'])
+        self.label.SetForegroundColour(colors.app['text'])
+        self.icon.SetBitmap(
+            icons.ButtonIcon(self._icon, size=16).bitmap
+        )
 
 
 class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
@@ -362,6 +368,7 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
             tooltip = f"{label}: {tooltip}"
         self.SetToolTipString(tooltip)
         # set icon
+        self.icon = icon
         self.SetBitmap(
             icons.ButtonIcon(icon, size=32).bitmap
         )
@@ -374,6 +381,9 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
 
     def _applyAppTheme(self):
         self.SetBackgroundColour(colors.app['frame_bg'])
+        self.SetBitmap(
+            icons.ButtonIcon(self.icon, size=32).bitmap
+        )
 
     def onHover(self, evt):
         if evt.EventType == wx.EVT_ENTER_WINDOW.typeId:
@@ -395,8 +405,9 @@ class FrameRibbonDropdownButton(wx.Panel, handlers.ThemeMixin):
         self.button = wx.Button(self, label=label, style=wx.BORDER_NONE)
         self.sizer.Add(self.button, proportion=1, border=0, flag=wx.EXPAND | wx.ALL)
         # set icon
+        self.icon = icon
         self.button.SetBitmap(
-            icons.ButtonIcon(icon, size=32).bitmap
+            icons.ButtonIcon(self.icon, size=32).bitmap
         )
         # bind button callback
         if callback is not None:
@@ -428,8 +439,14 @@ class FrameRibbonDropdownButton(wx.Panel, handlers.ThemeMixin):
 
     def _applyAppTheme(self):
         self.SetBackgroundColour(colors.app['frame_bg'])
+        self.SetForegroundColour(colors.app['text'])
         self.button.SetBackgroundColour(colors.app['frame_bg'])
+        self.button.SetForegroundColour(colors.app['text'])
         self.drop.SetBackgroundColour(colors.app['frame_bg'])
+        self.drop.SetForegroundColour(colors.app['text'])
+        self.button.SetBitmap(
+            icons.ButtonIcon(self.icon, size=32).bitmap
+        )
 
     def onHover(self, evt):
         if evt.EventType == wx.EVT_ENTER_WINDOW.typeId:

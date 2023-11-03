@@ -85,6 +85,7 @@ class HoverMixin:
             # and mark as unhovered
             self.IsHovered = False
         # Refresh
+        self.Update()
         self.Refresh()
 
     @property

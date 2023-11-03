@@ -3123,6 +3123,9 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
         self.pluginBtn.SetBitmapCurrent(icon)
         self.pluginBtn.SetBitmapPressed(icon)
         self.pluginBtn.SetBitmapFocus(icon)
+        # Refresh
+        self.Update()
+        self.Refresh()
 
     def addToFavorites(self, comp):
         name = comp.__name__
@@ -3339,6 +3342,8 @@ class FlowPanel(wx.Panel, handlers.ThemeMixin):
     def _applyAppTheme(self):
         self.SetBackgroundColour(colors.app['panel_bg'])
         self.btnPanel.SetBackgroundColour(colors.app['panel_bg'])
+        self.btnInsertRoutine._applyAppTheme()
+        self.btnInsertLoop._applyAppTheme()
 
         self.Refresh()
 
