@@ -1,5 +1,7 @@
 from copy import deepcopy
 
+import pygments, pygments.lexers, pygments.token, pygments.styles
+
 from . import colors, icons, theme
 from ...preferences.preferences import prefs
 
@@ -145,6 +147,49 @@ def styleTextCtrl(target):
     target.Update()
 
 
+def styleRichTextCtrl(target):
+    from . import fonts
+    fonts.coderTheme.load(theme.code)
+    font = fonts.coderTheme.base
+
+    # Set background
+    target.SetBackgroundColour(font.backColor)
+    target.SetForegroundColour(font.foreColor)
+    # don't restyle if ctrl is hidden
+    if not target.IsShown():
+        return
+    # don't style if we don't have a lexer
+    if not (hasattr(target, "lexer") and hasattr(target, "formatter")):
+        return
+    # freeze while we style
+    target.GetBuffer().BeginSuppressUndo()
+    target.Freeze()
+
+    # set base style
+    baseStyle = target.formatter.GetTokenStyle(pygments.token.Token)
+    target.SetBasicStyle(baseStyle)
+    # lex content to get tokens
+    content = target.GetValue()
+    tokens = pygments.lex(content, lexer=target.lexer)
+    # set character style
+    i = 0
+    while content.startswith("\n"):
+        content = content[1:]
+        i += 1
+    for token, text in tokens:
+        charFormat = target.formatter.GetTokenStyle(token)
+        # apply format object
+        target.SetStyleEx(wx.richtext.RichTextRange(i, i + len(text)), charFormat)
+        # move forward to next token
+        i += len(text)
+
+    # thaw once done
+    target.GetBuffer().EndSuppressUndo()
+    target.Thaw()
+    target.Update()
+    target.Refresh()
+
+
 def styleListCtrl(target):
     target.SetBackgroundColour(colors.app['tab_bg'])
     target.SetTextColour(colors.app['text'])
@@ -162,7 +207,7 @@ methods = {
     aui.AuiNotebook: styleNotebook,
     stc.StyledTextCtrl: styleCodeEditor,
     wx.TextCtrl: styleTextCtrl,
-    wx.richtext.RichTextCtrl: styleTextCtrl,
+    wx.richtext.RichTextCtrl: styleRichTextCtrl,
     wx.ToolBar: styleToolbar,
     wx.ListCtrl: styleListCtrl,
     HtmlWindow: styleHTMLCtrl
@@ -239,6 +284,41 @@ class ThemeMixin:
             if isinstance(self, cls):
                 # If child extends this class, call the appropriate method on it
                 fcn(self)
+
+
+class RichTextFormatter:
+    def __init__(self):
+        self.pygTheme = pygments.styles.get_style_by_name("default")
+        self._baseFont = None
+        self.styles = {}
+
+    def GetBaseFont(self):
+        if self._baseFont is None:
+            from . import fonts
+            fonts.coderTheme.load(theme.code)
+            font = fonts.coderTheme.base
+            self._baseFont = font.obj
+
+        return self._baseFont
+
+    def GetTokenStyle(self, token):
+        if token not in self.styles:
+            # get style for this token
+            tokenStyle = self.pygTheme.style_for_token(token)
+            # get base font
+            font = self.GetBaseFont()
+            # apply style
+            font.SetStyle(wx.FONTSTYLE_ITALIC if tokenStyle['italic'] else wx.FONTSTYLE_NORMAL)
+            font.SetWeight(wx.FONTWEIGHT_BOLD if tokenStyle['bold'] else wx.FONTWEIGHT_NORMAL)
+            font.SetUnderlined(tokenStyle['underline'])
+            # create textattr from font & colour
+            attr = wx.TextAttr(wx.Colour(f"#{tokenStyle['color']}"), font=font)
+            # convert to rich text attribute
+            style = wx.richtext.RichTextAttr(attr)
+            # assign to styles dict
+            self.styles[token] = style
+
+        return self.styles[token]
 
 
 class PsychopyDockArt(aui.AuiDefaultDockArt):

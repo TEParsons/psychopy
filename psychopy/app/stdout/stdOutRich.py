@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import webbrowser
 
+import pygments.lexers
 import wx
 import re
 import wx.richtext
@@ -33,7 +34,7 @@ from psychopy.alerts._alerts import AlertEntry
 from psychopy.alerts._errorHandler import _BaseErrorHandler
 
 
-class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler):
+class StdOutRich(wx.richtext.RichTextCtrl, handlers.ThemeMixin, _BaseErrorHandler):
     """
     A rich text ctrl for handling stdout/stderr
     """
@@ -45,6 +46,9 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler):
 
         _BaseErrorHandler.__init__(self)
         wx.richtext.RichTextCtrl.__init__(self, **kwargs)
+
+        self.lexer = pygments.lexers.get_lexer_by_name("pytb")
+        self.formatter = handlers.RichTextFormatter()
 
         self.prefs = prefs
         self.paths = prefs.paths
@@ -141,26 +145,16 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler):
                 # this line contains a file/line location so write as URL
                 # self.BeginStyle(self.urlStyle)  # this should be done with
                 # styles, but they don't exist in wx as late as 2.8.4.0
-                self.BeginBold()
-                self.BeginTextColour(wx.BLUE)
                 self.BeginURL(thisLine)
                 self.WriteText(thisLine)
                 self.EndURL()
-                self.EndBold()
-                self.EndTextColour()
-            elif len(re.findall('WARNING', thisLine)) > 0:
-                self.BeginTextColour([0, 150, 0])
-                self.WriteText(thisLine)
-                self.EndTextColour()
-            elif len(re.findall('ERROR', thisLine)) > 0:
-                self.BeginTextColour([150, 0, 0])
-                self.WriteText(thisLine)
-                self.EndTextColour()
             else:
                 # line to write as simple text
                 self.WriteText(thisLine)
         self.MoveEnd()  # go to end of stdout so user can see updated text
         self.ShowPosition(self.GetLastPosition())
+
+        self._applyAppTheme()
 
     def flush(self):
 
