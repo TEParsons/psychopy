@@ -509,6 +509,7 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
     # WASAPI devices will be returned when calling static method
     # `Microphone.getDevices()`
     enforceWASAPI = True
+    components = ["psychopy.experiment.components.microphone.MicrophoneComponent"]
 
     def __init__(self,
                  index=None,

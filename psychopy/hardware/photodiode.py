@@ -31,6 +31,8 @@ class PhotodiodeResponse:
 
 
 class BasePhotodiodeGroup(base.BaseDevice):
+    components = ["psychopy.experiment.components.photodiodeValidator.PhotodiodeValidatorComponent"]
+
     def __init__(self, parent, channels=1, threshold=None, pos=None, size=None, units=None):
         # store ref to parent device which drives the diode group
         self.parent = parent

@@ -143,7 +143,7 @@ class DeviceManager:
 
         Returns
         -------
-        type
+        BaseDevice
             Class pointed to by deviceClass
         """
         # get package and class names from deviceClass string
@@ -377,6 +377,9 @@ class DeviceManager:
         # if deviceClass is *, call for all types
         if deviceClass == "*":
             deviceClass = DeviceManager.deviceClasses
+            logging.debug(
+                f"getAvailableDevices called with * as class, looking for classes: {DeviceManager.deviceClasses}"
+            )
         # if given multiple types, call for each
         if isinstance(deviceClass, (list, tuple)):
             devices = {}

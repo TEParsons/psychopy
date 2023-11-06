@@ -1342,6 +1342,11 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
             self.addToUndoStack("EDIT experiment settings")
             self.setIsModified(True)
 
+    def openDeviceManager(self, evt=None):
+        from .dialogs.dlgDeviceManager import DeviceManagerDlg
+        dlg = DeviceManagerDlg(self)
+        dlg.Show()
+
     def addRoutine(self, event=None):
         """Defines ability to add routine in the routine panel
         """
@@ -4355,6 +4360,18 @@ class BuilderRibbon(ribbon.FrameRibbon):
             tooltip=_translate("Edit experiment settings"),
             callback=parent.setExperimentSettings
         )
+        # monitor center
+        self.addButton(
+            section="experiment", name='monitor', label=_translate('Monitor center'), icon="monitors",
+            tooltip=_translate("Monitor settings and calibration"),
+            callback=parent.app.openMonitorCenter
+        )
+        # device manager
+        self.addButton(
+            section="experiment", name='devices', label=_translate('Device manager'), icon="deviceManager",
+            tooltip=_translate("Manage connected devices"),
+            callback=parent.openDeviceManager
+        )
         # send to runner
         self.addButton(
             section="experiment", name='runner', label=_translate('Runner'), icon="runner",
@@ -4367,12 +4384,6 @@ class BuilderRibbon(ribbon.FrameRibbon):
         # --- Python ---
         self.addSection(
             "py", label=_translate("Desktop"), icon="desktop"
-        )
-        # monitor center
-        self.addButton(
-            section="py", name='monitor', label=_translate('Monitor center'), icon="monitors",
-            tooltip=_translate("Monitor settings and calibration"),
-            callback=parent.app.openMonitorCenter
         )
         # compile python
         self.addButton(

@@ -14,6 +14,9 @@ __all__ = [
 
 
 class BaseDevice:
+    # point to components which use this device (mostly for UI)
+    components = []
+
     """Base class for device interfaces."""
     def __init_subclass__(cls, aliases=None):
         from psychopy.hardware.manager import DeviceManager

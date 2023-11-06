@@ -186,6 +186,8 @@ class KeyboardDevice(BaseDevice, aliases=["keyboard"]):
     _iohubKeyboard = None
     _ptbOffset = 0.0
 
+    components = ["psychopy.experiment.components.keyboard.KeyboardComponent"]
+
     def __init__(self, device=-1, bufferSize=10000, waitForStart=False, clock=None, backend=None):
         """Create the device (default keyboard or select one)
 

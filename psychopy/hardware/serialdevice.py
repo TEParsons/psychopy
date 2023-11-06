@@ -67,6 +67,8 @@ class SerialDevice(BaseDevice, AttributeGetSetMixin):
     # list of supported devices (if more than one supports same protocol)
     driverFor = []
 
+    components = ["psychopy.experiment.components.serialOut.SerialOutComponent"]
+
     def __init__(self, port=None, baudrate=9600,
                  byteSize=8, stopBits=1,
                  parity="N",  # 'N'one, 'E'ven, 'O'dd, 'M'ask,
