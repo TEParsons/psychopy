@@ -315,6 +315,7 @@ class RecordingBuffer:
 class Microphone:
     def __init__(
             self,
+            name=None,
             device=None,
             sampleRateHz=None,
             channels=None,
@@ -323,24 +324,15 @@ class Microphone:
             policyWhenFull='warn',
             audioLatencyMode=None,
             audioRunMode=0):
-        # look for device if initialised
-        self.device = DeviceManager.getDevice(device)
-        # if no matching name, try matching index
-        if self.device is None:
-            self.device = DeviceManager.getDeviceBy("index", device)
-        # if still no match, make a new device
-        if self.device is None:
-            self.device = DeviceManager.addDevice(
-                deviceClass="psychopy.sound.MicrophoneDevice", deviceName=device,
-                index=device,
-                sampleRateHz=sampleRateHz,
-                channels=channels,
-                streamBufferSecs=streamBufferSecs,
-                maxRecordingSize=maxRecordingSize,
-                policyWhenFull=policyWhenFull,
-                audioLatencyMode=audioLatencyMode,
-                audioRunMode=audioRunMode
+
+        if deviceManager.checkDeviceNameAvailable(name):
+            # if no matching device is in DeviceManager, make a new one
+            self.device = deviceManager.addMicrophone(
+                name=name, device=device, sampleRate=sampleRateHz, channels=channels
             )
+        else:
+            # otherwise, use the existing device
+            self.device = deviceManager.getMicrophone(name)
 
     @property
     def recording(self):
@@ -429,7 +421,7 @@ class Microphone:
         return self.device.getRecording()
 
 
-class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
+class MicrophoneDevice(BaseDevice):
     """Class for recording audio from a microphone or input stream.
 
     Creating an instance of this class will open a stream using the specified
