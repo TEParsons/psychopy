@@ -7,7 +7,7 @@ from psychopy.localization import _translate
 from psychopy.hardware import DeviceManager
 
 
-class DeviceListNode(wx.Panel):
+class DeviceListItem(wx.Panel):
     """
     Node representing the static information of an available device
     """
@@ -131,9 +131,12 @@ class DeviceListNode(wx.Panel):
 
 
 class DeviceListCtrl(scrolledpanel.ScrolledPanel):
-    def __init__(self, parent):
+    def __init__(self, parent, dlg=None):
         scrolledpanel.ScrolledPanel.__init__(self, parent)
-        self.dlg = parent
+        self.parent = parent
+        if dlg is None:
+            dlg = parent
+        self.dlg = dlg
         self.SetBackgroundColour("white")
         # setup sizer
         self.border = wx.BoxSizer(wx.VERTICAL)
@@ -143,39 +146,142 @@ class DeviceListCtrl(scrolledpanel.ScrolledPanel):
         # setup selection behaviour
         self.selected = None
         self.Bind(wx.EVT_LEFT_DOWN, self.onDeselect)
+        # setup nodes dict (store by ID)
+        self.items = []
 
         self.Layout()
 
-    def addNode(self, device):
-        node = DeviceListNode(parent=self, dlg=self.dlg, device=device)
-        self.sizer.Add(node, border=6, flag=wx.EXPAND | wx.ALL)
-
+    def addItem(self, device):
+        # make node
+        item = DeviceListItem(parent=self, dlg=self.dlg, device=device)
+        # store node
+        self.items.append(item)
+        # add to sizer
+        self.sizer.Add(item, border=6, flag=wx.EXPAND | wx.ALL)
         self.dlg.Layout()
+
+    def getItem(self, pos):
+        """
+        Get an item from its position in this control.
+
+        Parameters
+        ----------
+        pos : int
+            Position of the item in this control, zero indexed.
+
+        Returns
+        -------
+        DeviceListItem
+            Specified item
+        """
+        return self.items[pos]
+
+    def getItemPosition(self, item):
+        """
+        Get the position of a node in this control.
+
+        Parameters
+        ----------
+        item : DeviceListItem
+            Item whose position to get
+
+        Returns
+        -------
+        int
+            Position of the item in this control.
+        """
+        return self.items.index(item)
 
     def onDeselect(self, evt=None):
         self.setSelection(None)
 
-    def setSelection(self, node):
+    def setSelection(self, item):
         # unstyle previous selection
-        if isinstance(self.selected, DeviceListNode):
+        if isinstance(self.selected, DeviceListItem):
             self.selected.SetBackgroundColour(self.GetBackgroundColour())
             self.selected.Update()
             self.selected.Refresh()
         # select new node
-        self.selected = node
+        self.selected = item
         # style new selection
-        if isinstance(self.selected, DeviceListNode):
+        if isinstance(self.selected, DeviceListItem):
             self.selected.SetBackgroundColour("#f2f2f2")
             self.selected.Update()
             self.selected.Refresh()
+        # emit event
+        if item is None:
+            evt = wx.ListEvent(wx.EVT_LIST_ITEM_DESELECTED.typeId, wx.ID_NONE)
+        else:
+            evt = wx.ListEvent(wx.EVT_LIST_ITEM_SELECTED.typeId, self.getItemPosition(item))
+        evt.SetEventObject(self)
+        wx.PostEvent(self, evt)
 
     def getSelection(self):
         return self.selected
 
-    def clearNodes(self):
+    def clearItems(self):
         for node in self.GetChildren():
-            if isinstance(node, DeviceListNode):
+            if isinstance(node, DeviceListItem):
+                self.items.remove(node)
                 node.Destroy()
+
+
+class DeviceDetailsPanel(wx.Panel):
+    def __init__(self, parent, dlg=None):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        if dlg is None:
+            dlg = parent
+        self.dlg = dlg
+        # style
+        self.SetBackgroundColour("white")
+        # setup sizers
+        self.border = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.border)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.border.Add(self.sizer, border=12, proportion=1, flag=wx.EXPAND | wx.ALL)
+        # header sizer
+        self.headerSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.headerSizer, flag=wx.EXPAND)
+        # icon
+        self.icon = wx.StaticBitmap(self, bitmap=wx.Bitmap())
+        self.headerSizer.Add(self.icon, flag=wx.EXPAND)
+        # summary sizer
+        self.summarySizer = wx.BoxSizer(wx.VERTICAL)
+        self.headerSizer.Add(self.summarySizer, proportion=1, flag=wx.EXPAND)
+        # name ctrl
+        self.nameCtrl = wx.TextCtrl(self)
+        self.nameCtrl.SetFont(fonts.AppFont(12).obj)
+        self.summarySizer.Add(self.nameCtrl, border=6, flag=wx.EXPAND | wx.ALL)
+        # class label
+        self.classLbl = wx.StaticText(self)
+        self.classLbl.SetFont(fonts.CodeFont(10).obj)
+        self.classLbl.SetForegroundColour("#acacb0")
+        self.summarySizer.Add(self.classLbl, border=6, flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM)
+
+        self.Layout()
+
+    def setDevice(self, device):
+        # get device class
+        deviceClass = DeviceManager._resolveAlias(device['deviceClass'])
+        cls = DeviceManager._resolveClassString(deviceClass)
+        # make icon
+        if cls.components:
+            iconCls = DeviceManager._resolveClassString(cls.components[0])
+            icon = icons.ComponentIcon(iconCls).bitmap
+        else:
+            icon = wx.Bitmap()
+        self.icon.SetBitmap(icon)
+        self.nameCtrl.SetValue(
+            device.get('deviceName', "")
+        )
+        self.classLbl.SetLabel(
+            device.get('deviceClass', "")
+        )
+
+    def clearDevice(self):
+        self.nameCtrl.SetValue("")
+        self.classLbl.SetLabel("")
 
 
 class AddDeviceDlg(wx.Dialog):
@@ -212,11 +318,11 @@ class AddDeviceDlg(wx.Dialog):
 
     def populate(self, evt=None):
         # clear any extant nodes
-        self.ctrl.clearNodes()
+        self.ctrl.clearItems()
         # make nodes
         for devs in self.available.values():
             for device in devs:
-                self.ctrl.addNode(device)
+                self.ctrl.addItem(device)
 
         self.Layout()
         self.ctrl.SetupScrolling(scroll_x=False, scroll_y=True)
@@ -262,31 +368,45 @@ class DeviceManagerDlg(wx.Dialog):
             size=(1080, 720),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
+
         # setup sizers
         self.border = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.border)
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.border.Add(self.sizer, border=12, proportion=1, flag=wx.EXPAND | wx.ALL)
+        self.splitter = wx.SplitterWindow(self)
+        self.border.Add(self.splitter, border=12, proportion=1, flag=wx.EXPAND | wx.ALL)
+        # setup left panel
+        self.leftPnl = wx.Panel(self.splitter)
         self.leftSizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.leftSizer, border=6, flag=wx.EXPAND | wx.ALL)
-        self.rightSizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.rightSizer, border=6, proportion=1, flag=wx.EXPAND | wx.ALL)
+        self.leftPnl.SetSizer(self.leftSizer)
 
         # add instructions
         self.instr = utils.WrappedStaticText(
-            self, label=_translate(
+            self.leftPnl, label=_translate(
                 "These devices have been configured in this experiment's Device Manager. You can refer to them "
                 "by name in the 'device' field of Components your experiment."
             )
         )
         self.leftSizer.Add(self.instr, border=6, flag=wx.EXPAND | wx.ALL)
         # add available devices ctrl
-        self.ctrl = DeviceListCtrl(self)
+        self.ctrl = DeviceListCtrl(self.leftPnl, dlg=self)
+        self.ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelect)
+        self.ctrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.onDeselect)
         self.leftSizer.Add(self.ctrl, border=6, proportion=1, flag=wx.EXPAND | wx.ALL)
         # add "add device" button
-        self.addBtn = wx.Button(self, label=_translate("Add device..."))
+        self.addBtn = wx.Button(self.leftPnl, label=_translate("Add device..."))
         self.addBtn.Bind(wx.EVT_BUTTON, self.onAdd)
-        self.leftSizer.Add(self.addBtn, border=6,flag=wx.ALIGN_LEFT | wx.ALL)
+        self.leftSizer.Add(self.addBtn, border=6, flag=wx.ALIGN_LEFT | wx.ALL)
+
+        # add details panel
+        self.details = DeviceDetailsPanel(self.splitter, dlg=self)
+
+        # split
+        self.splitter.SplitVertically(
+            self.leftPnl,
+            self.details,
+            sashPosition=int(self.GetSize()[0]/2)
+        )
+        self.leftPnl.Layout()
 
         # add buttons
         btns = self.CreateStdDialogButtonSizer(flags=wx.CANCEL | wx.OK)
@@ -298,14 +418,22 @@ class DeviceManagerDlg(wx.Dialog):
     def onAdd(self, evt=None):
         dlg = AddDeviceDlg(self)
         if dlg.ShowModal() == wx.ID_OK:
-            if isinstance(dlg.ctrl.selected, DeviceListNode):
-                self.ctrl.addNode(dlg.ctrl.selected.getInfo())
+            if isinstance(dlg.ctrl.selected, DeviceListItem):
+                self.ctrl.addItem(dlg.ctrl.selected.getInfo())
+
+    def onSelect(self, evt):
+        i = evt.GetId()
+        node = self.ctrl.getItem(i)
+        self.details.setDevice(node.device)
+
+    def onDeselect(self, evt):
+        self.details.clearDevice()
 
     def onOK(self, evt=None):
         devices = []
-        for node in self.addedCtrl.GetChildren():
+        for node in self.ctrl.GetChildren():
             # skip labels and such
-            if not isinstance(node, DeviceListNode):
+            if not isinstance(node, DeviceListItem):
                 continue
             # get node info
             devices.append(node.getInfo())
