@@ -63,9 +63,11 @@ class MicrophoneComponent(BaseComponent):
                  startType='time (s)', startVal=0.0,
                  stopType='duration (s)', stopVal=2.0,
                  startEstim='', durationEstim='',
-                 channels='auto', device=None,
+                 # device
+                 channels='auto', device=-1, deviceName="",
                  sampleRate='DVD Audio (48kHz)', maxSize=24000,
                  outputType='default', speakTimes=True, trimSilent=False,
+                 # transcription
                  transcribe=False, transcribeBackend="Whisper",
                  transcribeLang="en-US", transcribeWords="",
                  transcribeWhisperModel="base",
@@ -89,15 +91,55 @@ class MicrophoneComponent(BaseComponent):
             'The duration of the recording in seconds; blank = 0 sec')
         self.params['stopType'].hint = msg
 
-        # params
-        msg = _translate("What microphone device would you like the use to record? This will only affect local "
-                         "experiments - online experiments ask the participant which mic to use.")
+        # --- Device params ---
+        self.params['deviceName'] = Param(
+            deviceName, valType="str", inputType="single", categ="Device",
+            label=_translate("Device name"),
+            hint=_translate(
+                "A name to refer to this Component's associated hardware device by. If using the "
+                "same device for multiple components, be sure to use the same name here."
+            )
+        )
+
+        def getDeviceIndices():
+            """
+            Get the indices of
+            Returns
+            -------
+
+            """
+            from psychopy.sound.microphone import MicrophoneDevice
+            # start off with default
+            indices = [-1]
+            # add each device we can find
+            for profile in MicrophoneDevice.getAvailableDevices():
+                indices.append(
+                    profile['index']
+                )
+
+            return indices
+
+        def getDeviceNames():
+            from psychopy.sound.microphone import MicrophoneDevice
+            # start off with default
+            names = ["-1 (Default)"]
+            # add each device we can find
+            for profile in MicrophoneDevice.getAvailableDevices():
+                names.append(
+                    "%(index)s ( %(deviceName)s )" % profile
+                )
+
+            return names
+
         self.params['device'] = Param(
-            device, valType='str', inputType="choice", categ="Basic",
-            allowedVals=deviceIndices,
-            allowedLabels=deviceNames,
-            hint=msg,
-            label=_translate("Device")
+            device, valType='code', inputType="choice", categ="Device",
+            allowedVals=getDeviceIndices,
+            allowedLabels=getDeviceNames,
+            hint=_translate(
+                "What device, by the number assigned to it by this specific computer, should be "
+                "used?"
+            ),
+            label=_translate("Device index")
         )
 
         msg = _translate(
@@ -107,7 +149,7 @@ class MicrophoneComponent(BaseComponent):
             # If using a legacy mic component, work out channels from old bool value of stereo
             channels = ['mono', 'stereo'][stereo]
         self.params['channels'] = Param(
-            channels, valType='str', inputType="choice", categ='Hardware',
+            channels, valType='str', inputType="choice", categ='Device',
             allowedVals=['auto', 'mono', 'stereo'],
             hint=msg,
             label=_translate("Channels"))
@@ -115,7 +157,7 @@ class MicrophoneComponent(BaseComponent):
         msg = _translate(
             "How many samples per second (Hz) to record at")
         self.params['sampleRate'] = Param(
-            sampleRate, valType='num', inputType="choice", categ='Hardware',
+            sampleRate, valType='num', inputType="choice", categ='Device',
             allowedVals=list(sampleRates),
             hint=msg, direct=False,
             label=_translate("Sample rate (hz)"))
@@ -123,9 +165,11 @@ class MicrophoneComponent(BaseComponent):
         msg = _translate(
             "To avoid excessively large output files, what is the biggest file size you are likely to expect?")
         self.params['maxSize'] = Param(
-            maxSize, valType='num', inputType="single", categ='Hardware',
+            maxSize, valType='num', inputType="single", categ='Device',
             hint=msg,
             label=_translate("Max recording size (kb)"))
+
+        # --- Data params ---
 
         msg = _translate(
             "What file type should output audio files be saved as?")
@@ -264,24 +308,17 @@ class MicrophoneComponent(BaseComponent):
         inits = getInitVals(self.params)
 
         # --- setup mic ---
-
-        # Substitute default if device not found
-        if inits['device'].val not in deviceIndices:
-            alert(4330, strFields={'device': self.params['device'].val})
-            inits['device'].val = None
         # Substitute sample rate value for numeric equivalent
         inits['sampleRate'] = sampleRates[inits['sampleRate'].val]
         # Substitute channel value for numeric equivalent
         inits['channels'] = {'mono': 1, 'stereo': 2, 'auto': None}[self.params['channels'].val]
-        # Get device names
-        inits['deviceName'] = getDeviceName(inits['device'].val)
         # initialise mic device
         code = (
             "# initialise microphone\n"
-            "if deviceManager.getDevice('%(deviceName)s') is None:\n"
+            "if deviceManager.getDevice(%(deviceName)s) is None:\n"
             "    deviceManager.addDevice(\n"
             "        deviceClass='microphone',\n"
-            "        deviceName='%(deviceName)s',\n"
+            "        deviceName=%(deviceName)s,\n"
             "        index=%(device)s,\n"
             "        channels=%(channels)s, \n"
             "        sampleRateHz=%(sampleRate)s, \n"
