@@ -189,7 +189,8 @@ class Window():
                  bpc=(8, 8, 8),
                  depthBits=8,
                  stencilBits=8,
-                 backendConf=None):
+                 backendConf=None,
+                 infoMsg=None):
         """
         These attributes can only be set at initialization. See further down
         for a list of attributes which can be changed after initialization
@@ -242,7 +243,9 @@ class Window():
             instead.
         checkTiming : bool
             Whether to calculate frame duration on initialization. Estimated
-            duration is saved in :py:attr:`~Window.monitorFramePeriod`.
+            duration is saved in :py:attr:`~Window.monitorFramePeriod`. The
+            message displayed on the screen can be set with the `infoMsg`
+            argument.
         allowStencil : bool
             When set to `True`, this allows operations that use the OpenGL
             stencil buffer (notably, allowing the
@@ -298,6 +301,11 @@ class Window():
             available across all of them. This allows you to pass special
             configuration options to a specific backend to configure the
             feature.
+        infoMsg : str or None
+            Message to display during frame rate measurement (i.e., when
+            ``checkTiming=True``). Default is None, which means that a default
+            message is displayed. If you want to hide the message, pass an
+            empty string.
 
         Notes
         -----
@@ -616,7 +624,7 @@ class Window():
         # for testing when to stop drawing a stim:
         self.monitorFramePeriod = 0.0
         if checkTiming:
-            self._monitorFrameRate = self.getActualFrameRate()
+            self._monitorFrameRate = self.getActualFrameRate(infoMsg=infoMsg)
 
         if self._monitorFrameRate is not None:
             self.monitorFramePeriod = 1.0 / self._monitorFrameRate
@@ -2368,6 +2376,93 @@ class Window():
         self.movieFrames.append(im)
         return im
 
+    def _getPixels(self, rect=None, buffer='front', includeAlpha=True,
+                   makeLum=False):
+        """Return an array of pixel values from the current window buffer or
+        sub-region.
+
+        Parameters
+        ----------
+        rect : tuple, optional
+            The region of the window to capture in normalized coordinates
+            (left, top, width, height). If `None`, the whole window is captured.
+        buffer : str, optional
+            Buffer to capture.
+        includeAlpha : bool, optional
+            Include the alpha channel in the returned array. Default is `True`.
+        makeLum : bool, optional
+            Convert the RGB values to luminance values. Values are rounded to
+            the nearest integer. Default is `False`.
+
+        Returns
+        -------
+        ndarray
+            Pixel values as a 3D array of shape (height, width, channels). If
+            `includeAlpha` is `False`, the array will have shape (height, width,
+            3). If `makeLum` is `True`, the array will have shape (height,
+            width).
+
+        Examples
+        --------
+        Get the pixel values of the whole window::
+
+            pix = win._getPixels()
+
+        Get pixel values and convert to luminance and get average::
+
+            pix = win._getPixels(makeLum=True)
+            average = pix.mean()
+
+        """
+        # do the reading of the pixels
+        if buffer == 'back' and self.useFBO:
+            GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0_EXT)
+        elif buffer == 'back':
+            GL.glReadBuffer(GL.GL_BACK)
+        elif buffer == 'front':
+            if self.useFBO:
+                GL.glBindFramebufferEXT(GL.GL_FRAMEBUFFER_EXT, 0)
+            GL.glReadBuffer(GL.GL_FRONT)
+        else:
+            raise ValueError("Requested read from buffer '{}' but should be "
+                             "'front' or 'back'".format(buffer))
+
+        if rect:
+            x, y = self.size
+            # box corners in pix
+            left = int((rect[0] / 2. + 0.5) * x)
+            bottom = int((rect[3] / 2. + 0.5) * y)
+            w = int((rect[2] / 2. + 0.5) * x) - left
+            h = int((rect[1] / 2. + 0.5) * y) - bottom
+        else:
+            left = bottom = 0
+            w, h = self.size
+
+        # get pixel data
+        bufferDat = (GL.GLubyte * (4 * w * h))()
+        GL.glReadPixels(
+            left, bottom, w, h,
+            GL.GL_RGBA,
+            GL.GL_UNSIGNED_BYTE,
+            bufferDat)
+
+        # convert to array
+        toReturn = numpy.frombuffer(bufferDat, dtype=numpy.uint8)
+        toReturn = toReturn.reshape((h, w, 4))
+
+        # if we want the color data without an alpha channel, we need to
+        # convert the data to a numpy array and remove the alpha channel
+        if not includeAlpha:
+            toReturn = toReturn[:, :, :3]  # remove alpha channel
+
+        # convert to luminance if requested
+        if makeLum:
+            coeffs = [0.2989, 0.5870, 0.1140]
+            toReturn = numpy.rint(numpy.dot(toReturn[:, :, :3], coeffs)).astype(
+                numpy.uint8)
+
+        return toReturn
+
     def _getFrame(self, rect=None, buffer='front'):
         """Return the current Window as an image.
         """
@@ -3312,7 +3407,7 @@ class Window():
         self._showSplash = False
 
     def getActualFrameRate(self, nIdentical=10, nMaxFrames=100,
-                           nWarmUpFrames=10, threshold=1):
+                           nWarmUpFrames=10, threshold=1, infoMsg=None):
         """Measures the actual frames-per-second (FPS) for the screen.
 
         This is done by waiting (for a max of `nMaxFrames`) until
@@ -3350,8 +3445,10 @@ class Window():
         screen = self.screen
         name = self.name
 
-        self.showMessage(
-            "Attempting to measure frame rate of screen, please wait ...")
+        if infoMsg is None:
+            infoMsg = "Attempting to measure frame rate of screen, please wait ..."
+
+        self.showMessage(infoMsg)
 
         # log that we're measuring the frame rate now
         if self.autoLog:

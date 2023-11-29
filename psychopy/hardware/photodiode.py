@@ -5,45 +5,31 @@ from psychopy.localization import _translate
 from psychopy.hardware import keyboard
 
 
-class PhotodiodeResponse:
-    def __init__(self, t, channel, value, threshold=None):
-        self.t = t
-        self.value = value
+class PhotodiodeResponse(base.BaseResponse):
+    # list of fields known to be a part of this response type
+    fields = ["t", "value", "channel", "threshold"]
+
+    def __init__(self, t, value, channel, threshold=None):
+        # initialise base response class
+        base.BaseResponse.__init__(self, t=t, value=value)
+        # store channel and threshold
         self.channel = channel
         self.threshold = threshold
 
-    def __repr__(self):
-        return f"<PhotodiodeResponse: t={self.t}, value={self.value}, channel={self.channel}, threshold={self.threshold}>"
 
-    def getJSON(self):
-        message = {
-            'type': "hardware_response",
-            'class': "PhotodiodeResponse",
-            'data': {
-                't': self.t,
-                'value': self.value,
-                'channel': self.channel,
-                'threshold': self.threshold
-            }
-        }
-
-        return json.dumps(message)
+class BasePhotodiodeGroup(base.BaseResponseDevice):
+    responseClass = PhotodiodeResponse
 
 
 class BasePhotodiodeGroup(base.BaseDevice):
     components = ["psychopy.experiment.components.photodiodeValidator.PhotodiodeValidatorComponent"]
 
-    def __init__(self, parent, channels=1, threshold=None, pos=None, size=None, units=None):
-        # store ref to parent device which drives the diode group
-        self.parent = parent
+    def __init__(self, channels=1, threshold=None, pos=None, size=None, units=None):
+        base.BaseResponseDevice.__init__(self)
         # store number of channels
         self.channels = channels
         # attribute in which to store current state
         self.state = [False] * channels
-        # list in which to store messages in chronological order
-        self.responses = []
-        # list of listener objects
-        self.listeners = []
         # set initial threshold
         if threshold is not None:
             self.setThreshold(threshold)
@@ -52,33 +38,28 @@ class BasePhotodiodeGroup(base.BaseDevice):
         self.size = size
         self.units = units
 
-    def clearResponses(self):
-        self.parent.dispatchMessages()
-        self.responses = []
-
-    def addListener(self, listener):
+    def dispatchMessages(self):
         """
-        Add a listener, which will receive all the same messages as this Photodiode.
-
-        Parameters
-        ----------
-        listener : hardware.listener.BaseListener
-            Object to duplicate messages to when received by this Photodiode.
-        """
-        self.listeners.append(listener)
-
-    def clearListeners(self):
-        """
-        Remove any listeners from this device.
+        Dispatch messages - this could mean pulling them from a backend, or from a parent device
 
         Returns
         -------
         bool
-            True if completed successfully
+            True if request sent successfully
         """
-        self.listeners = []
+        raise NotImplementedError()
 
-        return True
+    def parseMessage(self, message):
+        raise NotImplementedError()
+
+    def receiveMessage(self, message):
+        # do base receiving
+        base.BaseResponseDevice.receiveMessage(self, message)
+        # update state
+        self.state[message.channel] = message.value
+
+    def getAvailableDevices(self):
+        raise NotImplementedError()
 
     def getResponses(self, state=None, channel=None, clear=True):
         """
@@ -99,7 +80,7 @@ class BasePhotodiodeGroup(base.BaseDevice):
             List of matching responses.
         """
         # make sure parent dispatches messages
-        self.parent.dispatchMessages()
+        self.dispatchMessages()
         # array to store matching responses
         matches = []
         # check messages in chronological order
@@ -114,19 +95,6 @@ class BasePhotodiodeGroup(base.BaseDevice):
                 matches.append(resp)
 
         return matches
-
-    def receiveMessage(self, message):
-        assert isinstance(message, PhotodiodeResponse), (
-            "{ownType}.receiveMessage() can only receive messages of type PhotodiodeResponse, instead received "
-            "{msgType}. Try parsing the message first using {ownType}.parseMessage()"
-        ).format(ownType=type(self).__name__, msgType=type(message).__name__)
-        # update current state
-        self.state[message.channel] = message.value
-        # add message to responses
-        self.responses.append(message)
-        # relay message to listener
-        for listener in self.listeners:
-            listener.receiveMessage(message)
 
     def findPhotodiode(self, win, channel):
         """
@@ -198,7 +166,7 @@ class BasePhotodiodeGroup(base.BaseDevice):
                 rect.draw()
                 win.flip()
                 # dispatch parent messages
-                self.parent.dispatchMessages()
+                self.dispatchMessages()
                 # check for escape before entering recursion
                 if kb.getKeys(['escape']):
                     return
@@ -211,13 +179,13 @@ class BasePhotodiodeGroup(base.BaseDevice):
 
         # reset state
         self.state = [None] * self.channels
-        self.parent.dispatchMessages()
+        self.dispatchMessages()
         self.clearResponses()
         # recursively shrink rect around the photodiode
         scanQuadrants()
         # clear all the events created by this process
         self.state = [None] * self.channels
-        self.parent.dispatchMessages()
+        self.dispatchMessages()
         self.clearResponses()
         # reinstate autodraw
         win.retrieveAutoDraw()
@@ -354,7 +322,7 @@ class BasePhotodiodeGroup(base.BaseDevice):
 
         # reset state
         self.state = [None] * self.channels
-        self.parent.dispatchMessages()
+        self.dispatchMessages()
         self.clearResponses()
         # bisect thresholds, starting at 127 (exact middle)
         threshold = _bisectThreshold(127)
@@ -363,7 +331,7 @@ class BasePhotodiodeGroup(base.BaseDevice):
         bg.setAutoDraw(False)
         # clear all the events created by this process
         self.state = [None] * self.channels
-        self.parent.dispatchMessages()
+        self.dispatchMessages()
         self.clearResponses()
         # reinstate autodraw
         win.retrieveAutoDraw()
@@ -376,7 +344,7 @@ class BasePhotodiodeGroup(base.BaseDevice):
         raise NotImplementedError()
 
     def resetTimer(self, clock=logging.defaultClock):
-        return self.parent.resetTimer(clock=clock)
+        raise NotImplementedError()
 
     def getThreshold(self):
         if hasattr(self, "_threshold"):
@@ -384,12 +352,9 @@ class BasePhotodiodeGroup(base.BaseDevice):
 
     def getState(self, channel):
         # dispatch messages from parent
-        self.parent.dispatchMessages()
+        self.dispatchMessages()
         # return state after update
         return self.state[channel]
-
-    def parseMessage(self, message):
-        raise NotImplementedError()
 
 
 class PhotodiodeValidationError(BaseException):
