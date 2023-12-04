@@ -602,7 +602,7 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
             args = []
 
         # set switch mode
-        self.ribbon.buttons['pyswitch'].setMode("--debug" in args)
+        self.ribbon.buttons['debugswitch'].setMode("--debug" in args)
 
         currentFile = str(self.currentFile)
         if self.currentFile.suffix == '.psyexp':
@@ -1011,14 +1011,21 @@ class RunnerRibbon(ribbon.FrameRibbon):
 
         self.addSeparator()
 
-        # --- Python ---
+        # --- Experiment ---
         self.addSection(
-            "py", label=_translate("Desktop"), icon="desktop"
+            "experiment", label=_translate("Experiment"), icon="experiment"
         )
         # switch run/debug
         runDebugSwitch = self.addSwitchCtrl(
-            section="py", name="pyswitch",
+            section="experiment", name="debugswitch",
             labels=(_translate("Run"), _translate("Debug"))
+        )
+
+        self.addSeparator()
+
+        # --- Python ---
+        self.addSection(
+            "py", label=_translate("Desktop"), icon="desktop"
         )
         # run Py
         btn = self.addButton(

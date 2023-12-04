@@ -2923,6 +2923,11 @@ class CoderRibbon(ribbon.FrameRibbon):
             tooltip=_translate("Send current file to Runner"),
             callback=parent.sendToRunner
         ).Disable()
+        # switch run/debug
+        runDebugSwitch = self.addSwitchCtrl(
+            section="experiment", name="debugswitch",
+            labels=(_translate("Run"), _translate("Debug"))
+        )
 
         self.addSeparator()
 
@@ -2934,11 +2939,6 @@ class CoderRibbon(ribbon.FrameRibbon):
             section="py", name='monitor', label=_translate('Monitor center'), icon="monitors",
             tooltip=_translate("Monitor settings and calibration"),
             callback=parent.app.openMonitorCenter
-        )
-        # switch run/debug
-        runDebugSwitch = self.addSwitchCtrl(
-            section="py", name="pyswitch",
-            labels=(_translate("Run"), _translate("Debug"))
         )
         # run Py
         btn = self.addButton(

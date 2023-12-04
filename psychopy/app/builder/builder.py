@@ -4375,6 +4375,11 @@ class BuilderRibbon(ribbon.FrameRibbon):
             tooltip=_translate("Send experiment to Runner"),
             callback=parent.sendToRunner
         )
+        # switch run/debug
+        runDebugSwitch = self.addSwitchCtrl(
+            section="experiment", name="debugswitch",
+            labels=(_translate("Run"), _translate("Debug"))
+        )
 
         self.addSeparator()
 
@@ -4393,11 +4398,6 @@ class BuilderRibbon(ribbon.FrameRibbon):
             section="py", name="pycompile", label=_translate('Write Python'), icon='compile_py',
             tooltip=_translate("Write experiment as a Python script"),
             callback=parent.compileScript
-        )
-        # switch run/debug
-        runDebugSwitch = self.addSwitchCtrl(
-            section="py", name="pyswitch",
-            labels=(_translate("Run"), _translate("Debug"))
         )
         # run Py
         self.addButton(
