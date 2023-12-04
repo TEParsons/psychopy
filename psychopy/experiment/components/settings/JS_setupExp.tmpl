@@ -1,3 +1,6 @@
+// are we in debug mode?
+const DEBUGGING = Boolean(expInfo['debug']);
+
 psychoJS.experimentLogger.setLevel(core.Logger.ServerLevel.{loggingLevel});
 
 async function updateInfo() {{
