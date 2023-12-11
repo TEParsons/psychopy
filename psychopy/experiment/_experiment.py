@@ -146,9 +146,8 @@ class Experiment:
         self.requirePsychopyLibs(libs=libs)
         self.requireImport(importName='keyboard',
                            importFrom='psychopy.hardware')
-
-        _settingsComp = getComponents(fetchIcons=False)['SettingsComponent']
-        self.settings = _settingsComp(parentName='', exp=self)
+        from .components.settings import SettingsComponent
+        self.settings = SettingsComponent(parentName='', exp=self)
         # this will be the xml.dom.minidom.doc object for saving
         self._doc = xml.ElementTree()
         self.namespace = NameSpace(self)  # manage variable names
