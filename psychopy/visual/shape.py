@@ -26,6 +26,7 @@ from psychopy.colors import Color
 from psychopy.tools.attributetools import (attributeSetter,  # logAttrib,
                                            setAttribute)
 from psychopy.tools.arraytools import val2array
+from psychopy.tools.legacytools import legacySafe, LegacyArg
 from psychopy.visual.basevisual import (
     BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin, WindowMixin
 )
@@ -138,11 +139,11 @@ class BaseShapeStim(BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin):
                  autoLog=None,
                  autoDraw=False,
                  # legacy
-                 color=False,
-                 lineRGB=False,
-                 fillRGB=False,
-                 fillColorSpace=None,
-                 lineColorSpace=None
+                 color=LegacyArg("fillColor"),
+                 lineRGB=LegacyArg("lineColor"),
+                 fillRGB=LegacyArg("fillColor"),
+                 fillColorSpace=LegacyArg("colorSpace"),
+                 lineColorSpace=LegacyArg("colorSpace")
                  ):
         """ """  # all doc is in the attributes
         # what local vars are defined (these are the init params) for use by
@@ -163,32 +164,13 @@ class BaseShapeStim(BaseVisualStim, DraggingMixin, ColorMixin, ContainerMixin):
 
         # Appearance
         self.colorSpace = colorSpace
-        if fillColor is not False:
-            self.fillColor = fillColor
-        elif color is not False:
-            # Override fillColor with color if not set
-            self.fillColor = color
-        else:
-            # Default to None if neither are set
-            self.fillColor = self._defaultFillColor
-        if lineColor is not False:
-            self.lineColor = lineColor
-        elif color is not False:
-            # Override lineColor with color if not set
-            self.lineColor = color
-        else:
-            # Default to black if neither are set
-            self.lineColor = self._defaultLineColor
-        if lineRGB is not False:
-            # Override with RGB if set
-            logging.warning("Use of rgb arguments to stimuli are deprecated."
-                            " Please use color and colorSpace args instead")
-            self.setLineColor(lineRGB, colorSpace='rgb', log=None)
-        if fillRGB is not False:
-            # Override with RGB if set
-            logging.warning("Use of rgb arguments to stimuli are deprecated."
-                            " Please use color and colorSpace args instead")
-            self.setFillColor(fillRGB, colorSpace='rgb', log=None)
+        if fillColor is False:
+            fillColor = self._defaultFillColor
+        self.fillColor = fillColor
+        if lineColor is False:
+            lineColor = self._defaultLineColor
+        self.lineColor = lineColor
+
         self.contrast = contrast
         if opacity is not None:
             self.opacity = opacity
@@ -499,7 +481,7 @@ class ShapeStim(BaseShapeStim):
 
     """
     # Author: Jeremy Gray, November 2015, using psychopy.contrib.tesselate
-
+    @legacySafe
     def __init__(self,
                  win,
                  units='',
@@ -523,11 +505,11 @@ class ShapeStim(BaseShapeStim):
                  autoLog=None,
                  autoDraw=False,
                  # legacy
-                 color=False,
-                 lineRGB=False,
-                 fillRGB=False,
-                 fillColorSpace=None,
-                 lineColorSpace=None
+                 color=LegacyArg("fillColor"),
+                 lineRGB=LegacyArg("lineColor"),
+                 fillRGB=LegacyArg("fillColor"),
+                 fillColorSpace=LegacyArg("colorSpace"),
+                 lineColorSpace=LegacyArg("colorSpace")
                  ):
 
         # what local vars are defined (init params, for use by __repr__)
@@ -539,9 +521,7 @@ class ShapeStim(BaseShapeStim):
                                         lineWidth=lineWidth,
                                         colorSpace=colorSpace,
                                         lineColor=lineColor,
-                                        lineColorSpace=lineColorSpace,
                                         fillColor=fillColor,
-                                        fillColorSpace=fillColorSpace,
                                         vertices=None,  # dummy verts
                                         closeShape=self.closeShape,
                                         pos=pos,
