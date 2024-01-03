@@ -33,6 +33,8 @@ After importing sound, the sound lib and driver being used will be stored as::
 # Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2022 Open Science Tools Ltd.
 # Distributed under the terms of the GNU General Public License (GPL).
 
+__all__ = []
+
 import sys
 import os
 import traceback
@@ -41,9 +43,6 @@ from psychopy.tools import systemtools
 from .exceptions import DependencyError, SoundFormatError
 from .audiodevice import *
 from .audioclip import *  # import objects related to AudioClip
-from . import microphone
-
-__all__ = ["microphone"]
 
 # # import transcription if possible
 # try:

@@ -6,8 +6,7 @@ from psychtoolbox import audio as audio
 from psychopy import logging as logging, prefs
 from psychopy.constants import NOT_STARTED
 from psychopy.hardware import BaseDevice
-from psychopy.sound.audiodevice import AudioDeviceInfo, AudioDeviceStatus
-from psychopy.sound.audioclip import AudioClip
+from psychopy.sound import AudioDeviceInfo, AudioDeviceStatus, AudioClip
 from psychopy.sound.exceptions import AudioInvalidCaptureDeviceError, AudioInvalidDeviceError, \
     AudioStreamError, AudioRecordingBufferFullError
 from psychopy.tools import systemtools as st
