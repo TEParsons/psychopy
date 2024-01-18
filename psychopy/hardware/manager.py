@@ -303,6 +303,18 @@ class DeviceManager:
         return aliases
 
     @staticmethod
+    def getDeviceActions(deviceName):
+        from psychopy.hardware.base import DeviceAction
+        device = DeviceManager.getDevice(deviceName)
+        for attr in dir(device):
+            val = getattr(device, attr)
+            print(attr, type(val))
+            if isinstance(val, DeviceAction):
+                print(
+                    val.getJSON()
+                )
+
+    @staticmethod
     def getAllDeviceAliases():
         """
         Get all aliases by which each device is known to DeviceManager

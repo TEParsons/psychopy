@@ -13,6 +13,7 @@ __all__ = [
 ]
 
 import json
+import inspect
 
 
 class BaseResponse:
@@ -48,6 +49,62 @@ class BaseResponse:
             message['data'][key] = getattr(self, key)
 
         return json.dumps(message)
+
+
+def action(name):
+    """
+    Decorator to make a method into a DeviceAction.
+
+    Parameters
+    ----------
+    name
+
+    Returns
+    -------
+
+    """
+    def _actionDecorator(fcn):
+        return DeviceAction(name=name, fcn=fcn)
+
+    return _actionDecorator
+
+
+class DeviceAction:
+    """
+    Stores information about a named "action" which a device can perform, and the method and
+    inputs to perform this action. Distinguishes "actions" (i.e.
+    standalone functions which you might want to do from a GUI) from ordinary methods (i.e.
+    things which the Device class needs to function)
+    """
+    def __init__(self, name, fcn, instance=None):
+        self.name = name
+        self.fcn = fcn
+        self.instance = instance
+
+    def __get__(self, instance, owner):
+        return DeviceAction(name=self.name, fcn=self.fcn, instance=instance)
+
+    def __call__(self, *args, **kwargs):
+        return self.fcn(self.instance, *args, **kwargs)
+
+    def getJSON(self):
+        # get args from signature
+        params = []
+        for name, param in inspect.signature(self.fcn).parameters.items():
+            profile = {
+                'name': name,
+                'required': param.default is param.empty
+            }
+            if not profile['required']:
+                profile['default'] = param.default
+        # return information about the function
+        return json.dumps({
+            'type': "action",
+            'name': self.name,
+            'function': self.fcn.__name__,
+            'doc': self.fcn.__doc__,
+            'args': params
+        })
 
 
 class BaseDevice:
