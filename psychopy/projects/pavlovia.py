@@ -967,7 +967,12 @@ class PavloviaProject(dict):
         gitRoot = getGitRoot(self.localRoot)
 
         if gitRoot is None:
-            self._repo = self.newRepo()
+            repo = self.newRepo()
+            # return now if something went wrong
+            if repo is None:
+                return getattr(self, "_repo", None)
+            # otherwise store new repo
+            self._repo = repo
         elif gitRoot not in [self.localRoot, str(pathlib.Path(self.localRoot).absolute())]:
             # this indicates that the requested root is inside another repo
             raise AttributeError("The requested local path for project\n\t{}\n"
@@ -1047,7 +1052,6 @@ class PavloviaProject(dict):
         else:
             # no files locally so safe to try and clone from remote
             repo = self.cloneRepo(infoStream=infoStream)
-            # TODO: add the further case where there are remote AND local files!
 
         return repo
 
@@ -1090,6 +1094,20 @@ class PavloviaProject(dict):
         if not self.localRoot:
             raise AttributeError("Cannot fetch a PavloviaProject until we have "
                                  "chosen a local folder.")
+        if os.listdir(self.localRoot):
+            dlg = wx.MessageDialog(
+                parent=None,
+                caption=_translate("Git Failure"),
+                message=_translate(
+                    f"Could not clone project.\n"
+                    f"\n"
+                    f"Could not clone project to {self.localRoot} as the folder already has "
+                    f"files in it, which would be overwritten. Please choose a different location."
+                ),
+                style=wx.ICON_WARNING
+            )
+            dlg.ShowModal()
+            return
 
         if infoStream:
             infoStream.write("Cloning from remote...\n")
