@@ -304,15 +304,25 @@ class DeviceManager:
 
     @staticmethod
     def getDeviceActions(deviceName):
-        from psychopy.hardware.base import DeviceAction
+        """
+        Get all methods of a device which are decorated by `deviceAction`, as well as the info
+        from that decorator.
+
+        Parameters
+        ----------
+        deviceName : str
+            Key by which the device is stored.
+
+        Returns
+        -------
+        dict[str: DeviceAction]
+            Dict of method names against JSON serializable objects with information about the
+            corresponding device actions
+        """
+        # get device
         device = DeviceManager.getDevice(deviceName)
-        for attr in dir(device):
-            val = getattr(device, attr)
-            print(attr, type(val))
-            if isinstance(val, DeviceAction):
-                print(
-                    val.getJSON()
-                )
+        # return its deviceActions dict
+        return device.deviceActions
 
     @staticmethod
     def getAllDeviceAliases():

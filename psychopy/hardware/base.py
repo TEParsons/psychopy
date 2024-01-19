@@ -14,6 +14,7 @@ __all__ = [
 
 import json
 import inspect
+from psychopy.localization import _translate
 
 
 class BaseResponse:
@@ -51,66 +52,13 @@ class BaseResponse:
         return json.dumps(message)
 
 
-def action(name):
-    """
-    Decorator to make a method into a DeviceAction.
-
-    Parameters
-    ----------
-    name
-
-    Returns
-    -------
-
-    """
-    def _actionDecorator(fcn):
-        return DeviceAction(name=name, fcn=fcn)
-
-    return _actionDecorator
-
-
-class DeviceAction:
-    """
-    Stores information about a named "action" which a device can perform, and the method and
-    inputs to perform this action. Distinguishes "actions" (i.e.
-    standalone functions which you might want to do from a GUI) from ordinary methods (i.e.
-    things which the Device class needs to function)
-    """
-    def __init__(self, name, fcn, instance=None):
-        self.name = name
-        self.fcn = fcn
-        self.instance = instance
-
-    def __get__(self, instance, owner):
-        return DeviceAction(name=self.name, fcn=self.fcn, instance=instance)
-
-    def __call__(self, *args, **kwargs):
-        return self.fcn(self.instance, *args, **kwargs)
-
-    def getJSON(self):
-        # get args from signature
-        params = []
-        for name, param in inspect.signature(self.fcn).parameters.items():
-            profile = {
-                'name': name,
-                'required': param.default is param.empty
-            }
-            if not profile['required']:
-                profile['default'] = param.default
-        # return information about the function
-        return json.dumps({
-            'type': "action",
-            'name': self.name,
-            'function': self.fcn.__name__,
-            'doc': self.fcn.__doc__,
-            'args': params
-        })
-
-
 class BaseDevice:
     """
     Base class for device interfaces, includes support for DeviceManager and adding listeners.
     """
+    # dict in which to store device actions
+    deviceActions = {}
+
     def __init_subclass__(cls, aliases=None):
         from psychopy.hardware.manager import DeviceManager
         import inspect
@@ -201,6 +149,90 @@ class BaseDevice:
         raise NotImplementedError(
             "All subclasses of BaseDevice must implement the method `getAvailableDevices`"
         )
+
+
+def deviceAction(label=None, hint="", awaited=True):
+    """
+    Decorator to distinguish "actions" (standalone functions which you might want to call from a
+    GUI) from ordinary methods. The method remains unchanged, but on decoration, stores info in
+    the class so that it can be accessed by DeviceManager.getDeviceActions
+
+    Parameters
+    ----------
+    label : str
+        Recommended label for any buttons for this action. Leave as None to use the function name.
+    hint : str
+        Recommended content for tooltips on any buttons for this action. Leave as None to use the
+        function docstring.
+    awaited : bool
+        When calling this action, should the GUI wait for it to return?
+    """
+    def _actionDecorator(fcn):
+        return DeviceAction(fcn, label=label, hint=hint, awaited=awaited)
+
+    return _actionDecorator
+
+
+class DeviceAction:
+    """
+    Stores information about a named "action" which a device can perform, and the method and
+    inputs to perform this action. Distinguishes "actions" (standalone functions which you might
+    want to do from a GUI) from ordinary methods.
+    """
+    def __init__(self, fcn, label=None, hint=None, awaited=True):
+        # store function handle
+        self.fcn = fcn
+        # store label
+        if label is None:
+            # use function name if no label given
+            label = fcn.__name__
+        self.label = label
+        # store tooltip
+        if hint is None:
+            # use function docstring if no hint given
+            hint = fcn.__doc__
+        self.hint = hint
+        # store whether the decorated function needs to be awaited
+        self.awaited = awaited
+        # get function args from signature
+        self.args = []
+        for name, param in inspect.signature(self.fcn).parameters.items():
+            # skip self
+            if name == "self":
+                continue
+            # get name and required status for arg
+            profile = {
+                'name': name,
+                'required': param.default is param.empty
+            }
+            # if required has a default, store that too
+            if not profile['required']:
+                profile['default'] = param.default
+            # add to args
+            self.args.append(profile)
+
+    def __set_name__(self, owner: BaseDevice, name):
+        """
+        DeviceAction will record itself in a class when assigned to a method of that class. This
+        function shouldn't be called directly.
+        """
+        # store ref to self
+        owner.deviceActions[name] = self
+        # set as if function
+        setattr(owner, name, self.fcn)
+        # self.fcn.__set_name__(owner, name)
+
+    def getJSON(self):
+        # return information about the function
+        return json.dumps({
+            'type': "action",
+            'label': self.label,
+            'hint': self.hint,
+            'function': self.fcn.__name__,
+            'doc': self.fcn.__doc__,
+            'args': self.args,
+            'awaited': self.awaited,
+        })
 
 
 class BaseResponseDevice(BaseDevice):
@@ -294,6 +326,11 @@ class BaseResponseDevice(BaseDevice):
     def getListenerNames(self):
         return [type(lsnr).__name__ for lsnr in self.listeners]
 
+    @deviceAction(
+        label=_translate("Add listener"),
+        hint=_translate("Add a listener, which will receive all the same messages as this device."),
+        awaited=False
+    )
     def addListener(self, listener, startLoop=False):
         """
         Add a listener, which will receive all the same messages as this device.

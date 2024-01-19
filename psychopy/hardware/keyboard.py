@@ -70,7 +70,7 @@ from psychopy import logging
 from psychopy.constants import NOT_STARTED
 import time
 
-from psychopy.hardware.base import BaseResponseDevice, BaseResponse, action
+from psychopy.hardware.base import BaseResponseDevice, BaseResponse
 from psychopy.hardware import DeviceManager
 from psychopy.tools.attributetools import AttributeGetSetMixin
 from psychopy.tools import systemtools as st
