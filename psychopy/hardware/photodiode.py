@@ -1,6 +1,7 @@
 import json
 from psychopy import layout, logging
 from psychopy.hardware import base, DeviceManager
+from psychopy.hardware.base import deviceAction
 from psychopy.localization import _translate
 from psychopy.hardware import keyboard
 
@@ -101,18 +102,24 @@ class BasePhotodiodeGroup(base.BaseResponseDevice):
 
         return matches
 
+    @deviceAction(
+        label=_translate("Find photodiode"),
+        hint=_translate("Draws rectangles on the screen and records photodiode responses to "
+                        "recursively find the location of the diode.")
+    )
     def findPhotodiode(self, win, channel):
         """
-        Draws rectangles on the screen and records photodiode responses to recursively find the location of the diode.
+        Draws rectangles on the screen and records photodiode responses to recursively find the
+        location of the diode.
 
         Returns
         -------
         psychopy.layout.Position
-            Position of the diode on the window. Essentially, the center of the last rectangle which the photodiode
-            was able to detect.
+            Position of the diode on the window. Essentially, the center of the last rectangle
+            which the photodiode was able to detect.
         psychopy.layout.Size
-            Size of the area of certainty. Essentially, the size of the last (smallest) rectangle which the photodiode
-            was able to detect.
+            Size of the area of certainty. Essentially, the size of the last (smallest) rectangle
+            which the photodiode was able to detect.
         """
         # keyboard to check for escape
         kb = keyboard.Keyboard(deviceName="photodiodeValidatorKeyboard")
@@ -207,7 +214,28 @@ class BasePhotodiodeGroup(base.BaseResponseDevice):
             layout.Position(self.size, units="norm", win=win),
         )
 
+    @deviceAction(
+        label=_translate("Find best threshold"),
+        hint=_translate("Checks a variety of threshold values against a white and black screen to "
+                        "find one which detects white and not black.")
+    )
     def findThreshold(self, win, channel):
+        """
+        Checks a variety of threshold values against a white and black screen to find one which
+        detects white and not black.
+
+        Parameters
+        ----------
+        win : psychopy.visual.Window
+            Window to change the color of
+        channel : int
+            Channel of the photodiode whose threshold to find
+
+        Returns
+        -------
+        int
+            The chosen threshold
+        """
         # keyboard to check for escape/continue
         kb = keyboard.Keyboard(deviceName="photodiodeValidatorKeyboard")
         # stash autodraw
