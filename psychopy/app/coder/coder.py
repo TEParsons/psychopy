@@ -1241,6 +1241,8 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
                 if not os.path.isfile(filename):
                     continue
                 self.setCurrentDoc(filename, keepHidden=True)
+        else:
+            self.fileNew()
 
         # Create shelf notebook
         self.shelf = StyledNotebook(
@@ -2083,7 +2085,13 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         """Return the full filename of each open tab"""
         names = []
         for ii in range(self.notebook.GetPageCount()):
-            names.append(self.notebook.GetPage(ii).filename)
+            # get filename from page
+            filename = self.notebook.GetPage(ii).filename
+            # skip temp files
+            if str(filename).startswith(prefs.paths['temp']):
+                continue
+            # append
+            names.append(filename)
         return names
 
     def quit(self, event):
@@ -2175,7 +2183,11 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         text = codecs.open(docName, 'r', 'utf-8').read()
         pr.Print(text, docName)
 
-    def fileNew(self, event=None, filepath=""):
+    def fileNew(self, event=None, filepath=None):
+        if filepath is None:
+            filepath = os.path.join(prefs.paths['temp'], "untitled.py")
+            with open(filepath, "w") as f:
+                f.write("")
         self.setCurrentDoc(filepath)
 
     def fileReload(self, event, filename=None, checkSave=False):
@@ -2401,8 +2413,9 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
             doc = self.currentDoc
         if filename is None:
             filename = doc.filename
-        if filename.startswith('untitled'):
-            self.fileSaveAs(filename)
+        if filename.startswith(prefs.paths['temp']):
+            # if file is a temp, save as instead
+            self.fileSaveAs(None, filename=filename)
             # self.setFileModified(False) # done in save-as if saved; don't
             # want here if not saved there
         else:
@@ -2468,9 +2481,11 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
             docId = self.findDocID(doc.filename)
         if filename is None:
             filename = doc.filename
-
         # if we have an absolute path then split it
         initPath, filename = os.path.split(filename)
+        # if file is a temp, start off in home dir
+        if initPath.startswith(prefs.paths['temp']):
+            initPath = str(Path.home())
         # set wildcards; need strings to appear inside _translate
         if sys.platform != 'darwin':
             wildcard = _translate("Python script (*.py)|*.py|"
