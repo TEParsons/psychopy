@@ -12,6 +12,7 @@ from psychopy.app.colorpicker import PsychoColorPicker
 import sys
 import pickle
 import tempfile
+import shutil
 import mmap
 import time
 import io
@@ -1016,6 +1017,9 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         # start with an empty list to be appended by each frame
         self.prefs.appData['builder']['prevFiles'] = []
         self.prefs.appData['coder']['prevFiles'] = []
+
+        # delete any temp files
+        shutil.rmtree(self.prefs.paths['temp'], ignore_errors=True)
 
         # write plugins config if changed during the session
         # saveStartUpPluginsConfig()

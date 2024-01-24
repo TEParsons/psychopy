@@ -5,6 +5,7 @@ import errno
 import os
 import sys
 import platform
+import tempfile
 from pathlib import Path
 from .. import __version__
 
@@ -120,6 +121,8 @@ class Preferences:
         self.paths['demos'] = join(dirPsychoPy, 'demos')
         self.paths['resources'] = dirResources
         self.paths['tests'] = join(dirPsychoPy, 'tests')
+        # location of temporary files (e.g. unsaved Coder scripts)
+        self.paths['temp'] = tempfile.mkdtemp(prefix="psychopy_")
         # path to libs/frameworks
         if 'PsychoPy.app/Contents' in exePath:
             self.paths['libs'] = exePath.replace("MacOS/python", "Frameworks")
