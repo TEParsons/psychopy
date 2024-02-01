@@ -121,7 +121,7 @@ class Preferences:
         self.paths['demos'] = join(dirPsychoPy, 'demos')
         self.paths['resources'] = dirResources
         self.paths['tests'] = join(dirPsychoPy, 'tests')
-        # location of temporary files (e.g. unsaved Coder scripts)
+        # location of temporary files (unsaved Coder/Builder/Runner files)
         self.paths['temp'] = tempfile.mkdtemp(prefix="psychopy_")
         # path to libs/frameworks
         if 'PsychoPy.app/Contents' in exePath:
