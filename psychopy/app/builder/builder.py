@@ -3338,9 +3338,10 @@ class ReadmeFrame(wx.Frame, handlers.ThemeMixin):
         # check we can read
         if filename is None:  # check if we can write to the directory
             return False
-        elif not os.path.exists(filename):
-            with open(filename, "w") as f:
-                f.write("")
+        # Path-ise file
+        filename = Path(filename)
+        if not filename.is_file():
+            filename.write_text("")
             self.filename = filename
             return False
         elif not os.access(filename, os.R_OK):
