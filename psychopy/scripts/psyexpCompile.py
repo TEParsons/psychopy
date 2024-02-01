@@ -176,7 +176,7 @@ def compileScript(infile=None, version=None, outfile=None):
             The Python or JavaScript target type
         """
         # Set output type, either JS or Python
-        if outfile.endswith(".js"):
+        if str(outfile).endswith(".js"):
             targetOutput = "PsychoJS"
         else:
             targetOutput = "PsychoPy"

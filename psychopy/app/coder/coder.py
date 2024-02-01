@@ -2281,7 +2281,7 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
                 self.currentDoc.newlines = newlines
                 del fileText  # delete the buffer
                 self.currentDoc.fileModTime = os.path.getmtime(filename)
-                self.fileHistory.AddFileToHistory(filename)
+                self.fileHistory.AddFileToHistory(str(filename))
             else:
                 # set name for an untitled document
                 filename = 'untitled.py'

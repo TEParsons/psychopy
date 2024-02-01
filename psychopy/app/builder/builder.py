@@ -1466,10 +1466,9 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
 
     def compileScript(self, event=None):
         """Defines compile script button behavior"""
-        fullPath = self.filename.replace('.psyexp', '.py')
-        fullPath = self.generateScript(experimentPath=fullPath, exp=self.exp)
-        self.app.showCoder()  # make sure coder is visible
-        self.app.coder.fileNew(filepath=fullPath)
+        fullPath = self.filename.parent / (self.filename.stem + '.py')
+        fullPath = self.generateScript(experimentPath=str(fullPath), exp=self.exp)
+        self.app.showCoder(fileList=[fullPath])  # make sure coder is visible
         self.app.coder.fileReload(event=None, filename=fullPath)
 
     @property
