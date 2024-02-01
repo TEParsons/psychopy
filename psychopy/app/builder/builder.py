@@ -850,8 +850,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
                             exp=self.exp,
                             target="PsychoJS")
         # Open exported files
-        self.app.showCoder()
-        self.app.coder.fileNew(filepath=exportPath)
+        self.app.showCoder(fileList=[exportPath])
         self.app.coder.fileReload(event=None, filename=exportPath)
 
     def editREADME(self, event):

@@ -822,16 +822,18 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         # have to reimport because it is only local to __init__ so far
         from . import coder
         if self.coder is None:
-            title = "PsychoPy Coder (IDE) (v%s)"
+            # make a new Coder window if there is none
             wx.BeginBusyCursor()
             self.coder = coder.CoderFrame(None, -1,
-                                          title=title % self.version,
                                           files=fileList, app=self)
             self.updateWindowMenu()
             wx.EndBusyCursor()
         else:
             # Set output window and standard streams
             self.coder.setOutputWindow(True)
+            # open any new files
+            for file in fileList:
+                self.coder.setCurrentDoc(filename=file)
         self.coder.Show(True)
         self.SetTopWindow(self.coder)
         self.coder.Raise()

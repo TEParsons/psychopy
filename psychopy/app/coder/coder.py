@@ -1084,7 +1084,7 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
 
 class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
 
-    def __init__(self, parent, ID, title, files=(), app=None):
+    def __init__(self, parent, ID, title=None, files=(), app=None):
         self.app = app  # type: psychopy.app.PsychoPyApp
         self.frameType = 'coder'
         # things the user doesn't set like winsize etc
@@ -1101,7 +1101,9 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.showingReloadDialog = False
 
         # default window title string
-        self.winTitle = "PsychoPy Coder (v{})".format(self.app.version)
+        if title is None:
+            title = "PsychoPy Coder (v{})".format(self.app.version)
+        self.winTitle = title
 
         # we didn't have the key or the win was minimized/invalid
         if self.appData['winH'] == 0 or self.appData['winW'] == 0:
