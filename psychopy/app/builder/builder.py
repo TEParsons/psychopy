@@ -123,6 +123,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.appPrefs = self.app.prefs.app
         self.paths = self.app.prefs.paths
         self.frameType = 'builder'
+        self.fileExists = False
         self.filename = fileName
         self.htmlPath = None
         self.scriptProcess = None
@@ -638,10 +639,16 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
     @filename.setter
     def filename(self, value):
         if value is None:
-            # if value is None, use temp/untitled
-            value = Path(prefs.paths['temp']) / "untitled.psyexp"
-        # path-ise and set
-        self._filename = Path(value)
+            # mark nonexistant
+            self.fileExists = False
+            # keep placeholder name for labels and etc.
+            self._filename = Path("untitled.psyexp")
+        else:
+            # path-ise and set
+            self._filename = Path(value)
+            # mark existant
+            self.fileExists = Path(value).is_file()
+
         # skip if there's no ribbon
         if not hasattr(self, "ribbon"):
             return
@@ -698,7 +705,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
                 wildcard = _translate("PsychoPy experiments (*.psyexp)|*.psyexp|Any file (*.*)|*")
             # get path of current file (or home dir to avoid temp)
             initPath = self.filename.parent
-            if initPath == Path(prefs.paths['temp']):
+            if not self.fileExists:
                 initPath = Path.home()
             # Open dlg
             dlg = wx.FileDialog(self, message=_translate("Open file ..."),
@@ -766,7 +773,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         else:
             filename = Path(filename)
 
-        if filename.parent == Path(prefs.paths['temp']):
+        if not self.fileExists:
             if not self.fileSaveAs(filename):
                 return False  # the user cancelled during saveAs
         else:
@@ -797,7 +804,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         initPath = filename.parent
         filename = filename.name
         # substitute temp dir for home
-        if initPath == Path(prefs.paths['temp']):
+        if not self.fileExists:
             initPath = Path.home()
 
         if sys.platform != 'darwin':
@@ -819,8 +826,8 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
                     os.path.split(newPath)[1])[0]
                 self.exp.setExpName(newShortName)
             # actually save
-            self.fileSave(event=None, filename=newPath)
             self.filename = newPath
+            self.fileSave(event=None, filename=newPath)
             self.project = pavlovia.getProject(filename)
             returnVal = 1
         dlg.Destroy()
@@ -1270,7 +1277,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         Send the current file to the Runner.
         """
         # Check whether file is truly untitled (not just saved as untitled)
-        if not self.filename.is_file() or self.filename.parent == Path(prefs.paths['temp']):
+        if not self.fileExists:
             ok = self.fileSave(self.filename)
             if not ok:
                 return False  # save file before compiling script
