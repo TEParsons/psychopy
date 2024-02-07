@@ -151,7 +151,7 @@ class BaseDevice:
         )
 
 
-def deviceAction(label=None, hint="", awaited=True):
+def deviceAction(label=None, hint="", required=False, awaited=True):
     """
     Decorator to distinguish "actions" (standalone functions which you might want to call from a
     GUI) from ordinary methods. The method remains unchanged, but on decoration, stores info in
@@ -164,11 +164,13 @@ def deviceAction(label=None, hint="", awaited=True):
     hint : str
         Recommended content for tooltips on any buttons for this action. Leave as None to use the
         function docstring.
+    required : bool
+        Does this action need to have been called in order for the device to work?
     awaited : bool
         When calling this action, should the GUI wait for it to return?
     """
     def _actionDecorator(fcn):
-        return DeviceAction(fcn, label=label, hint=hint, awaited=awaited)
+        return DeviceAction(fcn, label=label, hint=hint, required=required, awaited=awaited)
 
     return _actionDecorator
 
@@ -179,7 +181,7 @@ class DeviceAction:
     inputs to perform this action. Distinguishes "actions" (standalone functions which you might
     want to do from a GUI) from ordinary methods.
     """
-    def __init__(self, fcn, label=None, hint=None, awaited=True):
+    def __init__(self, fcn, label=None, hint=None, required=False, awaited=True):
         # store function handle
         self.fcn = fcn
         # store label
@@ -194,6 +196,8 @@ class DeviceAction:
         self.hint = hint
         # store whether the decorated function needs to be awaited
         self.awaited = awaited
+        # store whether the decorated function is required for the device to work
+        self.required = required
         # get function args from signature
         self.args = []
         for name, param in inspect.signature(self.fcn).parameters.items():
@@ -231,6 +235,7 @@ class DeviceAction:
             'function': self.fcn.__name__,
             'doc': self.fcn.__doc__,
             'args': self.args,
+            'required': self.required,
             'awaited': self.awaited,
         })
 
