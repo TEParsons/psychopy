@@ -105,7 +105,8 @@ class BasePhotodiodeGroup(base.BaseResponseDevice):
     @deviceAction(
         label=_translate("Find photodiode"),
         hint=_translate("Draws rectangles on the screen and records photodiode responses to "
-                        "recursively find the location of the diode.")
+                        "recursively find the location of the diode."),
+        required=True
     )
     def findPhotodiode(self, win, channel):
         """
@@ -217,7 +218,8 @@ class BasePhotodiodeGroup(base.BaseResponseDevice):
     @deviceAction(
         label=_translate("Find best threshold"),
         hint=_translate("Checks a variety of threshold values against a white and black screen to "
-                        "find one which detects white and not black.")
+                        "find one which detects white and not black."),
+        required=True
     )
     def findThreshold(self, win, channel):
         """
