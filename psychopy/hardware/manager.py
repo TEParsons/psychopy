@@ -435,9 +435,9 @@ class DeviceManager:
         return isinstance(device, cls)
 
     @staticmethod
-    def getRequiredDeviceNamesFromExperiments(experiments):
+    def getDevicesFromExperiments(experiments):
         """
-        Get a list of device names referenced in a given set of experiments.
+        Get a list of devices referenced in a given set of experiments.
 
         Parameters
         ----------
@@ -446,15 +446,17 @@ class DeviceManager:
 
         Returns
         -------
-        dict[str:list[str]
-            Dict of device names against a list of the classes of device it's used to refer to
+        dict[str:dict[str:list]
+            Device names against the classes which the device could be and any icons associated
+            with the components.
         """
+
         from psychopy import experiment
 
         # dict in which to store usages
         usages = {}
 
-        def _process(emt):
+        def _processElement(emt, expFile):
             """
             Process an element (Component or Routine) for device names and append them to the
             usages dict.
@@ -463,6 +465,8 @@ class DeviceManager:
             ----------
             emt : Component or Routine
                 Element to process
+            expFile : str or Path
+                Experiment file element has come from
             """
             # if we have a device name for this element...
             if "deviceLabel" in emt.params:
@@ -472,11 +476,24 @@ class DeviceManager:
                 deviceName = inits['deviceLabel'].val
                 # make sure device name is in usages dict
                 if deviceName not in usages:
-                    usages[deviceName] = []
-                # add any new usages
+                    usages[deviceName] = {
+                        'references': [],
+                        'possibleClass': [],
+                        'possibleIcon': []
+                    }
+                # add location
+                usages[deviceName]['references'].append({
+                    'experiment': expFile,
+                    'element': emt.name
+                })
+                # add any new component class
+                icon = str(emt.iconFile.parent / "light" / emt.iconFile.name)
+                if icon not in usages[deviceName]['possibleIcon']:
+                    usages[deviceName]['possibleIcon'].append(icon)
+                # add any new device classes
                 for cls in getattr(emt, "deviceClasses", []):
-                    if cls not in usages[deviceName]:
-                        usages[deviceName].append(cls)
+                    if cls not in usages[deviceName]['possibleClass']:
+                        usages[deviceName]['possibleClass'].append(cls)
 
         # process each experiment
         for file in experiments:
@@ -488,11 +505,11 @@ class DeviceManager:
             for rt in exp.routines.values():
                 if isinstance(rt, experiment.routines.BaseStandaloneRoutine):
                     # for standalone routines, get device names from params
-                    _process(rt)
+                    _processElement(rt, file)
                 else:
                     # for regular routines, get device names from each component
                     for comp in rt:
-                        _process(comp)
+                        _processElement(comp, file)
 
         return usages
 
