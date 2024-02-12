@@ -21,6 +21,7 @@ class FrameRibbon(wx.Panel, handlers.ThemeMixin):
     def __init__(self, parent):
         # initialize panel
         wx.Panel.__init__(self, parent)
+        self.parent = parent
         # setup sizer
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.SetSizer(self.sizer)
@@ -72,8 +73,9 @@ class FrameRibbon(wx.Panel, handlers.ThemeMixin):
             Stem of icon to use for this button
         tooltip : str
             Tooltip to display on hover
-        callback : function
-            Function to call when this button is clicked
+        callback : function or tuple[functions]
+            Function to call when this button is clicked, supply a tuple of functions to have the
+            second run on right click
         style : wx.StyleFlag
             Style flags from wx to control button appearance
 
@@ -264,8 +266,9 @@ class FrameRibbonSection(wx.Panel, handlers.ThemeMixin):
             Stem of icon to use for this button
         tooltip : str
             Tooltip to display on hover
-        callback : function
-            Function to call when this button is clicked
+        callback : function or tuple[functions]
+            Function to call when this button is clicked, supply a tuple of functions to have the
+            second run on right click
         style : wx.StyleFlag
             Style flags from wx to control button appearance
 
@@ -380,8 +383,9 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
         Stem of icon to use for this button
     tooltip : str
         Tooltip to display on hover
-    callback : function
-        Function to call when this button is clicked
+    callback : function or tuple[functions]
+        Function to call when this button is clicked, supply a tuple of functions to have the
+        second run on right click
     style : int
         Combination of wx button styles to apply
     """
@@ -390,6 +394,10 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
         w = -1
         if style | wx.BU_NOTEXT == style:
             w = 40
+        # if given two callbacks, use the second for right click
+        r_callback = None
+        if isinstance(callback, (tuple, list)):
+            callback, r_callback = callback
         # initialize
         wx.Button.__init__(self, parent, style=wx.BORDER_NONE | style, size=(w, 44))
         self.SetMinSize((40, 44))
@@ -409,6 +417,8 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
         # if given, bind callback
         if callback is not None:
             self.Bind(wx.EVT_BUTTON, callback)
+        if r_callback is not None:
+            self.Bind(wx.EVT_CONTEXT_MENU, r_callback)
         # setup hover behaviour
         self.Bind(wx.EVT_ENTER_WINDOW, self.onHover)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.onHover)

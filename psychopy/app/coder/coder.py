@@ -3050,7 +3050,7 @@ class CoderRibbon(ribbon.FrameRibbon):
         self.addButton(
             section="views", name="builder", label=_translate("Show Builder"), icon="showBuilder",
             tooltip=_translate("Switch to Builder view"),
-            callback=parent.app.showBuilder
+            callback=(parent.app.showBuilder, self.makeFramesMenu)
         )
         # show Coder
         self.addButton(
@@ -3067,3 +3067,36 @@ class CoderRibbon(ribbon.FrameRibbon):
 
         # start off in run mode
         runPilotSwitch.setMode(1)
+
+
+
+    def makeFramesMenu(self, evt):
+        """
+        Make and show menu with all open Builder frames
+        """
+        # what frame are we looking for?
+        obj = evt.GetEventObject()
+        # make menu
+        menu = wx.Menu()
+        # array to store IDs against frames
+        frameIDs = {}
+
+        def _showFrame(evt):
+            """
+            Function to show target frame
+            """
+            frame = frameIDs[evt.GetId()]
+            frame.Show()
+            frame.Raise()
+
+        # get open windows
+        for frame in self.parent.app.getAllFrames():
+            if type(frame).__name__ == "BuilderFrame":
+                # make menu item
+                item = menu.Append(wx.ID_ANY, Path(frame.filename).name)
+                # reference its ID against the current frame
+                frameIDs[item.GetId()] = frame
+                # bind to frame show method
+                menu.Bind(wx.EVT_MENU, _showFrame, id=item.GetId())
+        # show
+        obj.PopupMenu(menu)
