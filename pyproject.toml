@@ -140,8 +140,17 @@ requires = [
     "pdm-backend",
     "distro; platform_system == \"Linux\"",
     "tomlkit",
+    "setuptools >= 42", 
+    "babel >= 2.9"
     ]
+
+[build.scripts]
+compile_mo = "python building/compile_mo.py"
+
 build-backend = "pdm.backend"
+
+[tool.setuptools]
+packages = ["psychopy"]
 
 [tool.pdm.build]
 includes = []
