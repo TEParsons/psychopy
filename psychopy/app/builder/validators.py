@@ -463,10 +463,13 @@ class CodeSnippetValidator(BaseValidator):
 
         # Get attributes of value control
         control = self.GetWindow()
-        if not hasattr(control, 'GetValue'):
-            return '', True  # mdc - why return anything here?
+        if hasattr(control, 'getValue'):
+            val = control.getValue()
+        elif hasattr(control, 'GetValue'):
+            val = control.GetValue()
+        else:
+            return '', True
 
-        val = control.GetValue()  # same as parent.params[self.fieldName].val
         if not isinstance(val, str):
             return '', True
 

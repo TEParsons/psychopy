@@ -130,6 +130,7 @@ class DlgCodeComponentProperties(wx.Dialog):
                                                     params=self.params,
                                                     codeType=codeType)
                 self.codeBoxes[paramName].AddText(param.val)
+                self.codeBoxes[paramName].SetHint(param.hint)
                 self.codeBoxes[paramName].Bind(wx.EVT_KEY_UP, self.onKeyUp)  # For real time translation
 
                 if len(param.val.strip()) and hasattr(_panel, "tabN") and not isinstance(openToPage, str):
@@ -307,7 +308,7 @@ class DlgCodeComponentProperties(wx.Dialog):
         """
         jsCode = ''
         jsBox = codeBox.replace(' ', ' JS ')
-        pythonCode = self.codeBoxes[codeBox].GetValue()
+        pythonCode = self.codeBoxes[codeBox].getValue()
         self.readOnlyCodeBox(False)
 
         try:
@@ -337,7 +338,7 @@ class DlgCodeComponentProperties(wx.Dialog):
         for boxName in self.codeBoxes:
             if 'JS' not in boxName:
                 newJS = self.runTranslation(boxName, True)
-                currentJS = self.codeBoxes[boxName.replace(' ', ' JS ')].GetValue()
+                currentJS = self.codeBoxes[boxName.replace(' ', ' JS ')].getValue()
 
                 if newJS == False or currentJS != newJS:
                     return True
@@ -465,7 +466,7 @@ class DlgCodeComponentProperties(wx.Dialog):
                 param.val = self.disableCtrl.GetValue()
             else:
                 codeBox = self.codeBoxes[fieldName]
-                param.val = codeBox.GetText()
+                param.val = codeBox.getValue()
         return self.params
 
     def helpButtonHandler(self, event):
@@ -514,6 +515,9 @@ class CodeBox(BaseCodeEditor, handlers.ThemeMixin):
 
         # apply the theme to the lexer
         self._applyAppTheme()
+
+    def getValue(self):
+        return self.GetValue()
 
     def OnKeyPressed(self, event):
         keyCode = event.GetKeyCode()
