@@ -48,107 +48,110 @@ class CodeComponent(BaseComponent):
             hint=msg, direct=False,
             label=_translate("Code type"))
 
-        msg = _translate("Code to run before the experiment starts "
-                         "(initialization); right-click checks syntax")
+        # Before experiment
+        msg = _translate(
+            "'''\n"
+            "Code to run before the experiment starts.\n"
+            "Variables set here will be in the global namespace.\n"
+            "'''"
+        )
         self.params['Before Experiment'] = Param(
             beforeExp, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Before experiment"))
+        self.params['Before JS Experiment'] = Param(
+            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            updates='constant', allowedUpdates=[],
+            hint=_docStringJS(msg),
+            label=_translate("Before JS experiment"))
 
-        msg = _translate("Code at the start of the experiment ; right-click "
-                         "checks syntax")
+        # Begin experiment
+        msg = _translate(
+            "'''\n"
+            "Code at the start of the experiment.\n"
+            "'''"
+        )
         self.params['Begin Experiment'] = Param(
             beginExp, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Begin experiment"))
+        self.params['Begin JS Experiment'] = Param(
+            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            updates='constant', allowedUpdates=[],
+            hint=_docStringJS(msg),
+            label=_translate("Begin JS experiment"))
 
-        msg = _translate("Code to be run at the start of each repeat of the "
-                         "Routine (e.g. each trial); "
-                         "right-click checks syntax")
+        # Each Routine
+        msg = _translate(
+            "'''\n"
+            "Code to be run at the start of each repeat of the \n"
+            "Routine (e.g. each trial)\n"
+            "'''"
+        )
         self.params['Begin Routine'] = Param(
             beginRoutine, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Begin Routine"))
+        self.params['Begin JS Routine'] = Param(
+            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            updates='constant', allowedUpdates=[],
+            hint=_docStringJS(msg),
+            label=_translate("Begin JS Routine"))
 
-        msg = _translate("Code to be run on every video frame during for the"
-                         " duration of this Routine; "
-                         "right-click checks syntax")
+        # Each frame
+        msg = _translate(
+            "'''\n"
+            "Code to be run on every video frame during for the \n"
+            "duration of this Routine\n"
+            "'''"
+        )
         self.params['Each Frame'] = Param(
             eachFrame, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Each frame"))
+        self.params['Each JS Frame'] = Param(
+            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            updates='constant', allowedUpdates=[],
+            hint=_docStringJS(msg),
+            label=_translate("Each JS frame"))
 
-        msg = _translate("Code at the end of this repeat of the Routine (e.g."
-                         " getting/storing responses); "
-                         "right-click checks syntax")
+
+        msg = _translate(
+            "'''\n"
+            "Code to be run at the end of each repeat of the \n"
+            "Routine (e.g. getting/storing responses)\n"
+            "'''"
+        )
         self.params['End Routine'] = Param(
             endRoutine, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("End Routine"))
+        self.params['End JS Routine'] = Param(
+            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            updates='constant', allowedUpdates=[],
+            hint=_docStringJS(msg),
+            label=_translate("End JS Routine"))
 
-        msg = _translate("Code at the end of the entire experiment (e.g. "
-                         "saving files, resetting computer); "
-                         "right-click checks syntax")
+        msg = _translate(
+            "'''\n"
+            "Code at the end of the entire experiment (e.g. \n"
+            "saving files, resetting computer)\n"
+            "'''"
+        )
         self.params['End Experiment'] = Param(
             endExperiment, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("End experiment"))
-        # todo: copy initial vals once javscript interp can do comments
-        msg = _translate("Code before the start of the experiment (initialization"
-                         "); right-click checks syntax")
-        self.params['Before JS Experiment'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Before JS experiment"))
-        msg = _translate("Code at the start of the experiment (initialization"
-                         "); right-click checks syntax")
-        self.params['Begin JS Experiment'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Begin JS experiment"))
-
-        msg = _translate("Code to be run at the start of each repeat of the "
-                         "Routine (e.g. each trial); "
-                         "right-click checks syntax")
-        self.params['Begin JS Routine'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Begin JS Routine"))
-
-        msg = _translate("Code to be run on every video frame during for the"
-                         " duration of this Routine; "
-                         "right-click checks syntax")
-        self.params['Each JS Frame'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Each JS frame"))
-
-        msg = _translate("Code at the end of this repeat of the Routine (e.g."
-                         " getting/storing responses); "
-                         "right-click checks syntax")
-        self.params['End JS Routine'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("End JS Routine"))
-
-        msg = _translate("Code at the end of the entire experiment (e.g. "
-                         "saving files, resetting computer); "
-                         "right-click checks syntax")
         self.params['End JS Experiment'] = Param(
             '', valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
-            hint=msg,
+            hint=_docStringJS(msg),
             label=_translate("End JS experiment"))
 
         # these inherited params are harmless but might as well trim:
@@ -264,3 +267,43 @@ class CodeComponent(BaseComponent):
             if self.params['End Experiment']:
                 buff.writeIndentedLines("// Run 'End Experiment' code from %(name)s" % self.params)
             buff.writeIndentedLines(str(self.params['End JS Experiment']) + '\n')
+
+
+def _docStringJS(comment):
+    """
+    Quickly translate a Python-style docstring to JS, without invoking the full transcription 
+    engine.
+    
+    Parameters
+    ----------
+    comment : str
+        Doc string in Python format (i.e. """""" or ''')
+
+    Returns
+    -------
+    str
+        Same doc string in JS format (i.e. /** */)
+    """
+    # split into lines
+    lines = comment.splitlines(keepends=False)
+    # if not enough lines, return unchanged
+    if len(lines) < 3:
+        return comment
+    # will be set to True once start and end lines are found
+    valid = False
+    # handle both quotes styles
+    for quotes in ('"""', "'''"):
+        if lines[0].startswith(quotes) and lines[-1].endswith(quotes):
+            # if start and stop lines are found, mark valid
+            valid = True
+            # replace start and stop lines with JS equivalent
+            lines[0] = lines[0].replace(quotes, "/**")
+            lines[-1] = lines[-1].replace(quotes, "*/")
+    # if invalid, return unchanged
+    if not valid:
+        return comment
+    # prepend all inner lines with *
+    for i in range(len(lines) - 2):
+        lines[i+1] = "* " + lines[i+1]
+    # recombine and return
+    return "\n".join(lines)
