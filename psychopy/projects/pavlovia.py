@@ -1427,7 +1427,9 @@ def getProject(filename):
             f"https://pavlovia.org/api/v2/experiments/{thisId}",
         ).json()
         if requestVal['experiment'] is None:
-            # If project has been deleted, return None
+            # if project has been deleted, delete it from known projects too
+            del knownProjects[path]
+            knownProjects.save()
             return None
         # If project is still there, get it
         try:
@@ -1443,6 +1445,11 @@ def getProject(filename):
         for remote in localRepo.remotes:
             for url in remote.urls:
                 if "gitlab.pavlovia.org" in url:
+                    # if remote doesn't exist, remove it
+                    try:
+                        localRepo.git.ls_remote(url)
+                    except git.GitCommandError:
+                        localRepo.delete_remote(remote)
                     # Get namespace from url
                     # could be 'https://gitlab.pavlovia.org/NameSpace/Name.git'
                     # or may be 'git@gitlab.pavlovia.org:NameSpace/Name.git'
