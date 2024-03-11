@@ -17,6 +17,7 @@ import time
 import io
 import argparse
 
+from psychopy.app.launcher.launcher import PsychoPyLauncher
 from psychopy.app.themes import icons, colors, handlers
 
 profiling = False  # turning on will save profile files in currDir
@@ -542,6 +543,10 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
                 view.builder = True
                 view.coder = True
                 view.runner = True
+            elif self.prefs.app['defaultView'] == "launcher":
+                view.builder = False
+                view.coder = False
+                view.runner = False
 
         # set the dispatcher for standard output
         # self.stdStreamDispatcher = console.StdStreamDispatcher(self)
@@ -564,7 +569,6 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
                 logging.debug(
                     "\n".join(traceback.format_exception(err))
                 )
-
         if view.coder:
             # open Coder if requested
             try:
@@ -593,11 +597,17 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
                     "Requested: {}\n"
                     "Err: {}"
                 ).format(exps, err))
-
         if view.direct:
             self.showRunner()
             for exp in [file for file in args if file.endswith('.psyexp') or file.endswith('.py')]:
                 self.runner.panel.runFile(exp)
+
+        self.launcher = PsychoPyLauncher(self)
+        if not any([view.runner, view.coder, view.builder, view.direct]):
+            self.launcher.Show()
+            self.launcher.Raise()
+            self.SetTopWindow(self.launcher)
+
         # if we started a busy cursor which never finished, finish it now
         if wx.IsBusy():
             wx.EndBusyCursor()
