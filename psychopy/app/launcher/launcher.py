@@ -47,8 +47,39 @@ class ButtonsPanel(wx.Panel):
         self.logo = wx.StaticBitmap(self, bitmap=wx.Bitmap(str(logoPath)))
         self.sizer.Add(self.logo, border=6, flag=wx.ALIGN_LEFT | wx.ALL)
         self.sizer.AddSpacer(12)
+        # new button
+        self.newBtn = wx.Button(self, label=_translate("New experiment (.psyexp)"))
+        self.sizer.Add(self.newBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        # open button
+        self.openBtn = wx.Button(self, label=_translate("Open..."))
+        self.sizer.Add(self.openBtn, border=6, flag=wx.EXPAND | wx.ALL)
 
         self.sizer.AddStretchSpacer(1)
+
+        # frame buttons sizer panel
+        self.frameBtnsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.frameBtnsSizer, border=6, flag=wx.EXPAND | wx.ALL)
+        # builder button
+        self.builderBtn = wx.Button(self, style=wx.BORDER_NONE)
+        self.builderBtn.SetBitmap(
+            icons.ButtonIcon("showBuilder", size=32).bitmap
+        )
+        self.builderBtn.Bind(wx.EVT_BUTTON, self.frame.app.showBuilder)
+        self.frameBtnsSizer.Add(self.builderBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        # coder button
+        self.coderBtn = wx.Button(self, style=wx.BORDER_NONE)
+        self.coderBtn.SetBitmap(
+            icons.ButtonIcon("showCoder", size=32).bitmap
+        )
+        self.coderBtn.Bind(wx.EVT_BUTTON, self.frame.app.showCoder)
+        self.frameBtnsSizer.Add(self.coderBtn, border=6, flag=wx.EXPAND | wx.ALL)
+        # runner button
+        self.runnerBtn = wx.Button(self, style=wx.BORDER_NONE)
+        self.runnerBtn.SetBitmap(
+            icons.ButtonIcon("showRunner", size=32).bitmap
+        )
+        self.runnerBtn.Bind(wx.EVT_BUTTON, self.frame.app.showRunner)
+        self.frameBtnsSizer.Add(self.runnerBtn, border=6, flag=wx.EXPAND | wx.ALL)
 
 
 class RecentFilesCtrl(wx.Panel):
@@ -101,9 +132,15 @@ class RecentFilesCtrl(wx.Panel):
         self.openBtn.Bind(wx.EVT_BUTTON, self.openFile)
 
     def openFile(self, evt=None):
+        # get file from item
         i = self.ctrl.GetFirstSelected()
         item = self.ctrl.GetItem(i)
         file = item.GetText()
-
-        print(file)
+        # open file in relevant frame
+        if file.endswith(".psyexp"):
+            self.frame.app.showBuilder(fileList=[file])
+        elif file.endswith(".psyrun"):
+            self.frame.app.showRunner(fileList=[file])
+        else:
+            self.frame.app.showCoder(fileList=[file])
 

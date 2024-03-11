@@ -880,13 +880,17 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             thisFrame.Raise()
             self.SetTopWindow(thisFrame)
 
-    def showRunner(self, event=None, fileList=[]):
+    def showRunner(self, event=None, fileList=None):
         if not self.runner:
             self.runner = self.newRunnerFrame()
         if not self.testMode:
             self.runner.Show()
             self.runner.Raise()
             self.SetTopWindow(self.runner)
+        if fileList is None:
+            fileList = []
+        for file in fileList:
+            self.runner.panel.loadTaskList(fileList=file)
         # Runner captures standard streams until program closed
         # if self.runner and not self.testMode:
         #     sys.stderr = sys.stdout = self.stdStreamDispatcher

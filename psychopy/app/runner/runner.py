@@ -271,27 +271,30 @@ class RunnerFrame(wx.Frame, handlers.ThemeMixin):
 
         dlg.Destroy()
 
-    def loadTaskList(self, evt=None):
+    def loadTaskList(self, evt=None, fileList=None):
         """Load saved task list from appData."""
-        if hasattr(self, 'listname'):
-            filename = self.listname
-        else:
-            filename = "untitled.psyrun"
-        initPath, filename = os.path.split(filename)
+        if fileList is None:
+            if hasattr(self, 'listname'):
+                filename = self.listname
+            else:
+                filename = "untitled.psyrun"
+            initPath, filename = os.path.split(filename)
+            _w = "PsychoPy task lists (*.psyrun)|*.psyrun|Any file (*.*)|*"
+            if sys.platform != 'darwin':
+                _w += '.*'
+            wildcard = _translate(_w)
+            dlg = wx.FileDialog(
+                self, message=_translate("Open task list ..."), defaultDir=initPath,
+                defaultFile=filename, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                wildcard=wildcard)
 
-        _w = "PsychoPy task lists (*.psyrun)|*.psyrun|Any file (*.*)|*"
-        if sys.platform != 'darwin':
-            _w += '.*'
-        wildcard = _translate(_w)
-        dlg = wx.FileDialog(
-            self, message=_translate("Open task list ..."), defaultDir=initPath,
-            defaultFile=filename, style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-            wildcard=wildcard)
+            if dlg.ShowModal() == wx.ID_OK:  # file was selected
+                fileList = [dlg.GetPath()]
+            else:
+                return
 
-        fileOk = True
-        newPath = None
-        if dlg.ShowModal() == wx.ID_OK:  # file was selected
-            newPath = dlg.GetPath()
+        for newPath in fileList:
+            fileOk = True
             with open(newPath, 'r') as file:
                 try:
                     experiments = json.load(file)
