@@ -5,6 +5,8 @@ import webbrowser
 import wx
 import re
 import wx.richtext
+from pygments_gui.wx.richtext import WxRichTextCtrlFormatter
+import pygments.lexers, pygments.formatters
 import locale
 
 from psychopy import prefs
@@ -38,13 +40,22 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler, handlers.ThemeMixi
     A rich text ctrl for handling stdout/stderr
     """
 
-    def __init__(self, parent, style, size=None, font=None, fontSize=None, app=None):
+    def __init__(self, parent, style, size=None, font=None, fontSize=None, app=None,
+                 lexer="pycon"):
         kwargs = {'parent': parent, 'style': style}
         if size is not None:
             kwargs['size'] = size
 
         _BaseErrorHandler.__init__(self)
         wx.richtext.RichTextCtrl.__init__(self, **kwargs)
+
+        # create a lexer for this ctrl
+        self.lexer = pygments.lexers.get_lexer_by_name(lexer)
+        # create a formatter for this ctrl
+        self.formatter = WxRichTextCtrlFormatter()
+        # set style according to theme
+        from psychopy.app.themes.colors.code.psychopyLight import PsychopyLight
+        self.formatter.set_style(PsychopyLight)
 
         self.prefs = prefs
         self.paths = prefs.paths
@@ -65,6 +76,7 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler, handlers.ThemeMixi
         handlers.ThemeMixin._applyAppTheme(self)
         # get base font
         font = fonts.coderTheme.base
+        self.SetFont(font.obj)
         # dict of styles
         self._styles = {
             'base': wx.richtext.RichTextAttr(wx.TextAttr(
@@ -198,6 +210,11 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler, handlers.ThemeMixi
         # go to end of stdout so user can see updated text
         self.MoveEnd()
         self.ShowPosition(self.GetLastPosition())
+
+        # lex content for tokens
+        tokens = pygments.lex(self.GetValue(), lexer=self.lexer)
+        # format ctrl using tokens
+        self.formatter.format(tokensource=tokens, outfile=self)
 
         if evt is not None:
             evt.Skip()

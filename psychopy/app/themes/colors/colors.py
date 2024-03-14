@@ -1,7 +1,7 @@
 import numpy
 import wx
 
-from . import theme
+from psychopy.app.themes import theme
 
 
 class BaseColor(wx.Colour):
@@ -195,6 +195,19 @@ class AppColors(dict):
     def __getitem__(self, item):
         # When getting an attribute of this object, return the key from the theme-appropriate dict
         return getattr(self, theme.app)[item]
+
+
+class _AppColors(dict):
+    """
+    Class for adding a theme to AppColors
+    """
+    def __init__(self, name, colors):
+        # add own colors dict
+        setattr(AppColors, name, colors)
+        # store name
+        self.name = name
+        # initialise as dictionary
+        dict.__init__(self, **colors)
 
 
 app = AppColors()
