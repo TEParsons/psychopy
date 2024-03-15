@@ -11,11 +11,11 @@ def setupProjectFolder(folder):
     folder = Path(folder)
     # make sure folder is empty
     assert folder.is_dir(), _translate(
-        f"Cannot create PsychoPy project in folder {folder.absolute()} as there is no such folder."
-    )
+        "Cannot create PsychoPy project in folder {} as there is no such folder."
+    ).format(folder.absolute())
     assert not any(folder.iterdir()), _translate(
-        f"Cannot create PsychoPy project in folder {folder.absolute()} as it is not empty."
-    )
+        "Cannot create PsychoPy project in folder {} as it is not empty."
+    ).format(folder.absolute())
     # make folder structure
     for subfolder in [
         folder / "data",
