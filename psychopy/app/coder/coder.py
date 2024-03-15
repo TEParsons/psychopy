@@ -2208,6 +2208,8 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         setupProjectFolder(target)
         # open new psyexp - close current if it's blank
         self.fileNew()
+        # clear Pavlovia project
+        self.project = None
 
     def fileNew(self, event=None, filepath=""):
         self.setCurrentDoc(filepath)

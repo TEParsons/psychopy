@@ -694,6 +694,10 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         setupProjectFolder(target)
         # open new psyexp - close current if it's blank
         self.fileNew(closeCurrent=self.fileExists, folder=target)
+        # clear Pavlovia project
+        self.project = None
+        # update README
+        self.updateReadme()
 
     def fileNew(self, event=None, closeCurrent=True, folder=None):
         """Create a default experiment (maybe an empty one instead)
