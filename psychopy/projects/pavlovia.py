@@ -829,6 +829,42 @@ class PavloviaProject(dict):
             # If we don't have enough info to save to knownProjects, just store the value given
             self._localRootStatic = value
 
+    def generateDataDescription(self):
+        """
+        Generate a dataset_description.json file for this project, in line with psych-DS guidelines.
+        """
+        # refresh project to make sure it has info
+        if not hasattr(self, "_info"):
+            self.refresh()
+
+        # create psych-DS compliant dict from project info
+        desc = {
+            '@context': "https://schema.org/",
+            '@type': "Dataset",
+            'schemaVersion': "Psych-DS 0.1.0",
+            'name': self['name'],
+            'description': self['description'],
+            'author': [
+                {
+                    '@type': "Person",
+                    'name': self['owner']['name'],
+                    'identifier': self['owner']['username'],
+                    'url': self['owner']['web_url'],
+                    'image': self['owner']['avatar_url']
+                }
+            ],
+            #todo: add citation
+            'temporalCoverage': "%(created_at)s/%(last_activity_at)s" % self,
+            'url': "https://pavlovia.org/%(path_with_namespace)s" % self,
+            'identifier': "pavlovia/%(path_with_namespace)s" % self,
+            'keywords': self['tag_list'],
+        }
+        # save
+        outFile = pathlib.Path(self.localRoot) / "data_description.json"
+        json.dump(
+            desc, outFile.open("w"), indent=True
+        )
+
     def sync(self, infoStream=None):
         """Performs a pull-and-push operation on the remote
 
@@ -857,6 +893,8 @@ class PavloviaProject(dict):
             dlg.ShowModal()
             return
         if self.project is not None:
+            # create psych-DS compliant data description
+            self.generateDataDescription()
             # Jot down start time
             t0 = time.time()
             # make repo if needed
