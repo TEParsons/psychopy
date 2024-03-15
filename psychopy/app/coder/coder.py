@@ -6,6 +6,7 @@
 # Distributed under the terms of the GNU General Public License (GPL).
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import wx
 import wx.stc
@@ -39,7 +40,7 @@ from psychopy.alerts._alerts import alert
 from psychopy.localization import _translate
 from ..utils import FileDropTarget, BasePsychopyToolbar, FrameSwitcher, updateDemosMenu
 from ..ui import BaseAuiFrame
-from psychopy.projects import pavlovia
+from psychopy.projects import pavlovia, setupProjectFolder
 import psychopy.app.pavlovia_ui.menu
 import psychopy.app.plugin_manager.dialog
 from psychopy.app.errorDlg import exceptionCallback
@@ -1158,6 +1159,7 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         # Create menus and status bar
         self.fileMenu = self.editMenu = self.viewMenu = None
         self.helpMenu = self.toolsMenu = None
+        self.menuIDs = SimpleNamespace()
         self.makeMenus()
         self.makeStatusBar()
         self.pavloviaMenu.syncBtn.Enable(bool(self.filename))
@@ -1389,6 +1391,11 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         keyCodes = self.app.keys
         menu = self.fileMenu
         menu.Append(wx.ID_NEW, _translate("&New\t%s") % keyCodes['new'])
+        self.menuIDs.ID_NEW_PROJECT = wx.NewId()
+        menu.Append(
+            self.menuIDs.ID_NEW_PROJECT,
+            _translate("New &Project"))
+        self.Bind(wx.EVT_MENU, self.projectNew, id=self.menuIDs.ID_NEW_PROJECT)
         menu.Append(wx.ID_OPEN, _translate("&Open...\t%s") % keyCodes['open'])
         menu.AppendSubMenu(self.recentFilesMenu, _translate("Open &Recent"))
         menu.Append(wx.ID_SAVE,
@@ -2182,6 +2189,25 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         docName = self.currentDoc.filename
         text = codecs.open(docName, 'r', 'utf-8').read()
         pr.Print(text, docName)
+
+    def projectNew(self, evt=None):
+        """
+        Create a new project - a folder with a specific structure and a psyexp inside it
+        """
+        # open dialog to choose folder
+        dlg = wx.DirDialog(
+            self,
+            message=_translate("Location for new project...")
+        )
+        if dlg.ShowModal() != wx.ID_OK:
+            # return if cancelled
+            return 0
+        # get folder
+        target = dlg.GetPath()
+        # setup project in folder
+        setupProjectFolder(target)
+        # open new psyexp - close current if it's blank
+        self.fileNew()
 
     def fileNew(self, event=None, filepath=""):
         self.setCurrentDoc(filepath)

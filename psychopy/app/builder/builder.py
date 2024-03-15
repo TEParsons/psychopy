@@ -70,7 +70,7 @@ from ..utils import (BasePsychopyToolbar, HoverButton, WindowFrozen,
 
 from psychopy.experiment import getAllStandaloneRoutines
 from psychopy.app import pavlovia_ui
-from psychopy.projects import pavlovia
+from psychopy.projects import pavlovia, setupProjectFolder
 from psychopy.tools import stringtools as st
 from psychopy.scripts.psyexpCompile import generateScript
 
@@ -299,6 +299,11 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         menu.Append(
             wx.ID_NEW,
             _translate("&New\t%s") % keys['new'])
+        self.menuIDs.ID_NEW_PROJECT = wx.NewId()
+        menu.Append(
+            self.menuIDs.ID_NEW_PROJECT,
+            _translate("New &Project"))
+        self.Bind(wx.EVT_MENU, self.projectNew, id=self.menuIDs.ID_NEW_PROJECT)
         menu.Append(
             wx.ID_OPEN,
             _translate("&Open...\t%s") % keys['open'])
@@ -671,7 +676,26 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
                     self._filename.is_file()
                 )
 
-    def fileNew(self, event=None, closeCurrent=True):
+    def projectNew(self, evt=None):
+        """
+        Create a new project - a folder with a specific structure and a psyexp inside it
+        """
+        # open dialog to choose folder
+        dlg = wx.DirDialog(
+            self,
+            message=_translate("Location for new project...")
+        )
+        if dlg.ShowModal() != wx.ID_OK:
+            # return if cancelled
+            return 0
+        # get folder
+        target = dlg.GetPath()
+        # setup project in folder
+        setupProjectFolder(target)
+        # open new psyexp - close current if it's blank
+        self.fileNew(closeCurrent=self.fileExists, folder=target)
+
+    def fileNew(self, event=None, closeCurrent=True, folder=None):
         """Create a default experiment (maybe an empty one instead)
         """
         # Note: this is NOT the method called by the File>New menu item.
@@ -680,7 +704,12 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
             if not self.fileClose(updateViews=False):
                 # close the existing (and prompt for save if necess)
                 return False
-        self.filename = None
+        if folder is None:
+            self.filename = None
+        else:
+            # if given a folder for new file, set filename but don't save it
+            self.filename = Path(folder) / "untitled.psyexp"
+            self.fileExists = False
         self.exp = experiment.Experiment(prefs=self.app.prefs)
         defaultName = 'trial'
         # create the trial routine as an example
@@ -838,7 +867,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         initPath = filename.parent
         filename = filename.name
         # substitute temp dir for home
-        if not self.fileExists:
+        if not initPath.is_absolute():
             initPath = Path.home()
 
         if sys.platform != 'darwin':
