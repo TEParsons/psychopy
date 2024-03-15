@@ -693,11 +693,18 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         # setup project in folder
         setupProjectFolder(target)
         # open new psyexp - close current if it's blank
-        self.fileNew(closeCurrent=self.fileExists, folder=target)
+        self.fileNew(folder=target)
         # clear Pavlovia project
         self.project = None
         # update README
         self.updateReadme()
+        # alert user
+        dlg = wx.MessageDialog(
+            self,
+            message=_translate("New project created successfully at {}.").format(target),
+            caption=_translate("New project created")
+        )
+        dlg.ShowModal()
 
     def fileNew(self, event=None, closeCurrent=True, folder=None):
         """Create a default experiment (maybe an empty one instead)

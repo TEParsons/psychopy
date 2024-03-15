@@ -2210,6 +2210,13 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.fileNew()
         # clear Pavlovia project
         self.project = None
+        # alert user
+        dlg = wx.MessageDialog(
+            self,
+            message=_translate("New project created successfully at {}.").format(target),
+            caption=_translate("New project created")
+        )
+        dlg.ShowModal()
 
     def fileNew(self, event=None, filepath=""):
         self.setCurrentDoc(filepath)
