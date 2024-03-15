@@ -9,3 +9,4 @@
 """
 
 from . import pavlovia
+from .project import setupProjectFolder
