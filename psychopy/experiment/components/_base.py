@@ -12,117 +12,172 @@ from xml.etree.ElementTree import Element
 
 from psychopy import prefs
 from psychopy.constants import FOREVER
-from ..params import Param
-from psychopy.experiment.utils import canBeNumeric
-from psychopy.experiment.utils import CodeGenerationException
-from psychopy.experiment.utils import unescapedDollarSign_re
+from psychopy.experiment.params import Param
+from psychopy.experiment.utils import (
+    canBeNumeric, CodeGenerationException, unescapedDollarSign_re, updates
+)
 from psychopy.experiment.params import getCodeFromParamStr
 from psychopy.alerts import alerttools
-from psychopy.colors import nonAlphaSpaces
-
 from psychopy.localization import _translate
 
 
 class BaseComponent:
-    """A template for components, defining the methods to be overridden"""
-    # override the categories property below
-    # an attribute of the class, determines the section in the components panel
+    """
+    Base class for components, defining the basic params which (mostly) all Components will have.
+    Overload the writing methods (writeInitCode, writeFrameCode, etc.) in a subclass to control how
+    the Component writes its code.
+    """
 
-    categories = ['Custom']
-    targets = []
-    plugin = None
-    iconFile = Path(__file__).parent / "unknown" / "unknown.png"
+    # category in Builder to list this Component under
+    categories = []
+    # text to display when this Component's button is hovered over
     tooltip = ""
+    # path to this Component's icon file (ignoring light/dark/classic folder)
+    iconFile = None
+    # link which this Component's help button points to
+    url = ""
+    # libraries supporting this Component
+    targets = []
+    # is this Component from a plugin?
+    plugin = None
     # what version was this Component added in?
     version = "0.0.0"
 
-    def __init__(self, exp, parentName, name='',
-                 startType='time (s)', startVal='',
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 saveStartStop=True, syncScreenRefresh=False,
-                 disabled=False):
+    def __init__(
+            self, exp, parentName,
+            # basic
+            name="",
+            startType="time (s)",
+            startVal="",
+            startEstim="",
+            stopType="duration (s)",
+            stopVal="",
+            durationEstim="",
+            # data
+            saveStartStop=True,
+            syncScreenRefresh=False,
+            # testing
+            disabled=False
+    ):
+        # if `.type` is not set by subclass, use class name
         self.type = type(self).__name__
-        self.exp = exp  # so we can access the experiment if necess
-        self.parentName = parentName  # to access the routine too if needed
-
+        # store references to exp and routine so we can access if necessary
+        self.exp = exp
+        self.parentName = parentName
+        # blank arrays to store params and display order in
         self.params = {}
-        self.depends = []  # allows params to turn each other off/on
-        """{
-         "dependsOn": "shape",
-         "condition": "=='n vertices",
-         "param": "n vertices",
-         "true": "enable",  # what to do with param if condition is True
-         "false": "disable",  # permitted: hide, show, enable, disable
-         }"""
-        self.order = ['name', 'startVal', 'startEstim', 'startType', 'stopVal', 'durationEstim', 'stopType']  # name first, then timing, then others
+        self.order = []
+        # blank array to store dependencies (params which affect each other)
+        self.depends = []
+        """
+        Format for a dependency is as follows:
+        {
+            'dependsOn': "shape",  # if... (param key)
+            'condition': "=='n vertices",  # meets... (condition to be evaluated)
+            'param': "n vertices",  # then... (param key)
+            'true': "enable",  # should... (one of: hide, show, enable, disable)
+            'false': "disable",  # otherwise... (one of: hide, show, enable, disable)
+        }
+        """
 
-        msg = _translate(
-            "Name of this Component (alphanumeric or _, no spaces)")
-        self.params['name'] = Param(name,
-            valType='code', inputType="single", categ='Basic',
-            hint=msg,
-            label=_translate("Name"))
+        # --- Basic params ---
+        self.order += [
+            "name",
+            "startVal",
+            "startEstim",
+            "startType",
+            "stopVal",
+            "durationEstim",
+            "stopType"
+        ]
+        self.params['name'] = Param(
+            name, valType="code", inputType="single", categ="Basic",
+            label=_translate("Name"),
+            hint=_translate(
+                "Name of this Component (alphanumeric or _, no spaces)"
+            )
+        )
+        self.params['startType'] = Param(
+            startType, valType="str", inputType="choice", categ="Basic",
+            allowedVals=["time (s)", "frame N", "condition"],
+            allowedLabels=[_translate("Time (s)"), _translate("Frame N"), _translate("Condition")],
+            label=_translate("Start type"),
+            hint=_translate(
+                "How do you want to define your start point?"
+            ),
+            direct=False,
+        )
+        self.params['startVal'] = Param(
+            startVal, valType="code", inputType="single", categ="Basic",
+            hint=_translate("When does the Component start?"),
+            label=_translate("Start")
+        )
+        self.params['startEstim'] = Param(
+            startEstim, valType="code", inputType="single", categ="Basic",
+            label=_translate("Expected start (s)"),
+            hint=_translate(
+                "(Optional) expected start (s), purely for representing in the timeline"
+            ),
+            direct=False,
+        )
+        self.params['stopType'] = Param(
+            stopType, valType="str", inputType="choice", categ="Basic",
+            allowedVals=[
+                "duration (s)", "duration (frames)", "time (s)", "frame N", "condition"
+            ],
+            allowedLabels=[
+                _translate("Duration (s)"), _translate("Duration (frames)"),
+                _translate("Time (s)"), _translate("Frame N"), _translate("Condition")
+            ],
+            hint=_translate("How do you want to define your end point?"),
+            label=_translate("Stop type"),
+            direct=False
+        )
+        self.params['stopVal'] = Param(
+            stopVal, valType='code', inputType="single", categ='Basic',
+            label=_translate("Stop"),
+            hint=_translate("When does the Component end? (blank is endless)")
+        )
+        self.params['durationEstim'] = Param(
+            durationEstim, valType="code", inputType="single", categ="Basic",
+            label=_translate("Expected duration (s)"),
+            hint=_translate(
+                "(Optional) expected duration (s), purely for representing in the timeline"
+            ),
+            direct=False,
+        )
 
-        msg = _translate("How do you want to define your start point?")
-        self.params['startType'] = Param(startType,
-            valType='str', inputType="choice", categ='Basic',
-            allowedVals=['time (s)', 'frame N', 'condition'],
-            hint=msg, direct=False,
-            label=_translate("Start type"))
+        # --- Data params ---
+        self.order += [
+            "saveStartStop",
+            "syncScreenRefresh"
+        ]
+        self.params['saveStartStop'] = Param(
+            saveStartStop, valType="bool", inputType="bool", categ="Data",
+            label=_translate("Save onset/offset times"),
+            hint=_translate(
+                "Store the onset/offset times in the data file (as well as in the log file)."
+            )
+        )
+        self.params['syncScreenRefresh'] = Param(
+            syncScreenRefresh, valType="bool", inputType="bool", categ="Data",
+            label=_translate("Sync timing with screen refresh"),
+            hint=_translate(
+                "Synchronize times with screen refresh (good for visual stimuli and responses "
+                "based on them)"
+            )
+        )
 
-        msg = _translate("How do you want to define your end point?")
-        self.params['stopType'] = Param(stopType,
-            valType='str', inputType="choice", categ='Basic',
-            allowedVals=['duration (s)', 'duration (frames)', 'time (s)',
-                         'frame N', 'condition'],
-            hint=msg, direct=False,
-            label=_translate("Stop type"))
-
-        self.params['startVal'] = Param(startVal,
-            valType='code', inputType="single", categ='Basic',
-            hint=_translate("When does the Component start?"), allowedTypes=[],
-            label=_translate("Start"))
-
-        self.params['stopVal'] = Param(stopVal,
-            valType='code', inputType="single", categ='Basic',
-            updates='constant', allowedUpdates=[], allowedTypes=[],
-            hint=_translate("When does the Component end? (blank is endless)"),
-            label=_translate("Stop"))
-
-        msg = _translate("(Optional) expected start (s), purely for "
-                         "representing in the timeline")
-        self.params['startEstim'] = Param(startEstim,
-            valType='code', inputType="single", categ='Basic',
-            hint=msg, allowedTypes=[], direct=False,
-            label=_translate("Expected start (s)"))
-
-        msg = _translate("(Optional) expected duration (s), purely for "
-                         "representing in the timeline")
-        self.params['durationEstim'] = Param(durationEstim,
-            valType='code', inputType="single", categ='Basic',
-            hint=msg, allowedTypes=[], direct=False,
-            label=_translate("Expected duration (s)"))
-
-        msg = _translate("Store the onset/offset times in the data file "
-                         "(as well as in the log file).")
-        self.params['saveStartStop'] = Param(saveStartStop,
-            valType='bool', inputType="bool", categ='Data',
-            hint=msg, allowedTypes=[],
-            label=_translate('Save onset/offset times'))
-
-        msg = _translate("Synchronize times with screen refresh (good for "
-                         "visual stimuli and responses based on them)")
-        self.params['syncScreenRefresh'] = Param(syncScreenRefresh,
-            valType='bool', inputType="bool", categ="Data",
-            hint=msg, allowedTypes=[],
-            label=_translate('Sync timing with screen refresh'))
-
-        msg = _translate("Disable this Component")
-        self.params['disabled'] = Param(disabled,
-            valType='bool', inputType="bool", categ="Testing",
-            hint=msg, allowedTypes=[], direct=False,
-            label=_translate('Disable Component'))
+        # --- Testing params ---
+        self.order += [
+            "disabled"
+        ]
+        self.params['disabled'] = Param(
+            disabled, valType="bool", inputType="bool", categ="Testing",
+            label=_translate('Disable Component'),
+            hint=_translate("Disable this Component"),
+            direct=False,
+        )
 
     @property
     def _xml(self):
@@ -215,7 +270,7 @@ class BaseComponent:
             if not (field.allowedUpdates and
                     isinstance(field.allowedUpdates, list) and
                     len(field.allowedUpdates) and
-                    field.updates == 'constant'):
+                    field.updates == updates.constant):
                 continue
             # now have only non-empty, possibly-code, and 'constant' updating
             if field.valType == 'str':
@@ -1075,10 +1130,13 @@ class BaseDeviceComponent(BaseComponent):
     def __init__(
             self, exp, parentName,
             # basic
-            name='',
-            startType='time (s)', startVal='',
-            stopType='duration (s)', stopVal='',
-            startEstim='', durationEstim='',
+            name="",
+            startType="time (s)",
+            startVal="",
+            startEstim="",
+            stopType="duration (s)",
+            stopVal="",
+            durationEstim="",
             # device
             deviceLabel="",
             # data
@@ -1089,11 +1147,18 @@ class BaseDeviceComponent(BaseComponent):
         # initialise base component
         BaseComponent.__init__(
             self, exp, parentName,
+            # basic
             name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
-            saveStartStop=saveStartStop, syncScreenRefresh=syncScreenRefresh,
+            startType=startType,
+            startVal=startVal,
+            startEstim=startEstim,
+            stopType=stopType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
             disabled=disabled
         )
         # require hardware
@@ -1104,7 +1169,6 @@ class BaseDeviceComponent(BaseComponent):
         self.order += [
             "deviceLabel"
         ]
-        # label to refer to device by
         self.params['deviceLabel'] = Param(
             deviceLabel, valType="str", inputType="single", categ="Device",
             label=_translate("Device label"),
@@ -1116,132 +1180,175 @@ class BaseDeviceComponent(BaseComponent):
 
 
 class BaseVisualComponent(BaseComponent):
-    """Base class for most visual stimuli
     """
-
+    Base class for stimuli which are displayed visually on screen.
+    """
+    # category in Builder to list this Component under
     categories = ['Stimuli']
-    targets = []
+    # path to this Component's icon file (ignoring light/dark/classic folder)
     iconFile = Path(__file__).parent / "unknown" / "unknown.png"
-    tooltip = ""
 
-    def __init__(self, exp, parentName, name='',
-                 units='from exp settings', color='white', fillColor="", borderColor="",
-                 pos=(0, 0), size=(0, 0), ori=0, colorSpace='rgb', opacity="", contrast=1,
-                 startType='time (s)', startVal='',
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 saveStartStop=True, syncScreenRefresh=True,
-                 validator="", disabled=False):
-
-        super(BaseVisualComponent, self).__init__(
-            exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
+    def __init__(
+            self, exp, parentName,
+            # basic
+            name="",
+            startType="time (s)",
+            startVal="",
+            startEstim="",
+            stopType="duration (s)",
+            stopVal="",
+            durationEstim="",
+            # layout
+            size=(0, 0),
+            pos=(0, 0),
+            units='from exp settings',
+            anchor="center",
+            ori=0,
+            # appearance
+            color="white",
+            fillColor="",
+            borderColor="",
+            colorSpace='rgb',
+            opacity="",
+            contrast=1,
+            # data
+            saveStartStop=True,
+            syncScreenRefresh=True,
+            # testing
+            validator="",
+            disabled=False
+    ):
+        # initialise base component
+        BaseComponent.__init__(
+            self, exp, parentName,
+            # basic
+            name=name,
+            startType=startType,
+            startVal=startVal,
+            startEstim=startEstim,
+            stopType=stopType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            # data
             saveStartStop=saveStartStop,
-            syncScreenRefresh=syncScreenRefresh, disabled=disabled)
-
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled
+        )
+        # mark the vision module as needed by this Component
         self.exp.requirePsychopyLibs(
-            ['visual'])  # needs this psychopy lib to operate
+            ['visual']
+        )
 
+        # --- Layout params ---
         self.order += [
-            "color",
-            "fillColor",
-            "borderColor",
-            "colorSpace",
-            "opacity",
             "size",
             "pos",
             "units",
             "anchor",
             "ori",
         ]
+        self.params['size'] = Param(
+            size, valType="list", inputType="single", categ="Layout",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Size [w,h]"),
+            hint=_translate(
+                "Size of this stimulus (either a single value or x,y pair, e.g. 2.5, [1,2] "
+            )
+        )
+        self.params['pos'] = Param(
+            pos, valType="list", inputType="single", categ="Layout",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Position [x,y]"),
+            hint=_translate("Position of this stimulus (e.g. [1,2] )")
+        )
+        self.params['units'] = Param(
+            units, valType="str", inputType="choice", categ="Layout",
+            allowedVals=[
+                "from exp settings", "deg", "cm", "pix", "norm", "height", "degFlatPos", "degFlat"
+            ],
+            allowedLabels=[
+                _translate("From experiment settings"), _translate("Degrees (deg)"),
+                _translate("Centimeters (cm)"), _translate("Pixels"),
+                _translate("Normalized (norm)"), _translate("Height (height)"),
+                _translate("Flattened position degrees (degFlatPos)"),
+                _translate("Flattened degrees (degFlat)")
+            ],
+            label=_translate("Spatial units"),
+            hint=_translate("Units of dimensions for this stimulus")
+        )
+        self.params['ori'] = Param(
+            ori, valType="num", inputType="spin", categ="Layout",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            allowedVals=[-360, 360],
+            label=_translate("Orientation"),
+            hint=_translate("Orientation of this stimulus (in deg)")
+        )
 
-        msg = _translate("Units of dimensions for this stimulus")
-        self.params['units'] = Param(units,
-            valType='str', inputType="choice", categ='Layout',
-            allowedVals=['from exp settings', 'deg', 'cm', 'pix', 'norm',
-                         'height', 'degFlatPos', 'degFlat'],
-            hint=msg,
-            label=_translate("Spatial units"))
-
-        msg = _translate("Foreground color of this stimulus (e.g. $[1,1,0], red )")
-        self.params['color'] = Param(color,
-            valType='color', inputType="color", categ='Appearance',
-            allowedTypes=[],
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Foreground color"))
-
-        msg = _translate("In what format (color space) have you specified "
-                         "the colors? (rgb, dkl, lms, hsv)")
-        self.params['colorSpace'] = Param(colorSpace,
-            valType='str', inputType="choice", categ='Appearance',
+        # --- Appearance ---
+        self.order += [
+            "color",
+            "fillColor",
+            "borderColor",
+            "colorSpace",
+            "opacity",
+            "contrast"
+        ]
+        self.params['color'] = Param(
+            color, valType="color", inputType="color", categ="Appearance",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Foreground color"),
+            hint=_translate("Foreground color of this stimulus (e.g. $[1,1,0], red )")
+        )
+        self.params['fillColor'] = Param(
+            fillColor, valType="color", inputType="color", categ="Appearance",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Fill color"),
+            hint=_translate("Fill color of this stimulus (e.g. $[1,1,0], red )")
+        )
+        self.params['borderColor'] = Param(
+            borderColor, valType="color", inputType="color", categ="Appearance",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Border color"),
+            hint=_translate("Border color of this stimulus (e.g. $[1,1,0], red )")
+        )
+        self.params['colorSpace'] = Param(
+            colorSpace, valType="str", inputType="choice", categ="Appearance",
             allowedVals=['rgb', 'dkl', 'lms', 'hsv'],
-            updates='constant',
-            hint=msg,
-            label=_translate("Color space"))
+            updates=updates.constant,
+            label=_translate("Color space"),
+            hint=_translate(
+                "In what format (color space) have you specified the colors? (rgb, dkl, lms, hsv)"
+            )
+        )
+        self.params['opacity'] = Param(
+            opacity, valType="num", inputType="single", categ="Appearance",
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Opacity"),
+            hint=_translate(
+                "Opacity of the stimulus (1=opaque, 0=fully transparent, 0.5=translucent). Leave "
+                "blank for each color to have its own opacity (recommended if any color is None)."
+            )
+        )
+        self.params['contrast'] = Param(
+            contrast, valType='num', inputType='single', categ='Appearance',
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Contrast"),
+            hint=_translate(
+                "Contrast of the stimulus (1.0=unchanged contrast, 0.5=decrease contrast, "
+                "0.0=uniform/no contrast, -0.5=slightly inverted, -1.0=totally inverted)"
+            )
+        )
 
-        msg = _translate("Fill color of this stimulus (e.g. $[1,1,0], red )")
-        self.params['fillColor'] = Param(fillColor,
-            valType='color', inputType="color", categ='Appearance',
-            updates='constant', allowedTypes=[],
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Fill color"))
-
-        msg = _translate("Border color of this stimulus (e.g. $[1,1,0], red )")
-        self.params['borderColor'] = Param(borderColor,
-            valType='color', inputType="color", categ='Appearance',
-            updates='constant',allowedTypes=[],
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Border color"))
-
-        msg = _translate("Opacity of the stimulus (1=opaque, 0=fully transparent, 0.5=translucent). "
-                         "Leave blank for each color to have its own opacity (recommended if any color is None).")
-        self.params['opacity'] = Param(opacity,
-            valType='num', inputType="single", categ='Appearance',
-            updates='constant', allowedTypes=[],
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Opacity"))
-
-        msg = _translate("Contrast of the stimulus (1.0=unchanged contrast, "
-                         "0.5=decrease contrast, 0.0=uniform/no contrast, "
-                         "-0.5=slightly inverted, -1.0=totally inverted)")
-        self.params['contrast'] = Param(contrast,
-            valType='num', inputType='single', allowedTypes=[], categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Contrast"))
-
-        msg = _translate("Position of this stimulus (e.g. [1,2] )")
-        self.params['pos'] = Param(pos,
-            valType='list', inputType="single", categ='Layout',
-            updates='constant', allowedTypes=[],
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Position [x,y]"))
-
-        msg = _translate("Size of this stimulus (either a single value or "
-                         "x,y pair, e.g. 2.5, [1,2] ")
-        self.params['size'] = Param(size,
-            valType='list', inputType="single", categ='Layout',
-            updates='constant', allowedTypes=[],
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Size [w,h]"))
-
-        self.params['ori'] = Param(ori,
-            valType='num', inputType="spin", categ='Layout',
-            updates='constant', allowedTypes=[], allowedVals=[-360,360],
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=_translate("Orientation of this stimulus (in deg)"),
-            label=_translate("Orientation"))
-
+        # --- Data params ---
         self.params['syncScreenRefresh'].readOnly = True
 
         # --- Testing ---
