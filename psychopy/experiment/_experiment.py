@@ -237,6 +237,11 @@ class Experiment:
 
         Can take a Routine object directly or will create
         an empty one if none is given.
+
+        Returns
+        -------
+        psychopy.experiment.routines.Routine
+            Created Routine
         """
         if routine is None:
             # create a default routine with this name
