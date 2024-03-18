@@ -8,83 +8,141 @@
 from pathlib import Path
 from psychopy.alerts import alerttools
 from psychopy.experiment.components import BaseVisualComponent, Param, getInitVals, _translate
+from psychopy.experiment.utils import updates
 
 
 class TextComponent(BaseVisualComponent):
-    """An event class for presenting text-based stimuli
+    """
+    A class for presenting text-based stimuli
     """
 
+    # category in Builder to list this Component under
     categories = ['Stimuli']
-    targets = ['PsychoPy', 'PsychoJS']
-    iconFile = Path(__file__).parent / 'text.png'
+    # text to display when this Component's button is hovered over
     tooltip = _translate('Text: present text stimuli')
+    # path to this Component's icon file (ignoring light/dark/classic folder)
+    iconFile = Path(__file__).parent / 'text.png'
+    # link which this Component's help button points to
+    url = "https://www.psychopy.org/builder/components/text.html"
+    # libraries supporting this Component
+    targets = ['PsychoPy', 'PsychoJS']
+    # is this Component from a plugin?
+    plugin = None
+    # what version was this Component added in?
+    version = "0.0.0"
 
-    def __init__(self, exp, parentName, name='text',
-                 # effectively just a display-value
-                 text=_translate('Any text\n\nincluding line breaks'),
-                 font='Open Sans', units='from exp settings',
-                 color='white', colorSpace='rgb',
-                 pos=(0, 0), letterHeight=0.05, ori=0,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 flip='None', startEstim='', durationEstim='', wrapWidth='',
-                 languageStyle='LTR'):
-        super(TextComponent, self).__init__(exp, parentName, name=name,
-                                            units=units,
-                                            color=color,
-                                            colorSpace=colorSpace,
-                                            pos=pos,
-                                            ori=ori,
-                                            startType=startType,
-                                            startVal=startVal,
-                                            stopType=stopType,
-                                            stopVal=stopVal,
-                                            startEstim=startEstim,
-                                            durationEstim=durationEstim)
+    def __init__(
+            self, exp, parentName, name='text',
+            # basic
+            startType='time (s)', startVal=0.0, startEstim='',
+            stopType='duration (s)', stopVal=1.0, durationEstim='',
+            text=_translate('Any text\n\nincluding line breaks'),
+            # layout
+            pos=(0, 0), wrapWidth='', units='from exp settings',
+            ori=0, flip='None',
+            # appearance
+            color='white', colorSpace='rgb',
+            opacity="", contrast=1,
+            # formatting
+            font="Open Sans", letterHeight=0.05, languageStyle='LTR',
+            # data
+            saveStartStop=True, syncScreenRefresh=True,
+            # testing
+            validator="", disabled=False,
+    ):
+        super(TextComponent, self).__init__(
+            exp, parentName, name=name,
+            # basic
+            startType=startType, startVal=startVal, startEstim=startEstim,
+            stopType=stopType, stopVal=stopVal, durationEstim=durationEstim,
+            # layout
+            pos=pos, units=units,
+            ori=ori,
+            # appearance
+            color=color, colorSpace=colorSpace,
+            opacity=opacity, contrast=contrast,
+            # data
+            saveStartStop=saveStartStop, syncScreenRefresh=syncScreenRefresh,
+            # testing
+            validator=validator, disabled=disabled,
+        )
         self.type = 'Text'
-        self.url = "https://www.psychopy.org/builder/components/text.html"
 
-        # params
-        _allow3 = ['constant', 'set every repeat', 'set every frame']  # list
+        # --- Basic params ---
+        self.order += [
+            "text"
+        ]
         self.params['text'] = Param(
-            text, valType='str', inputType="multi", allowedTypes=[], categ='Basic',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
+            text, valType='str', inputType="multi", categ='Basic',
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            label=_translate("Text"),
             hint=_translate("The text to be displayed"),
             canBePath=False,
-            label=_translate("Text"))
-        self.params['font'] = Param(
-            font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The font name (e.g. Comic Sans)"),
-            label=_translate("Font"))
-        del self.params['size']  # because you can't specify width for text
-        self.params['letterHeight'] = Param(
-            letterHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("Specifies the height of the letter (the width"
-                            " is then determined by the font)"),
-            label=_translate("Letter height"))
+        )
 
+        # --- Layout params ---
+        self.order += [
+            "wrapWidth",
+            "flip",
+        ]
+        del self.params['size']
         self.params['wrapWidth'] = Param(
-            wrapWidth, valType='num', inputType="single", allowedTypes=[], categ='Layout',
-            updates='constant', allowedUpdates=['constant'],
-            hint=_translate("How wide should the text get when it wraps? (in"
-                            " the specified units)"),
-            label=_translate("Wrap width"))
+            wrapWidth, valType='num', inputType="single", categ='Layout',
+            updates=updates.constant,
+            hint=_translate(
+                "How wide should the text get when it wraps? (inthe specified units)"
+            ),
+            label=_translate("Wrap width")
+        )
         self.params['flip'] = Param(
             flip, valType='str', inputType="single", allowedTypes=[], categ='Layout',
-            allowedVals=["horiz", "vert", "None"], updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("horiz = left-right reversed; vert = up-down"
-                            " reversed; $var = variable"),
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            allowedVals=["horiz", "vert", "None"],
+            allowedLabels=[
+                _translate("Horizontal"), _translate("Vertical"), _translate("Do not flip")
+            ],
+            hint=_translate(
+                "Horizontal = left-right reversed; Vertical = up-down reversed; $var = variable"
+            ),
             label=_translate("Flip (mirror)"))
+
+        # --- Appearance params ---
+        del self.params['fillColor']
+        del self.params['borderColor']
+
+        # --- Formatting params ---
+        self.order += [
+            "font",
+            "letterHeight",
+            "languageStyle",
+        ]
+        self.params['font'] = Param(
+            font, valType='str', inputType="single", categ='Formatting',
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            hint=_translate("The font name (e.g. Comic Sans)"),
+            label=_translate("Font")
+        )
+        self.params['letterHeight'] = Param(
+            letterHeight, valType='num', inputType="single", categ='Formatting',
+            updates=updates.constant,
+            allowedUpdates=[updates.constant, updates.repeat, updates.frame],
+            hint=_translate(
+                "Specifies the height of the letter (the width is then determined by the font)"
+            ),
+            label=_translate("Letter height")
+        )
         self.params['languageStyle'] = Param(
             languageStyle, valType='str', inputType="choice", categ='Formatting',
             allowedVals=['LTR', 'RTL', 'Arabic'],
+            allowedLabels=[
+                _translate("Left-to-right"), _translate("Right-to-left"), _translate("Arabic")
+            ],
             hint=_translate("Handle right-to-left (RTL) languages and Arabic reshaping"),
-            label=_translate("Language style"))
-
-        del self.params['fillColor']
-        del self.params['borderColor']
+            label=_translate("Language style")
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?
