@@ -36,44 +36,63 @@ class CameraComponent(BaseDeviceComponent):
     deviceClasses = ["psychopy.hardware.camera.Camera"]
 
     def __init__(
-            # Basic
-            self, exp, parentName,
-            name='cam',
-            startType='time (s)', startVal='0', startEstim='',
-            stopType='duration (s)', stopVal='', durationEstim='',
-            # Device
-            deviceLabel="",
-            cameraLib="ffpyplayer", 
-            device="default", 
-            resolution="", 
-            frameRate="",
-            deviceManual="", 
-            resolutionManual="", 
-            frameRateManual="",
-            # audio
-            micDeviceLabel="",
-            mic=None,
-            channels='auto', 
-            sampleRate='DVD Audio (48kHz)', 
-            maxSize=24000,
-            # Data
-            saveFile=True,
-            outputFileType="mp4", codec="h263",
-            saveStartStop=True, syncScreenRefresh=False,
-            # Testing
-            disabled=False,
+        self,
+        exp,
+        parentName,
+        # basic
+        name='cam',
+        startVal='0',
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        # device
+        deviceLabel='',
+        cameraLib='ffpyplayer',
+        device='default',
+        deviceManual='',
+        resolution='',
+        resolutionManual='',
+        frameRate='',
+        frameRateManual='',
+        # audio
+        micDeviceLabel='',
+        mic='',
+        micChannels='auto',
+        micSampleRate='DVD Audio (48kHz)',
+        micMaxRecSize=24000,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        saveFile=True,
+        # testing
+        disabled=False,
+        # legacy
+        channels='auto',
+        sampleRate='DVD Audio (48kHz)',
+        maxSize=24000,
+        outputFileType="mp4",
+        codec="h263",
     ):
         # Initialise superclass
         super(CameraComponent, self).__init__(
-            exp, parentName,
+            exp,
+            parentName,
+            # basic
             name=name,
-            startType=startType, startVal=startVal, startEstim=startEstim,
-            stopType=stopType, stopVal=stopVal, durationEstim=durationEstim,
-            # Device
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # device
             deviceLabel=deviceLabel,
-            # Data
-            saveStartStop=saveStartStop, syncScreenRefresh=syncScreenRefresh,
-            # Testing
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
             disabled=disabled,
         )
         # Mark as type
@@ -352,7 +371,7 @@ class CameraComponent(BaseDeviceComponent):
             "'auto' to use as many channels as the selected device allows.")
         
         self.params['micChannels'] = Param(
-            channels, valType='str', inputType="choice", categ='Audio',
+            micChannels, valType='str', inputType="choice", categ='Audio',
             allowedVals=['auto', 'mono', 'stereo'],
             hint=msg,
             label=_translate("Channels"))
@@ -360,7 +379,7 @@ class CameraComponent(BaseDeviceComponent):
         msg = _translate(
             "How many samples per second (Hz) to record at")
         self.params['micSampleRate'] = Param(
-            sampleRate, valType='num', inputType="choice", categ='Audio',
+            micSampleRate, valType='num', inputType="choice", categ='Audio',
             allowedVals=list(micSampleRates),
             hint=msg, direct=False,
             label=_translate("Sample rate (hz)"))
@@ -369,7 +388,7 @@ class CameraComponent(BaseDeviceComponent):
             "To avoid excessively large output files, what is the biggest file "
             "size you are likely to expect?")
         self.params['micMaxRecSize'] = Param(
-            maxSize, valType='num', inputType="single", categ='Audio',
+            micMaxRecSize, valType='num', inputType="single", categ='Audio',
             hint=msg,
             label=_translate("Max recording size (kb)"))
 

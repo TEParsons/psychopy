@@ -23,17 +23,46 @@ class EyetrackerRecordComponent(BaseComponent):
     tooltip = _translate('Start and / or Stop recording data from the eye tracker')
     beta = True
 
-    def __init__(self, exp, parentName, name='etRecord',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 actionType="Start and Stop",
-                 #legacy
-                 save='final', configFile='myTracker.yaml'):
-        BaseComponent.__init__(self, exp, parentName, name=name,
-                               startType=startType, startVal=startVal,
-                               stopType=stopType, stopVal=stopVal,
-                               startEstim=startEstim, durationEstim=durationEstim)
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='etRecord',
+        actionType='Start and Stop',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # testing
+        disabled=False,
+        # legacy
+        save='final',
+        configFile='myTracker.yaml',
+    ):
+        BaseComponent.__init__(
+            self,
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
         self.type = 'EyetrackerRecord'
         self.url = "https://www.psychopy.org/builder/components/eyetracker.html"
         self.exp.requirePsychopyLibs(['iohub', 'hardware'])

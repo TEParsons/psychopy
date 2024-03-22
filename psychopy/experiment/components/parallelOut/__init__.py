@@ -18,17 +18,47 @@ class ParallelOutComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'parallel.png'
     tooltip = _translate('Parallel out: send signals from the parallel port')
 
-    def __init__(self, exp, parentName, name='p_port',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 address=None, register='EIO', startData="1", stopData="0",
-                 syncScreen=True):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='p_port',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        # data
+        startData='1',
+        stopData='0',
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        syncScreen=True,
+        # hardware
+        address='0x0378',
+        register='EIO',
+        # testing
+        disabled=False,
+    ):
         super(ParallelOutComponent, self).__init__(
-            exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         self.type = 'ParallelOut'
         self.url = "https://www.psychopy.org/builder/components/parallelout.html"

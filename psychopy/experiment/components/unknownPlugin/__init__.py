@@ -19,13 +19,48 @@ class UnknownPluginComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'unknownPlugin.png'
     tooltip = _translate('Unknown: A component which comes from a plugin which you do not have installed & activated.')
 
-    def __init__(self, exp, parentName, name='', compType="UnknownPluginComponent"):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='',
+        startVal='',
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # testing
+        disabled=False,
+        # legacy
+        compType="UnknownPluginComponent",
+    ):
         self.type = compType
         self.exp = exp  # so we can access the experiment if necess
         self.parentName = parentName  # to access the routine too if needed
         self.params = {}
         self.depends = []
-        super(UnknownPluginComponent, self).__init__(exp, parentName, name=name)
+        super(UnknownPluginComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
         self.order += []
 
     @property

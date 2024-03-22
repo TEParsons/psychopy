@@ -17,18 +17,53 @@ class BrushComponent(BaseVisualComponent):
     iconFile = Path(__file__).parent / 'brush.png'
     tooltip = _translate('Brush: a drawing tool')
 
-    def __init__(self, exp, parentName, name='brush',
-                 lineColor='$[1,1,1]', lineColorSpace='rgb',
-                 lineWidth=1.5, opacity=1,
-                 buttonRequired=True,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='brush',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        buttonRequired=True,
+        # appearance
+        lineWidth=1.5,
+        lineColor='$[1,1,1]',
+        lineColorSpace='rgb',
+        opacity='',
+        contrast=1,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+    ):
         super(BrushComponent, self).__init__(
-            exp, parentName, name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # appearance
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
 
         self.type = 'Brush'
         self.url = "https://www.psychopy.org/builder/components/brush.html"

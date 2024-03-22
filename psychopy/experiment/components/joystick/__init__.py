@@ -21,17 +21,51 @@ class JoystickComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'joystick.png'
     tooltip = _translate('Joystick: query joystick position and buttons')
 
-    def __init__(self, exp, parentName, name='joystick',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 save='final', forceEndRoutineOnPress="any click",
-                 timeRelativeTo='joystick onset', deviceNumber='0', allowedButtons=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='joystick',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        forceEndRoutineOnPress='any click',
+        # data
+        saveJoystickState='final',
+        timeRelativeTo='joystick onset',
+        clickable='',
+        saveParamsClickable='name,',
+        allowedButtons='',
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # hardware
+        deviceNumber='0',
+        # testing
+        disabled=False,
+        # legacy
+        save='final',
+    ):
         super(JoystickComponent, self).__init__(
-            exp, parentName, name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         self.type = 'Joystick'
         self.url = "https://www.psychopy.org/builder/components/joystick.html"
@@ -48,7 +82,7 @@ class JoystickComponent(BaseComponent):
             "On every video frame, every click or just at the end of the "
             "Routine?")
         self.params['saveJoystickState'] = Param(
-            save, valType='str', inputType="choice", categ='Data',
+            saveJoystickState, valType='str', inputType="choice", categ='Data',
             allowedVals=['final', 'on click', 'every frame', 'never'],
             hint=msg, direct=False,
             label=_translate("Save joystick state"))
@@ -80,7 +114,7 @@ class JoystickComponent(BaseComponent):
                          'e.g. target, foil'
                          )
         self.params['clickable'] = Param(
-            '', valType='list', inputType="single", categ='Data',
+            clickable, valType='list', inputType="single", categ='Data',
             updates='constant',
             hint=msg,
             label=_translate("Clickable stimuli"))
@@ -91,7 +125,7 @@ class JoystickComponent(BaseComponent):
                          'clickable objects have all these params.'
                          )
         self.params['saveParamsClickable'] = Param(
-            'name,', valType='list', inputType="single", categ='Data',
+            saveParamsClickable, valType='list', inputType="single", categ='Data',
             updates='constant', allowedUpdates=[],
             hint=msg, direct=False,
             label=_translate("Store params for clicked"))

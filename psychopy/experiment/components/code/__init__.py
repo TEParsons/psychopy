@@ -19,15 +19,40 @@ class CodeComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'code.png'
     tooltip = _translate('Code: insert python commands into an experiment')
 
-    def __init__(self, exp, parentName, name='code',
-                 beforeExp="",
-                 beginExp="",
-                 beginRoutine="",
-                 eachFrame="",
-                 endRoutine="",
-                 endExperiment="",
-                 codeType=None, translator="manual"):
-        super(CodeComponent, self).__init__(exp, parentName, name)
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='code',
+        codeType='Auto->JS',
+        beforeExperiment='',
+        beginExperiment='',
+        beginRoutine='',
+        eachFrame='',
+        endRoutine='',
+        endExperiment='',
+        beforeJsExperiment='',
+        beginJsExperiment='',
+        beginJsRoutine='',
+        eachJsFrame='',
+        endJsRoutine='',
+        endJsExperiment='',
+        # testing
+        disabled=False,
+        # legacy
+        beforeExp="",
+        beginExp="",
+        translator="manual",
+    ):
+        super(CodeComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            # testing
+            disabled=disabled,
+        )
         self.type = 'Code'
         self.url = "https://www.psychopy.org/builder/components/code.html"
         # params
@@ -51,7 +76,7 @@ class CodeComponent(BaseComponent):
         msg = _translate("Code to run before the experiment starts "
                          "(initialization); right-click checks syntax")
         self.params['Before Experiment'] = Param(
-            beforeExp, valType='extendedCode', inputType="multi", allowedTypes=[],
+            beforeExperiment, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Before experiment"))
@@ -59,7 +84,7 @@ class CodeComponent(BaseComponent):
         msg = _translate("Code at the start of the experiment ; right-click "
                          "checks syntax")
         self.params['Begin Experiment'] = Param(
-            beginExp, valType='extendedCode', inputType="multi", allowedTypes=[],
+            beginExperiment, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Begin experiment"))
@@ -103,14 +128,14 @@ class CodeComponent(BaseComponent):
         msg = _translate("Code before the start of the experiment (initialization"
                          "); right-click checks syntax")
         self.params['Before JS Experiment'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            beforeJsExperiment, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Before JS experiment"))
         msg = _translate("Code at the start of the experiment (initialization"
                          "); right-click checks syntax")
         self.params['Begin JS Experiment'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            beginJsExperiment, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Begin JS experiment"))
@@ -119,7 +144,7 @@ class CodeComponent(BaseComponent):
                          "Routine (e.g. each trial); "
                          "right-click checks syntax")
         self.params['Begin JS Routine'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            beginJsRoutine, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Begin JS Routine"))
@@ -128,7 +153,7 @@ class CodeComponent(BaseComponent):
                          " duration of this Routine; "
                          "right-click checks syntax")
         self.params['Each JS Frame'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            eachJsFrame, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("Each JS frame"))
@@ -137,7 +162,7 @@ class CodeComponent(BaseComponent):
                          " getting/storing responses); "
                          "right-click checks syntax")
         self.params['End JS Routine'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            endJsRoutine, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("End JS Routine"))
@@ -146,7 +171,7 @@ class CodeComponent(BaseComponent):
                          "saving files, resetting computer); "
                          "right-click checks syntax")
         self.params['End JS Experiment'] = Param(
-            '', valType='extendedCode', inputType="multi", allowedTypes=[],
+            endJsExperiment, valType='extendedCode', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[],
             hint=msg,
             label=_translate("End JS experiment"))

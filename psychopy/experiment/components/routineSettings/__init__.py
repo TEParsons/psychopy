@@ -16,27 +16,46 @@ class RoutineSettingsComponent(BaseComponent):
     version = "2023.2.0"
 
     def __init__(
-            self, exp, parentName,
-            # Basic
-            name='',
-            skipIf="",
-            # Description
-            desc="",
-            # Window
-            useWindowParams=False,
-            color="$[0,0,0]",
-            colorSpace="rgb",
-            backgroundImg="",
-            backgroundFit="none",
-            # Testing
-            disabled=False
+        self,
+        exp,
+        parentName,
+        # basic
+        name='',
+        desc='',
+        # flow
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        skipIf='',
+        # window
+        useWindowParams=False,
+        color='$[0,0,0]',
+        colorSpace='rgb',
+        backgroundImg='',
+        backgroundFit='none',
+        # data
+        saveStartStop=True,
+        # testing
+        disabled=False,
     ):
         self.type = 'RoutineSettings'
         self.exp = exp  # so we can access the experiment if necess
         self.parentName = parentName  # to access the routine too if needed
         self.params = {}
         self.depends = []
-        super(RoutineSettingsComponent, self).__init__(exp, parentName, name=parentName, disabled=disabled)
+        super(RoutineSettingsComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            # testing
+            disabled=disabled,
+        )
         self.order += []
 
         # --- Params ---

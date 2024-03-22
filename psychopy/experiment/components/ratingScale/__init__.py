@@ -21,32 +21,65 @@ class RatingScaleComponent(BaseComponent):
     tooltip = _translate('Rating scale: obtain numerical or categorical '
                          'responses')
 
-    def __init__(self, exp, parentName,
-                 name='rating',
-                 scaleDescription='',
-                 categoryChoices='',
-                 visualAnalogScale=False,
-                 low='1', high='7',
-                 singleClick=False,
-                 showAccept=True,
-                 labels='',
-                 size='1.0',
-                 tickHeight='',
-                 pos='0, -0.4',
-                 startType='time (s)', startVal='0.0',
-                 stopType='condition', stopVal='',
-                 startEstim='', durationEstim='',
-                 forceEndRoutine=True,
-                 disappear=False,
-                 marker='triangle',
-                 markerStart='',
-                 storeRating=True, storeRatingTime=True, storeHistory=False,
-                 customize_everything=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='rating',
+        categoryChoices='',
+        scaleDescription='',
+        startType='time (s)',
+        stopType='condition',
+        startVal='0.0',
+        stopVal='',
+        startEstim='',
+        durationEstim='',
+        forceEndRoutine=True,
+        # layout
+        size='1.0',
+        pos='0, -0.4',
+        # interface
+        tickHeight='',
+        marker='triangle',
+        singleClick=False,
+        disappear=False,
+        showAccept=True,
+        # data
+        visualAnalogScale=False,
+        low='1',
+        high='7',
+        labels='',
+        markerStart='',
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        storeRating=True,
+        storeRatingTime=True,
+        storeHistory=False,
+        # custom
+        customizeEverything='',
+        # testing
+        disabled=False,
+        # legacy
+        customize_everything='',
+    ):
         super(RatingScaleComponent, self).__init__(
-            exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startType=startType,
+            stopType=stopType,
+            startVal=startVal,
+            stopVal=stopVal,
+            startEstim=startEstim,
+            durationEstim=durationEstim,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
         self.type = 'RatingScale'
         self.url = "https://www.psychopy.org/builder/components/ratingscale.html"
         self.exp.requirePsychopyLibs(['visual', 'event'])
@@ -158,7 +191,7 @@ class RatingScaleComponent(BaseComponent):
 
         # customization:
         self.params['customize_everything'] = Param(
-            customize_everything, valType='code', inputType="multi", allowedTypes=[],
+            customizeEverything, valType='code', inputType="multi", allowedTypes=[],
             updates='constant', allowedUpdates=[], categ="Custom",
             hint=_translate("Use this text to create the rating scale as you"
                             " would in a code Component; overrides all"

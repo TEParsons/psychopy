@@ -42,33 +42,84 @@ class SliderComponent(BaseVisualComponent):
     iconFile = Path(__file__).parent / 'slider.png'
     tooltip = _translate('Slider: A simple, flexible object for getting ratings')
 
-    def __init__(self, exp, parentName,
-                 name='slider',
-                 labels='',
-                 ticks="(1, 2, 3, 4, 5)",
-                 initVal="",
-                 size='(1.0, 0.1)',
-                 pos='(0, -0.4)',
-                 flip=False,
-                 style='rating', styleTweaks=[],
-                 granularity=0,
-                 color="LightGray",
-                 fillColor='Red',
-                 borderColor='White',
-                 font="Open Sans",
-                 letterHeight=0.05,
-                 startType='time (s)', startVal='0.0',
-                 stopType='condition', stopVal='',
-                 startEstim='', durationEstim='',
-                 forceEndRoutine=True,
-                 storeRating=True, storeRatingTime=True, storeHistory=False, readOnly=False):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='slider',
+        startVal='0.0',
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='condition',
+        forceEndRoutine=True,
+        styles='rating',
+        ticks='(1, 2, 3, 4, 5)',
+        labels='',
+        granularity=0,
+        initVal='',
+        # layout
+        size='(1.0, 0.1)',
+        pos='(0, -0.4)',
+        units='from exp settings',
+        ori=0,
+        flip=False,
+        # appearance
+        color='LightGray',
+        fillColor='Red',
+        borderColor='White',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        styleTweaks=[],
+        # formatting
+        font='Open Sans',
+        letterHeight=0.05,
+        # data
+        readOnly=False,
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        storeRating=True,
+        storeRatingTime=True,
+        storeHistory=False,
+        # testing
+        disabled=False,
+        validator='',
+        # legacy
+        style='rating',
+    ):
         super(SliderComponent, self).__init__(
-                exp, parentName, name,
-                pos=pos, size=size,
-                color=color, fillColor=fillColor, borderColor=borderColor,
-                startType=startType, startVal=startVal,
-                stopType=stopType, stopVal=stopVal,
-                startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            fillColor=fillColor,
+            borderColor=borderColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
         self.type = 'Slider'
         self.url = "https://www.psychopy.org/builder/components/slider.html"
         self.exp.requirePsychopyLibs(['visual', 'event'])
@@ -182,7 +233,7 @@ class SliderComponent(BaseVisualComponent):
                 label=_translate("Letter height"))
 
         self.params['styles'] = Param(
-                style, valType='str', inputType="choice", categ='Basic',
+                styles, valType='str', inputType="choice", categ='Basic',
                 updates='constant', allowedVals=knownStyles,
                 hint=_translate(
                         "Discrete styles to control the overall appearance of the slider."),

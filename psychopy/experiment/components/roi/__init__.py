@@ -20,25 +20,68 @@ class RegionOfInterestComponent(PolygonComponent):
     tooltip = _translate('Region Of Interest: Define a region of interest for use with eyetrackers')
     beta = True
 
-    def __init__(self, exp, parentName, name='roi',
-                 units='from exp settings',
-                 endRoutineOn="none",
-                 shape='triangle', nVertices=4,
-                 pos=(0, 0), size=(0.5, 0.5), ori=0,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 timeRelativeTo='roi onset',
-                 lookDur=0.1, debug=False,
-                 save='every look'):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='roi',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        shape='triangle',
+        nVertices=4,
+        vertices='',
+        endRoutineOn='none',
+        lookDur=0.1,
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        units='from exp settings',
+        anchor='center',
+        ori=0,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        save='every look',
+        timeRelativeTo='roi onset',
+        # testing
+        disabled=False,
+        validator='',
+        debug=False,
+    ):
 
-        PolygonComponent.__init__(self, exp, parentName, name=name,
-                 units=units,
-                 shape=shape, nVertices=nVertices,
-                 pos=pos, size=size, ori=ori,
-                 startType=startType, startVal=startVal,
-                 stopType=stopType, stopVal=stopVal,
-                 startEstim=startEstim, durationEstim=durationEstim)
+        PolygonComponent.__init__(
+            self,
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            shape=shape,
+            nVertices=nVertices,
+            vertices=vertices,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            anchor=anchor,
+            ori=ori,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
         self.type = 'RegionOfInterest'
         self.url = "https://www.psychopy.org/builder/components/roi.html"
         self.exp.requirePsychopyLibs(['iohub', 'hardware'])

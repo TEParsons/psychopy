@@ -18,21 +18,73 @@ class ImageComponent(BaseVisualComponent):
     iconFile = Path(__file__).parent / 'image.png'
     tooltip = _translate('Image: present images (bmp, jpg, tif...)')
 
-    def __init__(self, exp, parentName, name='image', image='', mask='',
-                 interpolate='linear', units='from exp settings',
-                 color='$[1,1,1]', colorSpace='rgb', pos=(0, 0),
-                 size=(0.5, 0.5), anchor="center", ori=0, texRes='128', flipVert=False,
-                 flipHoriz=False,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='image',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        image='',
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        units='from exp settings',
+        anchor='center',
+        ori=0,
+        flipVert=False,
+        flipHoriz=False,
+        # appearance
+        color='$[1,1,1]',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        # texture
+        mask='',
+        textureResolution='128',
+        interpolate='linear',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+        # legacy
+        texRes='128',
+    ):
         super(ImageComponent, self).__init__(
-            exp, parentName, name=name, units=units,
-            color=color, colorSpace=colorSpace,
-            pos=pos, size=size, ori=ori,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
         self.type = 'Image'
         self.url = "https://www.psychopy.org/builder/components/image.html"
         self.exp.requirePsychopyLibs(['visual'])
@@ -62,7 +114,7 @@ class ImageComponent(BaseVisualComponent):
 
         msg = _translate("Resolution of the mask if one is used.")
         self.params['texture resolution'] = Param(
-            texRes, valType='num', inputType="choice", categ='Texture',
+            textureResolution, valType='num', inputType="choice", categ='Texture',
             allowedVals=['32', '64', '128', '256', '512'],
             updates='constant', allowedUpdates=[],
             hint=msg,

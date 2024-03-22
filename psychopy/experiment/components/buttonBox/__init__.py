@@ -14,34 +14,53 @@ class ButtonBoxComponent(BaseDeviceComponent, PluginDevicesMixin):
     tooltip = _translate('Button Box: Get input from a button box')
 
     def __init__(
-            self, exp, parentName,
-            # basic
-            name='buttonBox',
-            startType='time (s)', startVal=0.0,
-            stopType='duration (s)', stopVal=1.0,
-            startEstim='', durationEstim='',
-            forceEndRoutine=True,
-            # device
-            deviceLabel="",
-            deviceBackend="keyboard",
-            # data
-            registerOn=True,
-            store='first',
-            allowedButtons="",
-            storeCorrect=False,
-            correctAns="",
-            # testing
-            disabled=False,
+        self,
+        exp,
+        parentName,
+        # basic
+        name='buttonBox',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        forceEndRoutine=True,
+        # device
+        deviceLabel='',
+        deviceBackend='keyboard',
+        kbButtonAliases="'q', 'w', 'e'",
+        # data
+        registerOn=True,
+        store='first',
+        allowedButtons='',
+        storeCorrect=False,
+        correctAns='',
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # testing
+        disabled=False,
     ):
         # initialise base class
         BaseDeviceComponent.__init__(
-            self, exp, parentName,
+            self,
+            exp,
+            parentName,
+            # basic
             name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # device
             deviceLabel=deviceLabel,
-            disabled=disabled
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
         )
         self.type = "ButtonBox"
 

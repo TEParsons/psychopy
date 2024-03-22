@@ -20,22 +20,74 @@ class PolygonComponent(BaseVisualComponent):
     tooltip = _translate('Polygon: any regular polygon (line, triangle, square'
                          '...circle)')
 
-    def __init__(self, exp, parentName, name='polygon', interpolate='linear',
-                 units='from exp settings', anchor='center',
-                 lineColor='white', lineColorSpace='rgb', lineWidth=1,
-                 fillColor='white', fillColorSpace='rgb',
-                 shape='triangle', nVertices=4, vertices="",
-                 pos=(0, 0), size=(0.5, 0.5), ori=0,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='polygon',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        shape='triangle',
+        nVertices=4,
+        vertices='',
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        units='from exp settings',
+        anchor='center',
+        ori=0,
+        # appearance
+        fillColor='white',
+        lineColor='white',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        lineWidth=1,
+        # texture
+        interpolate='linear',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+        # legacy
+        lineColorSpace='rgb',
+        fillColorSpace='rgb',
+    ):
         super(PolygonComponent, self).__init__(
-            exp, parentName, name=name, units=units,
-            fillColor=fillColor, borderColor=lineColor,
-            pos=pos, size=size, ori=ori,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            fillColor=fillColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
 
         self.type = 'Polygon'
         self.url = "https://www.psychopy.org/builder/components/polygon.html"

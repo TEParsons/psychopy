@@ -19,20 +19,48 @@ class JoyButtonsComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'joyButtons.png'
     tooltip = _translate('JoyButtons: check and record joystick/gamepad button presses')
 
-    def __init__(self, exp, parentName, name='button_resp',
-                 allowedKeys="0,1,2,3,4",
-                 store='last key', forceEndRoutine=True, storeCorrect=False,
-                 correctAns="",
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 deviceNumber='0',
-                 syncScreenRefresh=True):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='button_resp',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        forceEndRoutine=True,
+        # data
+        allowedKeys='0,1,2,3,4',
+        store='last key',
+        storeCorrect=False,
+        correctAns='',
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # hardware
+        deviceNumber='0',
+        # testing
+        disabled=False,
+    ):
         super(JoyButtonsComponent, self).__init__(
-            exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         self.type = 'JoyButtons'
         self.url = "https://www.psychopy.org/builder/components/joyButtons.html"

@@ -19,18 +19,51 @@ class MouseComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'mouse.png'
     tooltip = _translate('Mouse: query mouse position and buttons')
 
-    def __init__(self, exp, parentName, name='mouse',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 save='on click', forceEndRoutineOnPress="any click",
-                 storeCorrect=False, correctAns="",
-                 timeRelativeTo='mouse onset'):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='mouse',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        forceEndRoutineOnPress='any click',
+        newClicksOnly=True,
+        clickable='',
+        # data
+        saveMouseState='on click',
+        timeRelativeTo='mouse onset',
+        saveParamsClickable='name,',
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        storeCorrect=False,
+        correctAns='',
+        # testing
+        disabled=False,
+        # legacy
+        save='on click',
+    ):
         super(MouseComponent, self).__init__(
-            exp, parentName, name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         self.type = 'Mouse'
         self.url = "https://www.psychopy.org/builder/components/mouse.html"
@@ -47,7 +80,7 @@ class MouseComponent(BaseComponent):
             "On every video frame, every click or just at the end of the "
             "Routine?")
         self.params['saveMouseState'] = Param(
-            save, valType='str', inputType="choice", categ='Data',
+            saveMouseState, valType='str', inputType="choice", categ='Data',
             allowedVals=['final', 'on click', 'on valid click', 'every frame', 'never'],
             hint=msg, direct=False,
             label=_translate("Save mouse state"))
@@ -79,7 +112,7 @@ class MouseComponent(BaseComponent):
                          'recording as a new click.'
                          )
         self.params['newClicksOnly'] = Param(
-            True, valType='bool', inputType="bool", categ='Basic',
+            newClicksOnly, valType='bool', inputType="bool", categ='Basic',
             updates='constant',
             hint=msg,
             label=_translate("New clicks only"))
@@ -89,7 +122,7 @@ class MouseComponent(BaseComponent):
                          'e.g. target, foil'
                          )
         self.params['clickable'] = Param(
-            '', valType='list', inputType="single", categ='Basic',
+            clickable, valType='list', inputType="single", categ='Basic',
             updates='constant',
             hint=msg,
             label=_translate("Clickable stimuli"))
@@ -100,7 +133,7 @@ class MouseComponent(BaseComponent):
                          'clickable objects have all these params.'
                          )
         self.params['saveParamsClickable'] = Param(
-            'name,', valType='list', inputType="single", categ='Data',
+            saveParamsClickable, valType='list', inputType="single", categ='Data',
             updates='constant', allowedUpdates=[], direct=False,
             hint=msg,
             label=_translate("Store params for clicked"))

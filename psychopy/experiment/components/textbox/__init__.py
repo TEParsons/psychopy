@@ -21,37 +21,86 @@ class TextboxComponent(BaseVisualComponent):
     tooltip = _translate('Textbox: present text stimuli but cooler')
     beta = True
 
-    def __init__(self, exp, parentName, name='textbox',
-                 # effectively just a display-value
-                 text=_translate('Any text\n\nincluding line breaks'),
-                 placeholder=_translate("Type here..."),
-                 font='Arial', units='from exp settings', bold=False, italic=False,
-                 color='white', colorSpace='rgb', opacity="",
-                 pos=(0, 0), size=(0.5, 0.5), letterHeight=0.05, ori=0,
-                 speechPoint="",
-                 anchor='center', alignment='center',
-                 lineSpacing=1.0, padding=0,  # gap between box and text
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 overflow="visible", languageStyle='LTR', fillColor="None",
-                 borderColor="None", borderWidth=2,
-                 flipHoriz=False,
-                 flipVert=False,
-                 editable=False, autoLog=True):
-        super(TextboxComponent, self).__init__(exp, parentName, name,
-                                            units=units,
-                                            color=color, fillColor=fillColor, borderColor=borderColor,
-                                            colorSpace=colorSpace,
-                                            pos=pos,
-                                            ori=ori,
-                                            size=size,
-                                            startType=startType,
-                                            startVal=startVal,
-                                            stopType=stopType,
-                                            stopVal=stopVal,
-                                            startEstim=startEstim,
-                                            durationEstim=durationEstim)
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='textbox',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        editable=False,
+        text='Any text\n\nincluding line breaks',
+        placeholder='Type here...',
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        padding=0,
+        units='from exp settings',
+        anchor='center',
+        ori=0,
+        flipHoriz=False,
+        flipVert=False,
+        overflow='visible',
+        # appearance
+        color='white',
+        fillColor='None',
+        borderColor='None',
+        colorSpace='rgb',
+        opacity='',
+        borderWidth=2,
+        contrast=1,
+        speechPoint='',
+        # formatting
+        font='Arial',
+        letterHeight=0.05,
+        lineSpacing=1.0,
+        bold=False,
+        italic=False,
+        languageStyle='LTR',
+        alignment='center',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        autoLog=True,
+        # testing
+        disabled=False,
+        validator='',
+    ):
+        super(TextboxComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            fillColor=fillColor,
+            borderColor=borderColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
         self.type = 'Textbox'
         self.url = "https://www.psychopy.org/builder/components/textbox.html"
         self.order += [  # controls order of params within tabs

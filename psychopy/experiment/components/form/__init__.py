@@ -25,34 +25,75 @@ class FormComponent(BaseVisualComponent):
     tooltip = _translate('Form: a Psychopy survey tool')
     beta = True
 
-    def __init__(self, exp, parentName,
-                 name='form',
-                 items='.csv',
-                 textHeight=0.03,
-                 font="Open Sans",
-                 randomize=False,
-                 fillColor='',
-                 borderColor='',
-                 itemColor='white',
-                 responseColor='white',
-                 markerColor='red',
-                 size=(1, .7),
-                 pos=(0, 0),
-                 style='dark',
-                 itemPadding=0.05,
-                 startType='time (s)', startVal='0.0',
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 # legacy
-                 color='white'):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='form',
+        startVal='0.0',
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        items='.csv',
+        randomize=False,
+        dataFormat='rows',
+        # layout
+        size=(1, 0.7),
+        pos=(0, 0),
+        itemPadding=0.05,
+        # appearance
+        fillColor='',
+        borderColor='',
+        itemColor='white',
+        responseColor='white',
+        markerColor='red',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        style='dark',
+        # formatting
+        textHeight=0.03,
+        font='Open Sans',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+        # legacy
+        color='white',
+    ):
 
         super(FormComponent, self).__init__(
-            exp, parentName, name=name,
-            pos=pos, size=size,
-            color=color, fillColor=fillColor, borderColor=borderColor,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            # appearance
+            fillColor=fillColor,
+            borderColor=borderColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
 
         # these are defined by the BaseVisual but we don't want them
         del self.params['ori']
@@ -103,7 +144,7 @@ class FormComponent(BaseVisualComponent):
             label=_translate("Item padding"))
 
         self.params['Data Format'] = Param(
-            'rows', valType='str', inputType="choice", allowedTypes=[], categ='Basic',
+            dataFormat, valType='str', inputType="choice", allowedTypes=[], categ='Basic',
             allowedVals=['columns', 'rows'],
             updates='constant',
             hint=_translate("Store item data by columns, or rows"),

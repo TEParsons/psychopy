@@ -21,13 +21,48 @@ class UnknownComponent(BaseComponent):
                          'installed version of PsychoPy\n(most likely from the '
                          'future)')
 
-    def __init__(self, exp, parentName, name='', compType="UnknownComponent"):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='',
+        startVal='',
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # testing
+        disabled=False,
+        # legacy
+        compType="UnknownComponent",
+    ):
         self.type = compType
         self.exp = exp  # so we can access the experiment if necess
         self.parentName = parentName  # to access the routine too if needed
         self.params = {}
         self.depends = []
-        super(UnknownComponent, self).__init__(exp, parentName, name=name)
+        super(UnknownComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
         self.order += []
 
     @property

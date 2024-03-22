@@ -16,30 +16,74 @@ class ProgressComponent(BaseVisualComponent):
     tooltip = _translate('Progress: Present a progress bar, with values ranging from 0 to 1.')
     beta = True
 
-    def __init__(self, exp, parentName, name='prog',
-                 startType='time (s)', startVal=0,
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 saveStartStop=True, syncScreenRefresh=True,
-                 progress=0,
-                 color="white", fillColor="None", borderColor="white", colorSpace="rgb",
-                 opacity=1, lineWidth=4,
-                 pos=(0, 0), size=(0.5, 0.5), anchor="center left", ori=0, units="height",
-                 disabled=False):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='prog',
+        startVal=0,
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        progress=0,
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        units='height',
+        anchor='center left',
+        ori=0,
+        # appearance
+        color='white',
+        fillColor='None',
+        borderColor='white',
+        colorSpace='rgb',
+        opacity=1,
+        contrast=1,
+        lineWidth=4,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+    ):
 
         self.exp = exp  # so we can access the experiment if necess
         self.parentName = parentName  # to access the routine too if needed
         self.params = {}
         self.depends = []
         super(ProgressComponent, self).__init__(
-            exp, parentName, name=name,
-            units=units, color=color, fillColor=fillColor, borderColor=borderColor,
-            pos=pos, size=size, ori=ori, colorSpace=colorSpace, opacity=opacity,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
-            saveStartStop=saveStartStop, syncScreenRefresh=syncScreenRefresh,
-            disabled=disabled
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            fillColor=fillColor,
+            borderColor=borderColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
         )
         self.type = 'Progress'
 

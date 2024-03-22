@@ -18,24 +18,74 @@ class DotsComponent(BaseVisualComponent):
     iconFile = Path(__file__).parent / 'dots.png'
     tooltip = _translate('Dots: Random Dot Kinematogram')
 
-    def __init__(self, exp, parentName, name='dots',
-                 nDots=100,
-                 direction=0.0, speed=0.1, coherence=1.0,
-                 dotSize=2,
-                 dotLife=3, signalDots='same', noiseDots='direction', refreshDots='repeat',
-                 fieldShape='circle', fieldSize=1.0, fieldAnchor="center", fieldPos=(0.0, 0.0),
-                 color='$[1.0,1.0,1.0]', colorSpace='rgb',
-                 opacity="",
-                 units='from exp settings',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='dots',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        # layout
+        dotSize=2,
+        fieldSize=1.0,
+        fieldPos=(0.0, 0.0),
+        units='from exp settings',
+        anchor='center',
+        fieldShape='circle',
+        # appearance
+        color='$[1.0,1.0,1.0]',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        # dots
+        nDots=100,
+        dir=0.0,
+        speed=0.1,
+        coherence=1.0,
+        dotLife=3,
+        signalDots='same',
+        refreshDots='repeat',
+        noiseDots='direction',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+        # legacy
+        direction=0.0,
+        fieldAnchor="center",
+    ):
         super(DotsComponent, self).__init__(
-            exp, parentName, name=name, units=units,
-            color=color, colorSpace=colorSpace,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            units=units,
+            # appearance
+            color=color,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
 
         self.type = 'Dots'
         self.url = "https://www.psychopy.org/builder/components/dots.html"
@@ -58,7 +108,7 @@ class DotsComponent(BaseVisualComponent):
 
         msg = _translate("Direction of motion for the signal dots (degrees)")
         self.params['dir'] = Param(
-            direction, valType='num', inputType="spin", categ='Dots',
+            dir, valType='num', inputType="spin", categ='Dots',
             updates='constant',
             allowedUpdates=['constant', 'set every repeat', 'set every frame'],
             hint=msg,
@@ -147,7 +197,7 @@ class DotsComponent(BaseVisualComponent):
             label=_translate("Field position"))
 
         self.params['anchor'] = Param(
-            fieldAnchor, valType='str', inputType="choice", categ='Layout',
+            anchor, valType='str', inputType="choice", categ='Layout',
             allowedVals=['center',
                          'top-center',
                          'bottom-center',

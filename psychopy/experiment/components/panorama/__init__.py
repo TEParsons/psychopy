@@ -20,30 +20,64 @@ class PanoramaComponent(BaseVisualComponent):
                          'screen.')
     beta = True
 
-    def __init__(self, exp, parentName, name='pan',
-                 startType='time (s)', startVal=0,
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 saveStartStop=True, syncScreenRefresh=True,
-                 image="",
-                 interpolate='linear',
-                 posCtrl="mouse", smooth=True, posSensitivity=1,
-                 elevation="", azimuth="",
-                 zoomCtrl="wheel",
-                 zoom=1, zoomSensitivity=1,
-                 inKey="up", outKey="down",
-                 upKey="w", leftKey="a", downKey="s", rightKey="d", stopKey="space"):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='pan',
+        startVal=0,
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        image='',
+        posCtrl='mouse',
+        azimuth='',
+        elevation='',
+        upKey='w',
+        leftKey='a',
+        downKey='s',
+        rightKey='d',
+        stopKey='space',
+        posSensitivity=1,
+        smooth=True,
+        zoomCtrl='wheel',
+        zoom=1,
+        inKey='up',
+        outKey='down',
+        zoomSensitivity=1,
+        interpolate='linear',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+    ):
 
         self.exp = exp  # so we can access the experiment if necess
         self.parentName = parentName  # to access the routine too if needed
         self.params = {}
         self.depends = []
         super(PanoramaComponent, self).__init__(
-            exp, parentName, name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
-            saveStartStop=saveStartStop, syncScreenRefresh=syncScreenRefresh,
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
         )
         self.type = 'Panorama'
 

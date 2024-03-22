@@ -15,21 +15,44 @@ class ResourceManagerComponent(BaseComponent):
                          "to load first")
     beta = True
 
-    def __init__(self, exp, parentName, name='resources',
-                 startType='time (s)', startVal=0,
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 resources=None, actionType='Start and Check',
-                 saveStartStop=True, syncScreenRefresh=False,
-                 forceEndRoutine=False,
-                 disabled=False):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='resources',
+        startVal=0,
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        resources=[],
+        checkAll=[],
+        actionType='Start and Check',
+        forceEndRoutine=False,
+        # testing
+        disabled=False,
+        # legacy
+        saveStartStop=True,
+        syncScreenRefresh=False,
+    ):
 
-        BaseComponent.__init__(self, exp, parentName, name=name,
-                               startType=startType, startVal=startVal,
-                               stopType=stopType, stopVal=stopVal,
-                               startEstim=startEstim, durationEstim=durationEstim,
-                               saveStartStop=saveStartStop, syncScreenRefresh=syncScreenRefresh,
-                               disabled=disabled)
+        BaseComponent.__init__(
+            self,
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # testing
+            disabled=disabled,
+        )
         self.type = 'ResourceManager'
         self.url = "https://www.psychopy.org/builder/components/resourcemanager"
 
@@ -41,7 +64,7 @@ class ResourceManagerComponent(BaseComponent):
             hint=_translate("Resources to download/check"),
             direct=False, label=_translate("Resources"))
 
-        self.params['checkAll'] = Param(resources,
+        self.params['checkAll'] = Param(checkAll,
             valType='bool', inputType="bool", categ='Basic',
             hint=_translate("When checking these resources, also check for all currently downloading?"),
             label=_translate("Check all"))

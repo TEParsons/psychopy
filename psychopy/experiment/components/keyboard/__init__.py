@@ -24,22 +24,54 @@ class KeyboardComponent(BaseDeviceComponent):
     tooltip = _translate('Keyboard: check and record keypresses')
     deviceClasses = ["psychopy.hardware.keyboard.KeyboardDevice"]
 
-    def __init__(self, exp, parentName, name='key_resp', deviceLabel="",
-                 allowedKeys="'y','n','left','right','space'", registerOn="press",
-                 store='last key', forceEndRoutine=True, storeCorrect=False,
-                 correctAns="", discardPrev=True,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal='',
-                 startEstim='', durationEstim='',
-                 syncScreenRefresh=True,
-                 disabled=False):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='key_resp',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        forceEndRoutine=True,
+        registerOn='press',
+        allowedKeys="'y','n','left','right','space'",
+        # device
+        deviceLabel='',
+        # data
+        store='last key',
+        storeCorrect=False,
+        correctAns='',
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        discardPrevious=True,
+        # testing
+        disabled=False,
+        # legacy
+        discardPrev=True,
+    ):
         BaseDeviceComponent.__init__(
-            self, exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
+            self,
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # device
             deviceLabel=deviceLabel,
-            disabled=disabled
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
         )
 
         self.type = 'Keyboard'
@@ -92,7 +124,7 @@ class KeyboardComponent(BaseDeviceComponent):
         msg = _translate("Do you want to discard all responses occurring "
                          "before the onset of this Component?")
         self.params['discard previous'] = Param(
-            discardPrev, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
+            discardPrevious, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
             updates='constant',
             hint=msg,
             label=_translate("Discard previous"))

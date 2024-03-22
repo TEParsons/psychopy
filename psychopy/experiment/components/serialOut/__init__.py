@@ -20,20 +20,51 @@ class SerialOutComponent(BaseComponent):
     tooltip = _translate('Serial out: send signals from a serial port')
     beta = True
 
-    def __init__(self, exp, parentName, name='serialPort',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 port="COM3", baudrate=9600, bytesize=8, stopbits=1, parity='N',
-                 startdata=1, stopdata=0,
-                 timeout="", getResponse=False,
-                 syncScreenRefresh=False):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='serialPort',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        port='COM3',
+        startdata=1,
+        stopdata=0,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        getResponse=False,
+        # hardware
+        baudrate=9600,
+        bytesize=8,
+        stopbits=1,
+        parity='N',
+        timeout='',
+        # testing
+        disabled=False,
+    ):
         super(SerialOutComponent, self).__init__(
-            exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
-            syncScreenRefresh=syncScreenRefresh)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         self.type = 'SerialOut'
         self.url = "https://www.psychopy.org/builder/components/serialout.html"

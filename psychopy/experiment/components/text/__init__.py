@@ -19,28 +19,68 @@ class TextComponent(BaseVisualComponent):
     iconFile = Path(__file__).parent / 'text.png'
     tooltip = _translate('Text: present text stimuli')
 
-    def __init__(self, exp, parentName, name='text',
-                 # effectively just a display-value
-                 text=_translate('Any text\n\nincluding line breaks'),
-                 font='Open Sans', units='from exp settings',
-                 color='white', colorSpace='rgb',
-                 pos=(0, 0), letterHeight=0.05, ori=0,
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 flip='None', startEstim='', durationEstim='', wrapWidth='',
-                 languageStyle='LTR'):
-        super(TextComponent, self).__init__(exp, parentName, name=name,
-                                            units=units,
-                                            color=color,
-                                            colorSpace=colorSpace,
-                                            pos=pos,
-                                            ori=ori,
-                                            startType=startType,
-                                            startVal=startVal,
-                                            stopType=stopType,
-                                            stopVal=stopVal,
-                                            startEstim=startEstim,
-                                            durationEstim=durationEstim)
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='text',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        text='Any text\n\nincluding line breaks',
+        # layout
+        pos=(0, 0),
+        units='from exp settings',
+        ori=0,
+        wrapWidth='',
+        flip='None',
+        # appearance
+        color='white',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        # formatting
+        font='Open Sans',
+        letterHeight=0.05,
+        languageStyle='LTR',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+    ):
+        super(TextComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
         self.type = 'Text'
         self.url = "https://www.psychopy.org/builder/components/text.html"
 

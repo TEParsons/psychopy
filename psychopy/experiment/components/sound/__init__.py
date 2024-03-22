@@ -22,27 +22,50 @@ class SoundComponent(BaseDeviceComponent):
     tooltip = _translate('Sound: play recorded files or generated sounds', )
     deviceClasses = ["psychopy.hardware.speaker.SpeakerDevice"]
 
-    def __init__(self,
-                 exp, parentName,
-                 # basic
-                 name='sound_1',
-                 sound='A',
-                 startType='time (s)', startVal='0.0',
-                 stopType='duration (s)', stopVal='1.0',
-                 startEstim='', durationEstim='',
-                 syncScreenRefresh=True,
-                 # device
-                 deviceLabel="",
-                 speakerIndex=-1,
-                 # playback
-                 volume=1,
-                 stopWithRoutine=True):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='sound_1',
+        startVal='0.0',
+        startEstim='',
+        startType='time (s)',
+        stopVal='1.0',
+        durationEstim='',
+        stopType='duration (s)',
+        sound='A',
+        syncScreenRefresh=True,
+        # device
+        deviceLabel='',
+        speakerIndex=-1,
+        # playback
+        volume=1,
+        hamming=True,
+        stopWithRoutine=True,
+        # data
+        saveStartStop=True,
+        # testing
+        disabled=False,
+    ):
         super(SoundComponent, self).__init__(
-            exp, parentName, name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim,
-            deviceLabel=deviceLabel
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # device
+            deviceLabel=deviceLabel,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
         )
         self.type = 'Sound'
         self.url = "https://www.psychopy.org/builder/components/sound.html"
@@ -81,7 +104,7 @@ class SoundComponent(BaseDeviceComponent):
             hint=msg,
             label=_translate("Sync start with screen"))
         self.params['hamming'] = Param(
-            True, valType='bool', inputType="bool", updates='constant', categ='Playback',
+            hamming, valType='bool', inputType="bool", updates='constant', categ='Playback',
             hint=_translate(
                   "For tones we can apply a hamming window to prevent 'clicks' that "
                   "are caused by a sudden onset. This delays onset by roughly 1ms."),

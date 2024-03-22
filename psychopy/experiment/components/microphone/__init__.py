@@ -50,24 +50,62 @@ class MicrophoneComponent(BaseDeviceComponent):
                          'duration), okay for spoken words')
     deviceClasses = ['psychopy.hardware.microphone.MicrophoneDevice']
 
-    def __init__(self, exp, parentName, name='mic',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=2.0,
-                 startEstim='', durationEstim='',
-                 channels='auto', device=None,
-                 sampleRate='DVD Audio (48kHz)', maxSize=24000,
-                 outputType='default', speakTimes=True, trimSilent=False,
-                 transcribe=False, transcribeBackend="Whisper",
-                 transcribeLang="en-US", transcribeWords="",
-                 transcribeWhisperModel="base",
-                 transcribeWhisperDevice="auto",
-                 #legacy
-                 stereo=None, channel=None):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='mic',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=2.0,
+        durationEstim='',
+        stopType='duration (s)',
+        # device
+        deviceLabel='',
+        device='',
+        channels='auto',
+        sampleRate='DVD Audio (48kHz)',
+        maxSize=24000,
+        # transcription
+        transcribe=False,
+        transcribeBackend='Whisper',
+        transcribeLang='en-US',
+        transcribeWords='',
+        transcribeWhisperModel='base',
+        transcribeWhisperDevice='auto',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        outputType='default',
+        speakTimes=True,
+        trimSilent=False,
+        # testing
+        disabled=False,
+        # legacy
+        stereo=None,
+        channel=None,
+    ):
         super(MicrophoneComponent, self).__init__(
-            exp, parentName, name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # device
+            deviceLabel=deviceLabel,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         self.type = 'Microphone'
         self.url = "https://www.psychopy.org/builder/components/microphone.html"

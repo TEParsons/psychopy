@@ -20,12 +20,50 @@ class VariableComponent(BaseComponent):
     iconFile = Path(__file__).parent / 'variable.png'
     tooltip = _translate('Variable: create a new variable')
 
-    def __init__(self, exp, parentName,
-                 name='var1', startExpValue = '',
-                 startRoutineValue='',
-                 startFrameValue=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='var1',
+        startVal='',
+        startEstim='',
+        startType='time (s)',
+        stopVal='',
+        durationEstim='',
+        stopType='duration (s)',
+        startExpValue='',
+        startRoutineValue='',
+        startFrameValue='',
+        # data
+        saveStartExp=False,
+        saveStartRoutine=False,
+        saveFrameValue='never',
+        saveEndRoutine=True,
+        saveEndExp=False,
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # testing
+        disabled=False,
+    ):
 
-        super().__init__(exp, parentName, name)
+        super().__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+        )
 
         categories = ['Custom']
         self.type = 'Variable'
@@ -53,31 +91,31 @@ class VariableComponent(BaseComponent):
         # Save options
         hnt = _translate("Save the experiment start value in data file.")
         self.params['saveStartExp'] = Param(
-            False, valType='bool', inputType="bool", categ='Data',
+            saveStartExp, valType='bool', inputType="bool", categ='Data',
             updates='constant',
             hint=hnt,
             label=_translate("Save exp start value"))
         hnt = _translate("Save the experiment end value in data file.")
         self.params['saveEndExp'] = Param(
-            False, valType='bool', inputType="bool", categ='Data',
+            saveEndExp, valType='bool', inputType="bool", categ='Data',
             updates='constant',
             hint=hnt,
             label=_translate("Save exp end value"))
         hnt = _translate("Save the Routine start value in data file.")
         self.params['saveStartRoutine'] = Param(
-            False, valType='bool', inputType="bool", categ='Data',
+            saveStartRoutine, valType='bool', inputType="bool", categ='Data',
             updates='constant',
             hint=hnt,
             label=_translate("Save Routine start value"))
         hnt = _translate("Save the Routine end value in data file.")
         self.params['saveEndRoutine'] = Param(
-            True, valType='bool', inputType="bool", categ='Data',
+            saveEndRoutine, valType='bool', inputType="bool", categ='Data',
             updates='constant',
             hint=hnt,
             label=_translate("Save Routine end value"))
         hnt = _translate("Save choice of frame value in data file.")
         self.params['saveFrameValue'] = Param(
-            'never', valType='str', inputType="choice", categ='Data',
+            saveFrameValue, valType='str', inputType="choice", categ='Data',
             allowedVals=['first', 'last', 'all', 'never'],
             updates='constant', direct=False,
             hint=hnt,

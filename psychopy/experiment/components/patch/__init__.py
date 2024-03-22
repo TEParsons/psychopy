@@ -18,20 +18,76 @@ class PatchComponent(BaseVisualComponent):
     tooltip = _translate('Patch: present images (bmp, jpg, tif...) or textures '
                          'like gratings')
 
-    def __init__(self, exp, parentName, name='patch', image='sin', mask='None',
-                 sf='None', interpolate='linear',
-                 units='from exp settings', color='$[1,1,1]', colorSpace='rgb',
-                 pos=(0, 0), size=(0.5, 0.5), ori=0, phase=0.0, texRes='128',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='patch',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        image='sin',
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        units='from exp settings',
+        ori=0,
+        # appearance
+        color='$[1,1,1]',
+        fillColor='',
+        borderColor='',
+        colorSpace='rgb',
+        opacity='',
+        contrast=1,
+        # texture
+        mask='None',
+        sf='None',
+        phase=0.0,
+        textureResolution='128',
+        interpolate='linear',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+        # legacy
+        texRes='128',
+    ):
         super(PatchComponent, self).__init__(
-            exp, parentName, name=name, units=units,
-            color=color, colorSpace=colorSpace,
-            pos=pos, size=size, ori=ori,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            fillColor=fillColor,
+            borderColor=borderColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
 
         self.type = 'Patch'
         self.url = "https://www.psychopy.org/builder/components/patch.html"
@@ -77,7 +133,7 @@ class PatchComponent(BaseVisualComponent):
             "Resolution of the texture for standard ones such as sin, sqr "
             "etc. For most cases a value of 256 pixels will suffice")
         self.params['texture resolution'] = Param(
-            texRes, valType='num', inputType="choice", categ='Texture',
+            textureResolution, valType='num', inputType="choice", categ='Texture',
             allowedVals=['32', '64', '128', '256', '512'],
             updates='constant', allowedUpdates=[],
             hint=msg,

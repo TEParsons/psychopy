@@ -26,22 +26,50 @@ class StaticComponent(BaseComponent):
     tooltip = _translate('Static: Static screen period (e.g. an ISI). '
                          'Useful for pre-loading stimuli.')
 
-    def __init__(self, exp, parentName, name='ISI',
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=0.5,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='ISI',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=0.5,
+        durationEstim='',
+        stopType='duration (s)',
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=False,
+        # custom
+        code='',
+        # testing
+        disabled=False,
+    ):
         BaseComponent.__init__(
-            self, exp, parentName, name=name,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim
+            self,
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
         )
         self.updatesList = []  # a list of dicts {compParams, fieldName}
         self.type = 'Static'
         self.url = "https://www.psychopy.org/builder/components/static.html"
         hnt = _translate(
             "Custom code to be run during the static period (after updates)")
-        self.params['code'] = Param("", valType='code', inputType="multi", categ='Custom',
+        self.params['code'] = Param(code, valType='code', inputType="multi", categ='Custom',
                                     hint=hnt,
                                     label=_translate("Custom code"))
 

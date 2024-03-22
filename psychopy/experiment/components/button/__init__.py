@@ -24,28 +24,81 @@ class ButtonComponent(BaseVisualComponent):
     tooltip = _translate('Button: A clickable textbox')
     beta = True
 
-    def __init__(self, exp, parentName, name="button",
-                 startType='time (s)', startVal=0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim='',
-                 text=_translate("Click here"), font='Arvo',
-                 pos=(0, 0), size=(0.5, 0.5), padding="", anchor='center', units='from exp settings', ori=0,
-                 color="white", fillColor="darkgrey", borderColor="None", borderWidth=0, colorSpace='rgb', opacity="",
-                 letterHeight=0.05, bold=True, italic=False,
-                 callback="", save='every click', timeRelativeTo='button onset', forceEndRoutine=True, oncePerClick=True):
-        super(ButtonComponent, self).__init__(exp, parentName, name,
-                                            units=units,
-                                            color=color, fillColor=fillColor, borderColor=borderColor,
-                                            colorSpace=colorSpace,
-                                            pos=pos,
-                                            ori=ori,
-                                            size=size,
-                                            startType=startType,
-                                            startVal=startVal,
-                                            stopType=stopType,
-                                            stopVal=stopVal,
-                                            startEstim=startEstim,
-                                            durationEstim=durationEstim)
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='button',
+        startVal=0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        forceEndRoutine=True,
+        text='Click here',
+        callback='',
+        oncePerClick=True,
+        # layout
+        size=(0.5, 0.5),
+        pos=(0, 0),
+        units='from exp settings',
+        anchor='center',
+        ori=0,
+        padding='',
+        # appearance
+        color='white',
+        fillColor='darkgrey',
+        borderColor='None',
+        colorSpace='rgb',
+        opacity='',
+        borderWidth=0,
+        contrast=1,
+        # formatting
+        font='Arvo',
+        letterHeight=0.05,
+        bold=True,
+        italic=False,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        save='every click',
+        timeRelativeTo='button onset',
+        # testing
+        disabled=False,
+        validator='',
+    ):
+        super(ButtonComponent, self).__init__(
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            ori=ori,
+            # appearance
+            color=color,
+            fillColor=fillColor,
+            borderColor=borderColor,
+            colorSpace=colorSpace,
+            opacity=opacity,
+            contrast=contrast,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
         self.type = 'Button'
         self.url = "https://www.psychopy.org/builder/components/button.html"
         self.order += [  # controls order of params within tabs

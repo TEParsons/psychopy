@@ -26,20 +26,62 @@ class ApertureComponent(PolygonComponent):
     tooltip = _translate('Aperture: restrict the drawing of stimuli to a given '
                          'region')
 
-    def __init__(self, exp, parentName, name='aperture', units='norm',
-                 size=1, pos=(0, 0), anchor="center", ori=0,
-                 shape='triangle', nVertices=4, vertices="",
-                 startType='time (s)', startVal=0.0,
-                 stopType='duration (s)', stopVal=1.0,
-                 startEstim='', durationEstim=''):
+    def __init__(
+        self,
+        exp,
+        parentName,
+        # basic
+        name='aperture',
+        startVal=0.0,
+        startEstim='',
+        startType='time (s)',
+        stopVal=1.0,
+        durationEstim='',
+        stopType='duration (s)',
+        shape='triangle',
+        nVertices=4,
+        vertices='',
+        # layout
+        size=1,
+        pos=(0, 0),
+        units='norm',
+        anchor='center',
+        ori=0,
+        # data
+        saveStartStop=True,
+        syncScreenRefresh=True,
+        # testing
+        disabled=False,
+        validator='',
+    ):
         # initialise main parameters
         super(ApertureComponent, self).__init__(
-            exp, parentName, name=name, units=units,
-            pos=pos, size=size, ori=ori,
-            shape=shape, nVertices=nVertices, vertices=vertices,
-            startType=startType, startVal=startVal,
-            stopType=stopType, stopVal=stopVal,
-            startEstim=startEstim, durationEstim=durationEstim)
+            exp,
+            parentName,
+            # basic
+            name=name,
+            startVal=startVal,
+            startEstim=startEstim,
+            startType=startType,
+            stopVal=stopVal,
+            durationEstim=durationEstim,
+            stopType=stopType,
+            shape=shape,
+            nVertices=nVertices,
+            vertices=vertices,
+            # layout
+            size=size,
+            pos=pos,
+            units=units,
+            anchor=anchor,
+            ori=ori,
+            # data
+            saveStartStop=saveStartStop,
+            syncScreenRefresh=syncScreenRefresh,
+            # testing
+            disabled=disabled,
+            validator=validator,
+        )
 
         self.type = 'Aperture'
         self.url = "https://www.psychopy.org/builder/components/aperture.html"
