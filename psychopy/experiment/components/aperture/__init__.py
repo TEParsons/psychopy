@@ -114,7 +114,6 @@ class ApertureComponent(PolygonComponent):
         # Remove Polygon params which are not needed
         del self.params['colorSpace']
         del self.params['fillColor']
-        del self.params['lineColor']
         del self.params['lineWidth']
         del self.params['contrast']
         del self.params['opacity']
