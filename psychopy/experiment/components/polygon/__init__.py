@@ -43,7 +43,7 @@ class PolygonComponent(BaseVisualComponent):
         ori=0,
         # appearance
         fillColor='white',
-        lineColor='white',
+        borderColor='white',
         colorSpace='rgb',
         opacity='',
         contrast=1,
@@ -78,6 +78,7 @@ class PolygonComponent(BaseVisualComponent):
             ori=ori,
             # appearance
             fillColor=fillColor,
+            borderColor=borderColor,
             colorSpace=colorSpace,
             opacity=opacity,
             contrast=contrast,
@@ -94,7 +95,6 @@ class PolygonComponent(BaseVisualComponent):
         self.exp.requirePsychopyLibs(['visual'])
         self.order += ['shape', 'nVertices',  # Basic tab
                       ]
-        self.order.insert(self.order.index("borderColor"), "lineColor")
         self.depends = [  # allows params to turn each other off/on
             {"dependsOn": "shape",  # must be param name
              "condition": "=='regular polygon...'",  # val to check for
@@ -154,9 +154,6 @@ class PolygonComponent(BaseVisualComponent):
                            "Regular polygon...", "Custom polygon..."],
             hint=msg, direct=False,
             label=_translate("Shape"))
-
-        self.params['lineColor'] = self.params['borderColor']
-        del self.params['borderColor']
 
         msg = _translate("Width of the shape's line (always in pixels - this"
                          " does NOT use 'units')")
@@ -240,7 +237,7 @@ class PolygonComponent(BaseVisualComponent):
 
         code += ("    ori=%(ori)s, pos=%(pos)s, anchor=%(anchor)s,\n"
                  "    lineWidth=%(lineWidth)s, "
-                 "    colorSpace=%(colorSpace)s,  lineColor=%(lineColor)s, fillColor=%(fillColor)s,\n"
+                 "    colorSpace=%(colorSpace)s,  lineColor=%(borderColor)s, fillColor=%(fillColor)s,\n"
                  "    opacity=%(opacity)s, " % inits)
 
         depth = -self.getPosInRoutine()
@@ -332,7 +329,7 @@ class PolygonComponent(BaseVisualComponent):
                  "  anchor: {anchor},\n"
                  "  lineWidth: {lineWidth}, \n"
                  "  colorSpace: {colorSpace},\n"
-                 "  lineColor: new util.Color({lineColor}),\n"
+                 "  lineColor: new util.Color({borderColor}),\n"
                  "  fillColor: new util.Color({fillColor}),\n"
                  "  opacity: {opacity}, depth: {depth}, interpolate: {interpolate},\n"
                  "}});\n\n")
@@ -345,7 +342,7 @@ class PolygonComponent(BaseVisualComponent):
                                             ori=inits['ori'],
                                             pos=inits['pos'],
                                             colorSpace=inits['colorSpace'],
-                                            lineColor=inits['lineColor'],
+                                            borderColor=inits['borderColor'],
                                             fillColor=inits['fillColor'],
                                             opacity=inits['opacity'],
                                             depth=depth,
