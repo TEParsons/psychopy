@@ -9,6 +9,7 @@
 """
 import glob
 import json
+import mimetypes
 import pathlib
 import os
 import re
@@ -27,6 +28,7 @@ import wx
 
 from ..app.errorDlg import exceptionCallback
 from ..tools.apptools import SortTerm
+from .materials import schemaTypes, AttributionDlg
 
 try:
     import git  # must import psychopy constants before this (custom git path)
@@ -842,7 +844,7 @@ class PavloviaProject(dict):
             '@context': "https://schema.org/",
             '@type': "Dataset",
             'schemaVersion': "Psych-DS 0.1.0",
-            'name': self['name'],
+            'name': "%(name)s data" % self,
             'description': self['description'],
             'author': [
                 {
@@ -863,6 +865,92 @@ class PavloviaProject(dict):
         outFile = pathlib.Path(self.localRoot) / "data_description.json"
         json.dump(
             desc, outFile.open("w"), indent=True
+        )
+
+    def generateMaterialsDescription(self):
+        """
+        Generate a materials_description.json file for this project, in line with schema.org
+        guidelines.
+        """
+        # refresh project to make sure it has info
+        if not hasattr(self, "_info"):
+            self.refresh()
+        # get location where description file should be
+        descFile = pathlib.Path(self.localRoot) / "materials_description.json"
+        # make sure there is a file there
+        if not descFile.is_file():
+            # create schema.org compliant dict from project info
+            desc = {
+                '@context': "https://schema.org/",
+                '@type': "Collection",
+                'name': "%(name)s materials" % self,
+                "description": "Materials for the Pavlovia project '%(name)s'" % self,
+                'author': [
+                    {
+                        '@type': "Person",
+                        'name': self['owner']['name'],
+                        'identifier': self['owner']['username'],
+                        'url': self['owner']['web_url'],
+                        'image': self['owner']['avatar_url']
+                    }
+                ],
+                #todo: add citation
+                'temporalCoverage': "%(created_at)s/%(last_activity_at)s" % self,
+                'url': "https://pavlovia.org/%(path_with_namespace)s" % self,
+                'identifier': "pavlovia/%(path_with_namespace)s" % self,
+                'keywords': self['tag_list'],
+                "hasPart": []
+            }
+            # save
+            json.dump(
+                desc, descFile.open("w"), indent=True
+            )
+        # make sure there is a materials folder
+        materialsFolder = pathlib.Path(self.localRoot) / "materials"
+        materialsFolder.mkdir(exist_ok=True)
+        # load file
+        desc = json.load(
+            descFile.open("r")
+        )
+        # get list of already covered files
+        covered = []
+        for item in desc['hasPart']:
+            covered.append(item)
+        # check each file
+        unattributed = []
+        for file in materialsFolder.glob("**/*.*"):
+            # get mimetype
+            mt = mimetypes.guess_type(file)
+            # if mimetype isn't covered, skip
+            if mt not in schemaTypes:
+                continue
+            # if item is already in desc, skip
+            if str(self.localRoot) in covered:
+                continue
+            # otherwise, add to list of unattributed files
+            unattributed.append(str(file))
+        # if still here, ask user if they'd like to attribute found materials
+        dlg = wx.MessageDialog(
+            None,
+            caption=_translate(
+                "Unattributed materials"
+            ),
+            message=_translate(
+                "Unattributed materials found:\n"
+                "{}\n"
+                "Would you like to add attribution to these materials?"
+            ).format("\n".join(unattributed)),
+            style=wx.YES | wx.NO
+        )
+        if dlg.ShowModal() == wx.ID_YES:
+            # if they say yes, open an attribution dialog
+            dlg = AttributionDlg(materials=desc['hasPart'])
+            # if they chose OK, apply changes
+            if dlg.ShowModal() == wx.ID_OK:
+                desc['hasPart'] += dlg.getMaterials()
+        # save file
+        json.dump(
+            desc, descFile.open("w"), indent=True
         )
 
     def sync(self, infoStream=None):
