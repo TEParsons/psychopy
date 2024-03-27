@@ -85,62 +85,95 @@ class RegionOfInterestComponent(PolygonComponent):
         self.type = 'RegionOfInterest'
         self.url = "https://www.psychopy.org/builder/components/roi.html"
         self.exp.requirePsychopyLibs(['iohub', 'hardware'])
-        # params
-        self.order += ['config']  # first param after the name
 
-        # Delete all appearance parameters
-        for param in list(self.params).copy():
-            if self.params[param].categ in ["Appearance", "Texture"]:
-                del self.params[param]
+        # --- Basic params ---
+        self.order += [
+            'endRoutineOn',
+            'lookDur',
+        ]
+        self.params['endRoutineOn'] = Param(
+            endRoutineOn, valType='str', inputType='choice', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedVals=['look at', 'look away', 'none'],
+            allowedLabels=[_translate('look at'), _translate('look away'), _translate('none')],
+            label=_translate('End Routine on...'),
+            hint=_translate(
+                'Under what condition should this ROI end the Routine?'
+            ),
+        )
+        self.params['lookDur'] = Param(
+            lookDur, valType='num', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Min. look time'),
+            hint=_translate(
+                'Minimum dwell time within roi (look at) or outside roi (look away).'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'endRoutineOn',  # if...
+            'condition': "=='none'",  # meets...
+            'param': 'lookDur',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
 
-        # Fix units as default
-        self.params['units'].allowedVals = ['from exp settings']
-
-        self.params['endRoutineOn'] = Param(endRoutineOn,
-            valType='str', inputType='choice', categ='Basic',
-            allowedVals=["look at", "look away", "none"],
-            hint=_translate("Under what condition should this ROI end the Routine?"),
-            label=_translate("End Routine on...")
+        # --- Data params ---
+        self.order += [
+            'save',
+            'timeRelativeTo',
+        ]
+        self.params['save'] = Param(
+            save, valType='str', inputType='choice', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedVals=['first look', 'last look', 'every look', 'none'],
+            allowedLabels=[_translate('first look'), _translate('last look'),
+                           _translate('every look'), _translate('none')],
+            label=_translate('Save...'),
+            hint=_translate(
+                'What looks on this ROI should be saved to the data output?'
+            ),
+            direct=False,
+        )
+        self.params['timeRelativeTo'] = Param(
+            timeRelativeTo, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['roi onset', 'experiment', 'routine'],
+            allowedLabels=[_translate('roi onset'), _translate('experiment'),
+                           _translate('routine')],
+            label=_translate('Time relative to...'),
+            hint=_translate(
+                'What should the values of roi.time should be relative to?'
+            ),
+            direct=False,
         )
 
-        self.depends.append(
-            {"dependsOn": "endRoutineOn",  # must be param name
-             "condition": "=='none'",  # val to check for
-             "param": "lookDur",  # param property to alter
-             "true": "hide",  # what to do with param if condition is True
-             "false": "show",  # permitted: hide, show, enable, disable
-             }
-        )
-
-        self.params['lookDur'] = Param(lookDur,
-            valType='num', inputType='single', categ='Basic',
-            hint=_translate("Minimum dwell time within roi (look at) or outside roi (look away)."),
-            label=_translate("Min. look time")
-        )
-
+        # --- Testing params ---
+        self.order += [
+            'debug',
+        ]
         self.params['debug'] = Param(
             debug, valType='bool', inputType='bool', categ='Testing',
-            hint=_translate("In debug mode, the ROI is drawn in red. Use this to see what area of the "
-                            "screen is in the ROI."),
-            label=_translate("Debug mode")
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Debug mode'),
+            hint=_translate(
+                'In debug mode, the ROI is drawn in red. Use this to see what area of the screen is in the ROI.'
+            ),
         )
 
-        self.params['save'] = Param(
-            save, valType='str', inputType="choice", categ='Data',
-            allowedVals=['first look', 'last look', 'every look', 'none'],
-            direct=False,
-            hint=_translate(
-                "What looks on this ROI should be saved to the data output?"),
-            label=_translate("Save..."))
+        # --- Appearance params ---
 
-        self.params['timeRelativeTo'] = Param(
-            timeRelativeTo, valType='str', inputType="choice", categ='Data',
-            allowedVals=['roi onset', 'experiment', 'routine'],
-            updates='constant', direct=False,
-            hint=_translate(
-                "What should the values of roi.time should be "
-                "relative to?"),
-            label=_translate("Time relative to..."))
+        del self.params['colorSpace']
+        del self.params['fillColor']
+        del self.params['borderColor']
+        del self.params['opacity']
+        del self.params['contrast']
+        del self.params['lineWidth']
+
+        # --- Texture params ---
+
+        del self.params['interpolate']
 
     def writePreWindowCode(self, buff):
         pass

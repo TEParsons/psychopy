@@ -37,7 +37,7 @@ class FormComponent(BaseVisualComponent):
         stopVal='',
         durationEstim='',
         stopType='duration (s)',
-        items='.csv',
+        items='',
         randomize=False,
         dataFormat='rows',
         # layout
@@ -95,113 +95,157 @@ class FormComponent(BaseVisualComponent):
             validator=validator,
         )
 
-        # these are defined by the BaseVisual but we don't want them
-        del self.params['ori']
-        del self.params['units']  # we only support height units right now
-        del self.params['color']
-
         self.type = 'Form'
         self.url = "https://www.psychopy.org/builder/components/form.html"
         self.exp.requirePsychopyLibs(['visual', 'event', 'logging'])
 
-        # params
-        self.order += ['Items', 'Randomize',  # Basic tab
-                       'Data Format',  # Data tab
-                      ]
-        self.order.insert(self.order.index("units"), "Item Padding")
-
-        # normal params:
-        # = the usual as inherited from BaseComponent plus:
-
+        # --- Basic params ---
+        self.order += [
+            'Items',
+            'Randomize',
+            'Data Format',
+        ]
         self.params['Items'] = Param(
-            items, valType='file', inputType="table", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=_translate("The csv filename containing the items for your survey."),
-            label=_translate("Items"))
-
-        self.params['Text Height'] = Param(
-            textHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant',
-            hint=_translate("The size of the item text for Form"),
-            label=_translate("Text height"))
-
-        self.params['Font'] = Param(
-            font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=["constant"],
-            hint=_translate("The font name (e.g. Comic Sans)"),
-            label=_translate("Font"))
-
-        self.params['Randomize'] = Param(
-            randomize, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=_translate("Do you want to randomize the order of your questions?"),
-            label=_translate("Randomize"))
-
-        self.params['Item Padding'] = Param(
-            itemPadding, valType='num', inputType="single", allowedTypes=[], categ='Layout',
-            updates='constant',
-            hint=_translate("The padding or space between items."),
-            label=_translate("Item padding"))
-
-        self.params['Data Format'] = Param(
-            dataFormat, valType='str', inputType="choice", allowedTypes=[], categ='Basic',
-            allowedVals=['columns', 'rows'],
-            updates='constant',
-            hint=_translate("Store item data by columns, or rows"),
-            label=_translate("Data format"))
-
-        # Appearance
-        for param in ['fillColor', 'borderColor', 'itemColor', 'responseColor', 'markerColor', 'Style']:
-            if param in self.order:
-                self.order.remove(param)
-            self.order.insert(
-                self.order.index("colorSpace"),
-                param
-            )
-
-        self.params['Style'] = Param(
-            style, valType='str', inputType="choice", categ="Appearance",
-            updates='constant', allowedVals=knownStyles + ["custom..."],
+            items, valType='file', inputType='table', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Items'),
             hint=_translate(
-                    "Styles determine the appearance of the form"),
-            label=_translate("Styles"))
+                'The csv filename containing the items for your survey.'
+            ),
+        )
+        self.params['Randomize'] = Param(
+            randomize, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Randomize'),
+            hint=_translate(
+                'Do you want to randomize the order of your questions?'
+            ),
+        )
+        self.params['Data Format'] = Param(
+            dataFormat, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['columns', 'rows'],
+            allowedLabels=[_translate('columns'), _translate('rows')],
+            label=_translate('Data format'),
+            hint=_translate(
+                'Store item data by columns, or rows'
+            ),
+        )
 
-        for param in ['fillColor', 'borderColor', 'itemColor', 'responseColor', 'markerColor']:
-            self.depends += [{
-                "dependsOn": "Style",  # must be param name
-                "condition": "=='custom...'",  # val to check for
-                "param": param,  # param property to alter
-                "true": "enable",  # what to do with param if condition is True
-                "false": "disable",  # permitted: hide, show, enable, disable
-            }]
-
+        # --- Appearance params ---
+        self.order += [
+            'itemColor',
+            'responseColor',
+            'markerColor',
+            'Style',
+        ]
         self.params['fillColor'].hint = _translate("Color of the form's background")
+        self.params['borderColor'].hint = _translate('Color of the outline around the form')
+        self.params['itemColor'] = Param(
+            itemColor, valType='color', inputType='color', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Item color'),
+            hint=_translate(
+                'Base text color for questions'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'Style',  # if...
+            'condition': "=='custom...'",  # meets...
+            'param': 'itemColor',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
+        self.params['responseColor'] = Param(
+            responseColor, valType='color', inputType='color', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Response color'),
+            hint=_translate(
+                'Base text color for responses, also sets color of lines in sliders and borders of textboxes'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'Style',  # if...
+            'condition': "=='custom...'",  # meets...
+            'param': 'responseColor',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
+        self.params['markerColor'] = Param(
+            markerColor, valType='color', inputType='color', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Marker color'),
+            hint=_translate(
+                'Color of markers and the scrollbar'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'Style',  # if...
+            'condition': "=='custom...'",  # meets...
+            'param': 'markerColor',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
+        self.params['Style'] = Param(
+            style, valType='str', inputType='choice', categ='Appearance',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['light', 'dark', 'custom...'],
+            allowedLabels=[_translate('light'), _translate('dark'), _translate('custom...')],
+            label=_translate('Styles'),
+            hint=_translate(
+                'Styles determine the appearance of the form'
+            ),
+        )
 
-        self.params['borderColor'].hint = _translate("Color of the outline around the form")
+        del self.params['color']
 
-        self.params['itemColor'] = Param(itemColor,
-            valType='color', inputType="color", categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=_translate("Base text color for questions"),
-            label=_translate("Item color"))
-
-        self.params['responseColor'] = Param(responseColor,
-            valType='color', inputType="color", categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=_translate("Base text color for responses, also sets color of lines in sliders and borders of textboxes"),
-            label=_translate("Response color"))
-
-        self.params['markerColor'] = Param(markerColor,
-            valType='color', inputType="color", categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=_translate("Color of markers and the scrollbar"),
-            label=_translate("Marker color"))
-
-        self.params['pos'].allowedUpdates = []
+        # --- Layout params ---
+        self.order += [
+            'Item Padding',
+        ]
         self.params['size'].allowedUpdates = []
+        self.params['pos'].allowedUpdates = []
+        self.params['Item Padding'] = Param(
+            itemPadding, valType='num', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Item padding'),
+            hint=_translate(
+                'The padding or space between items.'
+            ),
+        )
+
+        del self.params['units']
+        del self.params['ori']
+
+        # --- Formatting params ---
+        self.order += [
+            'Text Height',
+            'Font',
+        ]
+        self.params['Text Height'] = Param(
+            textHeight, valType='num', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Text height'),
+            hint=_translate(
+                'The size of the item text for Form'
+            ),
+        )
+        self.params['Font'] = Param(
+            font, valType='str', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant'],
+            allowedLabels=[],
+            label=_translate('Font'),
+            hint=_translate(
+                'The font name (e.g. Comic Sans)'
+            ),
+        )
 
     def writeInitCode(self, buff):
         inits = getInitVals(self.params)

@@ -78,101 +78,99 @@ class KeyboardComponent(BaseDeviceComponent):
         self.url = "https://www.psychopy.org/builder/components/keyboard.html"
         self.exp.requirePsychopyLibs(['gui'])
 
-        # params
-
-        # NB name and timing params always come 1st
-        self.order += ['forceEndRoutine', 'registerOn', 'allowedKeys',  # Basic tab
-                       'store', 'storeCorrect', 'correctAns'  # Data tab
-                       ]
-
-        # --- Basic ---
+        # --- Basic params ---
         self.order += [
-            "registerOn",
-            "allowedKeys",
-            "forceEndRoutine"
+            'forceEndRoutine',
+            'registerOn',
+            'allowedKeys',
         ]
-
-        msg = _translate(
-            "When should the keypress be registered? As soon as pressed, or when released?")
+        self.params['forceEndRoutine'] = Param(
+            forceEndRoutine, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Force end of Routine'),
+            hint=_translate(
+                'Should a response force the end of the Routine (e.g end the trial)?'
+            ),
+        )
         self.params['registerOn'] = Param(
-            registerOn, valType='str', inputType='choice',
-            categ='Basic', updates='constant',
-            allowedVals=["press", "release"],
-            hint=msg,
-            label=_translate("Register keypress on...")
+            registerOn, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['press', 'release'],
+            allowedLabels=[_translate('press'), _translate('release')],
+            label=_translate('Register keypress on...'),
+            hint=_translate(
+                'When should the keypress be registered? As soon as pressed, or when released?'
+            ),
+        )
+        self.params['allowedKeys'] = Param(
+            allowedKeys, valType='list', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat'],
+            allowedLabels=[],
+            label=_translate('Allowed keys'),
+            hint=_translate(
+                "A comma-separated list of keys (with quotes), such as 'q','right','space','left'"
+            ),
         )
 
-        msg = _translate(
-            "A comma-separated list of keys (with quotes), such as "
-            "'q','right','space','left'")
-        self.params['allowedKeys'] = Param(
-            allowedKeys, valType='list', inputType="single", categ='Basic',
-            updates='constant', allowedUpdates=['constant', 'set every repeat'],
-            hint=(msg),
-            label=_translate("Allowed keys"))
-
-        msg = _translate("Should a response force the end of the Routine "
-                         "(e.g end the trial)?")
-        self.params['forceEndRoutine'] = Param(
-            forceEndRoutine, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=msg,
-            label=_translate("Force end of Routine"))
-
-        # hints say 'responses' not 'key presses' because the same hint is
-        # also used with button boxes
-        msg = _translate("Do you want to discard all responses occurring "
-                         "before the onset of this Component?")
-        self.params['discard previous'] = Param(
-            discardPrevious, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-            updates='constant',
-            hint=msg,
-            label=_translate("Discard previous"))
-
-        msg = _translate("Choose which (if any) responses to store at the "
-                         "end of a trial")
-        self.params['store'] = Param(
-            store, valType='str', inputType="choice", allowedTypes=[], categ='Data',
-            allowedVals=['last key', 'first key', 'all keys', 'nothing'],
-            updates='constant', direct=False,
-            hint=msg,
-            label=_translate("Store"))
-
-        msg = _translate("Do you want to save the response as "
-                         "correct/incorrect?")
-        self.params['storeCorrect'] = Param(
-            storeCorrect, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-            updates='constant',
-            hint=msg,
-            label=_translate("Store correct"))
-
-        self.depends += [  # allows params to turn each other off/on
-            {"dependsOn": "storeCorrect",  # must be param name
-             "condition": "== True",  # val to check for
-             "param": "correctAns",  # param property to alter
-             "true": "enable",  # what to do with param if condition is True
-             "false": "disable",  # permitted: hide, show, enable, disable
-             }
+        # --- Data params ---
+        self.order += [
+            'store',
+            'storeCorrect',
+            'correctAns',
+            'discard previous',
         ]
-
-        msg = _translate(
-            "What is the 'correct' key? Might be helpful to add a "
-            "correctAns column and use $correctAns to compare to the key "
-            "press.")
+        self.params['store'] = Param(
+            store, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['last key', 'first key', 'all keys', 'nothing'],
+            allowedLabels=[_translate('last key'), _translate('first key'), _translate('all keys'),
+                           _translate('nothing')],
+            label=_translate('Store'),
+            hint=_translate(
+                'Choose which (if any) responses to store at the end of a trial'
+            ),
+            direct=False,
+        )
+        self.params['storeCorrect'] = Param(
+            storeCorrect, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Store correct'),
+            hint=_translate(
+                'Do you want to save the response as correct/incorrect?'
+            ),
+        )
         self.params['correctAns'] = Param(
-            correctAns, valType='str', inputType="single", allowedTypes=[], categ='Data',
-            updates='constant',
-            hint=msg, direct=False,
-            label=_translate("Correct answer"))
-
-        msg = _translate(
-            "A reaction time to a visual stimulus should be based on when "
-            "the screen flipped")
-        self.params['syncScreenRefresh'] = Param(
-            syncScreenRefresh, valType='bool', inputType="bool", categ='Data',
-            updates='constant',
-            hint=msg,
-            label=_translate("Sync timing with screen"))
+            correctAns, valType='str', inputType='single', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Correct answer'),
+            hint=_translate(
+                "What is the 'correct' key? Might be helpful to add a correctAns column and use $correctAns to compare to the key press."
+            ),
+            direct=False,
+        )
+        self.depends.append({
+            'dependsOn': 'storeCorrect',  # if...
+            'condition': '== True',  # meets...
+            'param': 'correctAns',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
+        self.params['syncScreenRefresh'].updates = 'constant'
+        self.params['syncScreenRefresh'].label = _translate('Sync timing with screen')
+        self.params['syncScreenRefresh'].hint = _translate(
+            'A reaction time to a visual stimulus should be based on when the screen flipped')
+        self.params['discard previous'] = Param(
+            discardPrevious, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Discard previous'),
+            hint=_translate(
+                'Do you want to discard all responses occurring before the onset of this Component?'
+            ),
+        )
 
     def writeDeviceCode(self, buff):
         # get inits

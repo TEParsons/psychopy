@@ -89,138 +89,166 @@ class DotsComponent(BaseVisualComponent):
 
         self.type = 'Dots'
         self.url = "https://www.psychopy.org/builder/components/dots.html"
-        # Put dot/field size and position where regular size and position are in param order
-        self.order.insert(self.order.index("size"), "dotSize")
-        self.order.insert(self.order.index("size"), "fieldSize")
-        self.order.insert(self.order.index("pos"), "fieldPos")
-        self.order += [
-            "nDots", "dir", "speed"  # Dots tab
-        ]
 
-        # params
-        msg = _translate("Number of dots in the field (for circular fields"
-                         " this will be average number of dots)")
-        self.params['nDots'] = Param(
-            nDots, valType='int', inputType="spin", categ='Dots',
-            updates='constant',
-            hint=msg,
-            label=_translate("Number of dots"))
+        # --- Appearance params ---
+        self.params['color'].label = _translate('Dot color')
+        self.params['colorSpace'].label = _translate('Dot color space')
 
-        msg = _translate("Direction of motion for the signal dots (degrees)")
-        self.params['dir'] = Param(
-            dir, valType='num', inputType="spin", categ='Dots',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Direction"))
-
-        msg = _translate("Speed of the dots (displacement per frame in the"
-                         " specified units)")
-        self.params['speed'] = Param(
-            speed, valType='num', inputType="single", categ='Dots',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Speed"))
-
-        msg = _translate("Coherence of the dots (fraction moving in the "
-                         "signal direction on any one frame)")
-        self.params['coherence'] = Param(
-            coherence, valType='num', inputType="single", categ='Dots',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Coherence"))
-
-        msg = _translate("Size of the dots IN PIXELS regardless of "
-                         "the set units")
-        self.params['dotSize'] = Param(
-            dotSize, valType='num', inputType="spin", categ='Layout',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Dot size"))
-
-        msg = _translate("Number of frames before each dot is killed and "
-                         "randomly assigned a new position")
-        self.params['dotLife'] = Param(
-            dotLife, valType='num', inputType="spin", categ='Dots',
-            hint=msg,
-            label=_translate("Dot life-time"))
-
-        msg = _translate("On each frame are the signals dots remaining "
-                         "the same or changing? See Scase et al.")
-        self.params['signalDots'] = Param(
-            signalDots, valType='str', inputType="choice", allowedVals=['same', 'different'], categ='Dots',
-            hint=msg,
-            label=_translate("Signal dots"))
-            
-        msg = _translate("When should the whole sample of dots be refreshed")
-        self.params['refreshDots'] = Param(
-            refreshDots, valType='str', inputType="choice", allowedVals=['none', 'repeat'], categ='Dots',
-            allowedUpdates=[],
-            hint=msg, direct=False,
-            label=_translate("Dot refresh rule"))
-            
-
-        msg = _translate("What governs the behaviour of the noise dots? "
-                         "See Scase et al.")
-        self.params['noiseDots'] = Param(
-            noiseDots, valType='str', inputType="choice", categ='Dots',
-            allowedVals=['direction', 'position', 'walk'],
-            hint=msg,
-            label=_translate("Noise dots"))
-
-        self.params['fieldShape'] = Param(
-            fieldShape, valType='str', inputType="choice", allowedVals=['circle', 'square'], categ='Layout',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=_translate("What is the shape of the field?"),
-            label=_translate("Field shape"))
-
-        msg = _translate("What is the size of the field "
-                         "(in the specified units)?")
-        self.params['fieldSize'] = Param(
-            fieldSize, valType='num', inputType="single", categ='Layout',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Field size"))
-
-        msg = _translate(
-            "Where is the field centred (in the specified units)?")
-        self.params['fieldPos'] = Param(
-            fieldPos, valType='list', inputType="single", categ='Layout',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Field position"))
-
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the field should be anchored to its exact position?"),
-            label=_translate("Field anchor"))
-
-        # Reword colour parameters
-        self.params['color'].label = _translate("Dot color")
-        self.params['colorSpace'].label = _translate("Dot color space")
-
-        del self.params['size']  # should be fieldSize
-        del self.params['pos']  # should be fieldPos
-        del self.params['ori']  # should be dir for dots
         del self.params['fillColor']
         del self.params['borderColor']
+
+        # --- Layout params ---
+        self.order += [
+            'dotSize',
+            'fieldSize',
+            'fieldPos',
+            'anchor',
+            'fieldShape',
+        ]
+        self.params['dotSize'] = Param(
+            dotSize, valType='num', inputType='spin', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Dot size'),
+            hint=_translate(
+                'Size of the dots IN PIXELS regardless of the set units'
+            ),
+        )
+        self.params['fieldSize'] = Param(
+            fieldSize, valType='num', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Field size'),
+            hint=_translate(
+                'What is the size of the field (in the specified units)?'
+            ),
+        )
+        self.params['fieldPos'] = Param(
+            fieldPos, valType='list', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Field position'),
+            hint=_translate(
+                'Where is the field centred (in the specified units)?'
+            ),
+        )
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Field anchor'),
+            hint=_translate(
+                'Which point on the field should be anchored to its exact position?'
+            ),
+        )
+        self.params['fieldShape'] = Param(
+            fieldShape, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedVals=['circle', 'square'],
+            allowedLabels=[_translate('circle'), _translate('square')],
+            label=_translate('Field shape'),
+            hint=_translate(
+                'What is the shape of the field?'
+            ),
+        )
+
+        del self.params['pos']
+        del self.params['size']
+        del self.params['ori']
+
+        # --- Dots params ---
+        self.order += [
+            'nDots',
+            'dir',
+            'speed',
+            'coherence',
+            'dotLife',
+            'signalDots',
+            'refreshDots',
+            'noiseDots',
+        ]
+        self.params['nDots'] = Param(
+            nDots, valType='int', inputType='spin', categ='Dots',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Number of dots'),
+            hint=_translate(
+                'Number of dots in the field (for circular fields this will be average number of dots)'
+            ),
+        )
+        self.params['dir'] = Param(
+            dir, valType='num', inputType='spin', categ='Dots',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Direction'),
+            hint=_translate(
+                'Direction of motion for the signal dots (degrees)'
+            ),
+        )
+        self.params['speed'] = Param(
+            speed, valType='num', inputType='single', categ='Dots',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Speed'),
+            hint=_translate(
+                'Speed of the dots (displacement per frame in the specified units)'
+            ),
+        )
+        self.params['coherence'] = Param(
+            coherence, valType='num', inputType='single', categ='Dots',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Coherence'),
+            hint=_translate(
+                'Coherence of the dots (fraction moving in the signal direction on any one frame)'
+            ),
+        )
+        self.params['dotLife'] = Param(
+            dotLife, valType='num', inputType='spin', categ='Dots',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Dot life-time'),
+            hint=_translate(
+                'Number of frames before each dot is killed and randomly assigned a new position'
+            ),
+        )
+        self.params['signalDots'] = Param(
+            signalDots, valType='str', inputType='choice', categ='Dots',
+            updates=None, allowedUpdates=None,
+            allowedVals=['same', 'different'],
+            allowedLabels=[_translate('same'), _translate('different')],
+            label=_translate('Signal dots'),
+            hint=_translate(
+                'On each frame are the signals dots remaining the same or changing? See Scase et al.'
+            ),
+        )
+        self.params['refreshDots'] = Param(
+            refreshDots, valType='str', inputType='choice', categ='Dots',
+            updates=None, allowedUpdates=[],
+            allowedVals=['none', 'repeat'],
+            allowedLabels=[_translate('none'), _translate('repeat')],
+            label=_translate('Dot refresh rule'),
+            hint=_translate(
+                'When should the whole sample of dots be refreshed'
+            ),
+            direct=False,
+        )
+        self.params['noiseDots'] = Param(
+            noiseDots, valType='str', inputType='choice', categ='Dots',
+            updates=None, allowedUpdates=None,
+            allowedVals=['direction', 'position', 'walk'],
+            allowedLabels=[_translate('direction'), _translate('position'), _translate('walk')],
+            label=_translate('Noise dots'),
+            hint=_translate(
+                'What governs the behaviour of the noise dots? See Scase et al.'
+            ),
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

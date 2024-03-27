@@ -85,38 +85,25 @@ class ApertureComponent(PolygonComponent):
 
         self.type = 'Aperture'
         self.url = "https://www.psychopy.org/builder/components/aperture.html"
-        self.order += []
 
-        msg = _translate(
-            "How big is the aperture? (a single number for diameter)")
-        self.params['size'].hint = msg
+        # --- Appearance params ---
 
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the aperture should be anchored to its exact position?"),
-            label=_translate("Anchor"))
-
-        # only localize hints and labels
-        self.params['size'].label = _translate("Size")
-        self.params['pos'].hint = _translate("Where is the aperture centred?")
-
-        # Remove Polygon params which are not needed
         del self.params['colorSpace']
         del self.params['fillColor']
-        del self.params['lineWidth']
-        del self.params['contrast']
         del self.params['opacity']
+        del self.params['contrast']
+        del self.params['lineWidth']
+
+        # --- Layout params ---
+        self.params['size'].label = _translate('Size')
+        self.params['size'].hint = _translate(
+            'How big is the aperture? (a single number for diameter)')
+        self.params['pos'].hint = _translate('Where is the aperture centred?')
+        self.params['anchor'].hint = _translate(
+            'Which point on the aperture should be anchored to its exact position?')
+
+        # --- Texture params ---
+
         del self.params['interpolate']
 
     def writeInitCode(self, buff):

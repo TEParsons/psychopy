@@ -84,93 +84,123 @@ class MovieComponent(BaseVisualComponent):
 
         self.type = 'Movie'
         self.url = "https://www.psychopy.org/builder/components/movie.html"
-        # comes immediately after name and timing params
-        self.order += ['movie', 'forceEndRoutine', # Basic tab
-                       'loop', 'No audio', 'backend',
-                       ]
 
-        # params
+        # --- Basic params ---
+        self.order += [
+            'movie',
+            'forceEndRoutine',
+        ]
         self.params['stopVal'].hint = _translate(
-            "When does the Component end? (blank to use the duration of "
-            "the media)")
-
-        msg = _translate("A filename for the movie (including path)")
+            'When does the Component end? (blank to use the duration of the media)')
         self.params['movie'] = Param(
-            movie, valType='file', inputType="file", allowedTypes=[], categ='Basic',
+            movie, valType='file', inputType='file', categ='Basic',
             updates='constant', allowedUpdates=['constant', 'set every repeat'],
-            hint=msg,
-            label=_translate("Movie file"))
-
-        msg = _translate("What underlying lib to use for loading movies")
-        self.params['backend'] = Param(
-            backend, valType='str', inputType="choice", categ='Playback',
-            allowedVals=['ffpyplayer', 'moviepy', 'opencv', 'vlc'],
-            hint=msg, direct=False,
-            label=_translate("Backend"))
-
-        msg = _translate("Prevent the audio stream from being loaded/processed "
-               "(moviepy and opencv only)")
-        self.params["No audio"] = Param(
-            noAudio, valType='bool', inputType="bool", categ='Playback',
-            hint=msg,
-            label=_translate("No audio"))
-
-        self.depends.append(
-            {"dependsOn": "No audio",  # must be param name
-             "condition": "==True",  # val to check for
-             "param": "volume",  # param property to alter
-             "true": "hide",  # what to do with param if condition is True
-             "false": "show",  # permitted: hide, show, enable, disable
-             }
+            allowedLabels=[],
+            label=_translate('Movie file'),
+            hint=_translate(
+                'A filename for the movie (including path)'
+            ),
+        )
+        self.params['forceEndRoutine'] = Param(
+            forceEndRoutine, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Force end of Routine'),
+            hint=_translate(
+                'Should the end of the movie cause the end of the Routine (e.g. trial)?'
+            ),
         )
 
-        msg = _translate("How loud should audio be played?")
-        self.params["volume"] = Param(
-            volume, valType='num', inputType="float", categ='Playback',
-            hint=msg,
-            label=_translate("Volume"))
+        # --- Appearance params ---
 
-        msg = _translate("Should the end of the movie cause the end of "
-                         "the Routine (e.g. trial)?")
-        self.params['forceEndRoutine'] = Param(
-            forceEndRoutine, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Force end of Routine"))
-
-        msg = _translate("Whether the movie should loop back to the beginning "
-                         "on completion.")
-        self.params['loop'] = Param(
-            loop, valType='bool', inputType="bool", categ='Playback',
-            hint=msg,
-            label=_translate("Loop playback"))
-        self.params['stopWithRoutine'] = Param(
-            stopWithRoutine, valType='bool', inputType="bool", updates='constant', categ='Playback',
-            hint=_translate(
-                "Should playback cease when the Routine ends? Untick to continue playing "
-                "after the Routine has finished."),
-            label=_translate('Stop with Routine?'))
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the stimulus should be anchored to its exact position?"),
-            label=_translate("Anchor"))
-
-        # these are normally added but we don't want them for a movie
         del self.params['color']
         del self.params['colorSpace']
         del self.params['fillColor']
         del self.params['borderColor']
+
+        # --- Layout params ---
+        self.order += [
+            'anchor',
+        ]
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Which point on the stimulus should be anchored to its exact position?'
+            ),
+        )
+
+        # --- Playback params ---
+        self.order += [
+            'loop',
+            'No audio',
+            'backend',
+            'volume',
+            'stopWithRoutine',
+        ]
+        self.params['loop'] = Param(
+            loop, valType='bool', inputType='bool', categ='Playback',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Loop playback'),
+            hint=_translate(
+                'Whether the movie should loop back to the beginning on completion.'
+            ),
+        )
+        self.params['No audio'] = Param(
+            noAudio, valType='bool', inputType='bool', categ='Playback',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('No audio'),
+            hint=_translate(
+                'Prevent the audio stream from being loaded/processed (moviepy and opencv only)'
+            ),
+        )
+        self.params['backend'] = Param(
+            backend, valType='str', inputType='choice', categ='Playback',
+            updates=None, allowedUpdates=None,
+            allowedVals=['ffpyplayer', 'moviepy', 'opencv', 'vlc'],
+            allowedLabels=[_translate('ffpyplayer'), _translate('moviepy'), _translate('opencv'),
+                           _translate('vlc')],
+            label=_translate('Backend'),
+            hint=_translate(
+                'What underlying lib to use for loading movies'
+            ),
+            direct=False,
+        )
+        self.params['volume'] = Param(
+            volume, valType='num', inputType='float', categ='Playback',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Volume'),
+            hint=_translate(
+                'How loud should audio be played?'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'No audio',  # if...
+            'condition': '==True',  # meets...
+            'param': 'volume',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
+        self.params['stopWithRoutine'] = Param(
+            stopWithRoutine, valType='bool', inputType='bool', categ='Playback',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Stop with Routine?'),
+            hint=_translate(
+                'Should playback cease when the Routine ends? Untick to continue playing after the Routine has finished.'
+            ),
+        )
 
     def _writeCreationCode(self, buff, useInits):
         # This will be called by either self.writeInitCode() or

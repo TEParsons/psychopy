@@ -69,90 +69,139 @@ class ButtonBoxComponent(BaseDeviceComponent, PluginDevicesMixin):
             importFrom="psychopy.hardware.button"
         )
 
+        def getBackendKeys():
+            keys = []
+            for backend in self.backends:
+                keys.append(backend.key)
+
+            return keys
+
+        def getBackendLabels():
+            labels = []
+            for backend in self.backends:
+                labels.append(backend.label)
+
+            return labels
+
         # --- Basic params ---
         self.order += [
-            "forceEndRoutine"
+            'forceEndRoutine',
         ]
         self.params['forceEndRoutine'] = Param(
-            forceEndRoutine, valType='bool', inputType="bool", categ='Basic',
+            forceEndRoutine, valType='bool', inputType='bool', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Force end of Routine'),
             hint=_translate(
-                "Should a response force the end of the Routine (e.g end the trial)?"
+                'Should a response force the end of the Routine (e.g end the trial)?'
             ),
-            label=_translate("Force end of Routine"))
-
-        # --- Data params ---
-        self.order += [
-            "registerOn",
-            "store",
-            "allowedButtons",
-            "storeCorrect",
-            "correctAns",
-        ]
-        self.params['registerOn'] = Param(
-            registerOn, valType='code', inputType='choice', categ='Data',
-            allowedVals=[True, False],
-            allowedLabels=[_translate("Press"), _translate("Release")],
-            hint=_translate(
-                "When should the button press be registered? As soon as pressed, or when released?"
-            ),
-            label=_translate("Register button press on...")
         )
-        self.params['store'] = Param(
-            store, valType='str', inputType="choice", categ='Data',
-            allowedVals=['last', 'first', 'all', 'nothing'],
-            allowedLabels=[_translate("Last button"), _translate("First button"), _translate(
-                "All buttons"), _translate("Nothing")],
-            updates='constant', direct=False,
-            hint=_translate(
-                "Choose which (if any) responses to store at the end of a trial"
-            ),
-            label=_translate("Store"))
-        self.params['allowedButtons'] = Param(
-            allowedButtons, valType='list', inputType="single", categ='Data',
-            hint=_translate(
-                "A comma-separated list of button indices (should be whole numbers), leave blank "
-                "to listen for all buttons."
-            ),
-            label=_translate("Allowed buttons"))
-        self.params['storeCorrect'] = Param(
-            storeCorrect, valType='bool', inputType="bool", categ='Data',
-            updates='constant',
-            hint=_translate(
-                "Do you want to save the response as correct/incorrect?"
-            ),
-            label=_translate("Store correct"))
-        self.depends.append(
-            {
-                "dependsOn": "storeCorrect",  # if...
-                "condition": f"== True",  # meets...
-                "param": "correctAns",  # then...
-                "true": "show",  # should...
-                "false": "hide",  # otherwise...
-            }
-        )
-        self.params['correctAns'] = Param(
-            correctAns, valType='list', inputType="single", categ='Data',
-            hint=_translate(
-                "What is the 'correct' key? Might be helpful to add a correctAns column and use "
-                "$correctAns to compare to the key press. "
-            ),
-            label=_translate("Correct answer"), direct=False)
 
         # --- Device params ---
         self.order += [
-            "deviceBackend",
+            'deviceBackend',
+            'kbButtonAliases',
         ]
-
         self.params['deviceBackend'] = Param(
-            deviceBackend, valType="str", inputType="choice", categ="Device",
-            allowedVals=self.getBackendKeys,
-            allowedLabels=self.getBackendLabels,
-            label=_translate("Device backend"),
+            deviceBackend, valType='str', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedVals=getBackendKeys,
+            allowedLabels=getBackendLabels,
+            label=_translate('Device backend'),
             hint=_translate(
-                "What kind of button box is it? What package/plugin should be used to talk to it?"
+                'What kind of button box is it? What package/plugin should be used to talk to it?'
             ),
-            direct=False
+            direct=False,
         )
+        self.params['kbButtonAliases'] = Param(
+            kbButtonAliases, valType='list', inputType='single', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Buttons'),
+            hint=_translate(
+                'Keys to treat as buttons (in order of what button index you want them to be). Must be the same length as the number of buttons.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'deviceBackend',  # if...
+            'condition': "== 'keyboard'",  # meets...
+            'param': 'kbButtonAliases',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.depends.append({
+            'dependsOn': 'deviceBackend',  # if...
+            'condition': "== 'keyboard'",  # meets...
+            'param': 'kbButtonAliases',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+
+        # --- Data params ---
+        self.order += [
+            'registerOn',
+            'store',
+            'allowedButtons',
+            'storeCorrect',
+            'correctAns',
+        ]
+        self.params['registerOn'] = Param(
+            registerOn, valType='code', inputType='choice', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedVals=[True, False],
+            allowedLabels=[_translate('Press'), _translate('Release')],
+            label=_translate('Register button press on...'),
+            hint=_translate(
+                'When should the button press be registered? As soon as pressed, or when released?'
+            ),
+        )
+        self.params['store'] = Param(
+            store, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['last', 'first', 'all', 'nothing'],
+            allowedLabels=[_translate('Last button'), _translate('First button'),
+                           _translate('All buttons'), _translate('Nothing')],
+            label=_translate('Store'),
+            hint=_translate(
+                'Choose which (if any) responses to store at the end of a trial'
+            ),
+            direct=False,
+        )
+        self.params['allowedButtons'] = Param(
+            allowedButtons, valType='list', inputType='single', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Allowed buttons'),
+            hint=_translate(
+                'A comma-separated list of button indices (should be whole numbers), leave blank to listen for all buttons.'
+            ),
+        )
+        self.params['storeCorrect'] = Param(
+            storeCorrect, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Store correct'),
+            hint=_translate(
+                'Do you want to save the response as correct/incorrect?'
+            ),
+        )
+        self.params['correctAns'] = Param(
+            correctAns, valType='list', inputType='single', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Correct answer'),
+            hint=_translate(
+                "What is the 'correct' key? Might be helpful to add a correctAns column and use $correctAns to compare to the key press. "
+            ),
+            direct=False,
+        )
+        self.depends.append({
+            'dependsOn': 'storeCorrect',  # if...
+            'condition': '== True',  # meets...
+            'param': 'correctAns',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
 
         # add params for any backends
         self.loadBackends()

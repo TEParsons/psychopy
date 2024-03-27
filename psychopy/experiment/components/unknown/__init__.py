@@ -63,7 +63,6 @@ class UnknownComponent(BaseComponent):
             # testing
             disabled=disabled,
         )
-        self.order += []
 
     @property
     def _xml(self):

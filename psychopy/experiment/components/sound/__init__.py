@@ -70,64 +70,6 @@ class SoundComponent(BaseDeviceComponent):
         self.type = 'Sound'
         self.url = "https://www.psychopy.org/builder/components/sound.html"
         self.exp.requirePsychopyLibs(['sound'])
-        self.order += [
-            "sound",  # Basic tab
-            "volume", "hammingWindow",  # Playback tab
-        ]
-        # params
-        self.params['stopType'].allowedVals = ['duration (s)']
-        self.params['stopType'].hint = _translate('The maximum duration of a'
-                                                  ' sound in seconds')
-        hnt = _translate("When does the Component end? (blank to use the "
-                         "duration of the media)")
-        self.params['stopVal'].hint = hnt
-
-        hnt = _translate("A sound can be a note name (e.g. A or Bf), a number"
-                         " to specify Hz (e.g. 440) or a filename")
-        self.params['sound'] = Param(
-            sound, valType='str', inputType="file", allowedTypes=[], updates='constant', categ='Basic',
-            allowedUpdates=['constant', 'set every repeat'],
-            hint=hnt,
-            label=_translate("Sound"))
-        _allowed = ['constant', 'set every repeat', 'set every frame']
-        self.params['volume'] = Param(
-            volume, valType='num', inputType="single", allowedTypes=[], updates='constant', categ='Playback',
-            allowedUpdates=_allowed[:],  # use a copy
-            hint=_translate("The volume (in range 0 to 1)"),
-            label=_translate("Volume"))
-        msg = _translate(
-            "A reaction time to a sound stimulus should be based on when "
-            "the screen flipped")
-        self.params['syncScreenRefresh'] = Param(
-            syncScreenRefresh, valType='bool', inputType="bool", categ='Basic',
-            updates='constant',
-            hint=msg,
-            label=_translate("Sync start with screen"))
-        self.params['hamming'] = Param(
-            hamming, valType='bool', inputType="bool", updates='constant', categ='Playback',
-            hint=_translate(
-                  "For tones we can apply a hamming window to prevent 'clicks' that "
-                  "are caused by a sudden onset. This delays onset by roughly 1ms."),
-            label=_translate("Hamming window"))
-        self.params['stopWithRoutine'] = Param(
-            stopWithRoutine, valType='bool', inputType="bool", updates='constant', categ='Playback',
-            hint=_translate(
-                "Should playback cease when the Routine ends? Untick to continue playing "
-                "after the Routine has finished."),
-            label=_translate('Stop with Routine?'))
-
-        # --- Device params ---
-        self.order += [
-            "speaker"
-        ]
-
-        def getSpeakerLabels():
-            from psychopy.hardware.speaker import SpeakerDevice
-            labels = [_translate("Default")]
-            for profile in SpeakerDevice.getAvailableDevices():
-                labels.append(profile['deviceName'])
-
-            return labels
 
         def getSpeakerValues():
             from psychopy.hardware.speaker import SpeakerDevice
@@ -137,14 +79,82 @@ class SoundComponent(BaseDeviceComponent):
 
             return vals
 
+        def getSpeakerLabels():
+            from psychopy.hardware.speaker import SpeakerDevice
+            labels = [_translate("Default")]
+            for profile in SpeakerDevice.getAvailableDevices():
+                labels.append(profile['deviceName'])
+
+            return labels
+
+        # --- Basic params ---
+        self.order += [
+            'sound',
+        ]
+        self.params['stopVal'].hint = _translate(
+            'When does the Component end? (blank to use the duration of the media)')
+        self.params['stopType'].hint = _translate('The maximum duration of a sound in seconds')
+        self.params['sound'] = Param(
+            sound, valType='str', inputType='file', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat'],
+            allowedLabels=[],
+            label=_translate('Sound'),
+            hint=_translate(
+                'A sound can be a note name (e.g. A or Bf), a number to specify Hz (e.g. 440) or a filename'
+            ),
+        )
+        self.params['syncScreenRefresh'].updates = 'constant'
+        self.params['syncScreenRefresh'].label = _translate('Sync start with screen')
+        self.params['syncScreenRefresh'].hint = _translate(
+            'A reaction time to a sound stimulus should be based on when the screen flipped')
+
+        # --- Device params ---
+        self.order += [
+            'speakerIndex',
+        ]
         self.params['speakerIndex'] = Param(
-            speakerIndex, valType="code", inputType="choice", categ="Device",
+            speakerIndex, valType='code', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
             allowedVals=getSpeakerValues,
             allowedLabels=getSpeakerLabels,
+            label=_translate('Speaker'),
             hint=_translate(
-                "What speaker to play this sound on"
+                'What speaker to play this sound on'
             ),
-            label=_translate("Speaker")
+        )
+
+        # --- Playback params ---
+        self.order += [
+            'volume',
+            'hamming',
+            'stopWithRoutine',
+        ]
+        self.params['volume'] = Param(
+            volume, valType='num', inputType='single', categ='Playback',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Volume'),
+            hint=_translate(
+                'The volume (in range 0 to 1)'
+            ),
+        )
+        self.params['hamming'] = Param(
+            hamming, valType='bool', inputType='bool', categ='Playback',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Hamming window'),
+            hint=_translate(
+                "For tones we can apply a hamming window to prevent 'clicks' that are caused by a sudden onset. This delays onset by roughly 1ms."
+            ),
+        )
+        self.params['stopWithRoutine'] = Param(
+            stopWithRoutine, valType='bool', inputType='bool', categ='Playback',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Stop with Routine?'),
+            hint=_translate(
+                'Should playback cease when the Routine ends? Untick to continue playing after the Routine has finished.'
+            ),
         )
 
     def writeDeviceCode(self, buff):

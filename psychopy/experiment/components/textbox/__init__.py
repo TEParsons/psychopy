@@ -103,145 +103,230 @@ class TextboxComponent(BaseVisualComponent):
         )
         self.type = 'Textbox'
         self.url = "https://www.psychopy.org/builder/components/textbox.html"
-        self.order += [  # controls order of params within tabs
-            "editable", "text", "usePlaceholder", "placeholder",  # Basic tab
-            "borderWidth", "opacity",  # Appearance tab
-            "font", "letterHeight", "lineSpacing", "bold", "italic",  # Formatting tab
-            ]
-        self.order.insert(self.order.index("units"), "padding") # Add "padding" just before spatial units
-        # params
-        _allow3 = ['constant', 'set every repeat', 'set every frame']  # list
-        self.params['color'].label = _translate("Text color")
 
+        # --- Basic params ---
+        self.order += [
+            'editable',
+            'text',
+            'placeholder',
+        ]
+        self.params['editable'] = Param(
+            editable, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Editable?'),
+            hint=_translate(
+                'Should textbox be editable?'
+            ),
+        )
         self.params['text'] = Param(
-            text, valType='str', inputType="multi", allowedTypes=[], categ='Basic',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The text to be displayed"),
+            text, valType='str', inputType='multi', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Text'),
+            hint=_translate(
+                'The text to be displayed'
+            ),
             canBePath=False,
-            label=_translate("Text"))
-        self.depends.append(
-            {
-                "dependsOn": "editable",  # if...
-                "condition": "==True",  # meets...
-                "param": "placeholder",  # then...
-                "true": "show",  # should...
-                "false": "hide",  # otherwise...
-            }
         )
         self.params['placeholder'] = Param(
-            placeholder, valType='str', inputType="single", categ='Basic',
-            updates='constant', allowedUpdates=_allow3[:],
-            hint=_translate("Placeholder text to show when there is no text contents."),
-            label=_translate("Placeholder text"))
-        self.params['font'] = Param(
-            font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The font name (e.g. Comic Sans)"),
-            label=_translate("Font"))
-        self.params['letterHeight'] = Param(
-            letterHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("Specifies the height of the letter (the width"
-                            " is then determined by the font)"),
-            label=_translate("Letter height"))
-        self.params['flipHoriz'] = Param(
-            flipHoriz, valType='bool', inputType="bool", allowedTypes=[], categ='Layout',
-            updates='constant',
-            hint=_translate("horiz = left-right reversed; vert = up-down"
-                            " reversed; $var = variable"),
-            label=_translate("Flip horizontal"))
-        self.params['flipVert'] = Param(
-            flipVert, valType='bool', inputType="bool", allowedTypes=[], categ='Layout',
-            updates='constant',
-            hint=_translate("horiz = left-right reversed; vert = up-down"
-                            " reversed; $var = variable"),
-            label=_translate("Flip vertical"))
-        self.params['languageStyle'] = Param(
-            languageStyle, valType='str', inputType="choice", categ='Formatting',
-            allowedVals=['LTR', 'RTL', 'Arabic'],
-            hint=_translate("Handle right-to-left (RTL) languages and Arabic reshaping"),
-            label=_translate("Language style"))
-        self.params['italic'] = Param(
-            italic, valType='bool', inputType="bool", allowedTypes=[], categ='Formatting',
-            updates='constant',
-            hint=_translate("Should text be italic?"),
-            label=_translate("Italic"))
-        self.params['bold'] = Param(
-            bold, valType='bool', inputType="bool", allowedTypes=[], categ='Formatting',
-            updates='constant',
-            hint=_translate("Should text be bold?"),
-            label=_translate("Bold"))
-        self.params['lineSpacing'] = Param(
-            lineSpacing, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant',
-            hint=_translate("Defines the space between lines"),
-            label=_translate("Line spacing"))
-        self.params['padding'] = Param(
-            padding, valType='num', inputType="single", allowedTypes=[], categ='Layout',
-            updates='constant', allowedUpdates=_allow3[:],
-            hint=_translate("Defines the space between text and the textbox border"),
-            label=_translate("Padding"))
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the stimulus should be anchored to its exact position?"),
-            label=_translate("Anchor"))
-        self.params['alignment'] = Param(
-            alignment, valType='str', inputType="choice", categ='Formatting',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("How should text be laid out within the box?"),
-            label=_translate("Alignment"))
-        self.params['overflow'] = Param(
-            overflow, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['visible',
-                         'scroll',
-                         'hidden',
-                         ],
-            updates='constant',
-            hint=_translate("If the text is bigger than the textbox, how should it behave?"),
-            label=_translate("Overflow"))
-        self.params['speechPoint'] = Param(
-            speechPoint, valType='list', inputType="single", categ='Appearance',
-            updates='constant', allowedUpdates=_allow3[:], direct=False,
-            hint=_translate("If specified, adds a speech bubble tail going to that point on screen."),
-            label=_translate("Speech point [x,y]")
-        )
-        self.params['borderWidth'] = Param(
-            borderWidth, valType='num', inputType="single", allowedTypes=[], categ='Appearance',
-            updates='constant', allowedUpdates=_allow3[:],
-            hint=_translate("Textbox border width"),
-            label=_translate("Border width"))
-        self.params['editable'] = Param(
-            editable, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=_translate("Should textbox be editable?"),
-            label=_translate("Editable?"))
-        self.params['autoLog'] = Param(
-            autoLog, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-            updates='constant',
+            placeholder, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Placeholder text'),
             hint=_translate(
-                    'Automatically record all changes to this in the log file'),
-            label=_translate("Auto log"))
+                'Placeholder text to show when there is no text contents.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'editable',  # if...
+            'condition': '==True',  # meets...
+            'param': 'placeholder',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+
+        # --- Appearance params ---
+        self.order += [
+            'borderWidth',
+            'speechPoint',
+        ]
+        self.params['color'].label = _translate('Text color')
+        self.params['borderWidth'] = Param(
+            borderWidth, valType='num', inputType='single', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Border width'),
+            hint=_translate(
+                'Textbox border width'
+            ),
+        )
+        self.params['speechPoint'] = Param(
+            speechPoint, valType='list', inputType='single', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Speech point [x,y]'),
+            hint=_translate(
+                'If specified, adds a speech bubble tail going to that point on screen.'
+            ),
+            direct=False,
+        )
+
+        # --- Layout params ---
+        self.order += [
+            'padding',
+            'anchor',
+            'flipHoriz',
+            'flipVert',
+            'overflow',
+        ]
+        self.params['padding'] = Param(
+            padding, valType='num', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Padding'),
+            hint=_translate(
+                'Defines the space between text and the textbox border'
+            ),
+        )
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Which point on the stimulus should be anchored to its exact position?'
+            ),
+        )
+        self.params['flipHoriz'] = Param(
+            flipHoriz, valType='bool', inputType='bool', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Flip horizontal'),
+            hint=_translate(
+                'horiz = left-right reversed; vert = up-down reversed; $var = variable'
+            ),
+        )
+        self.params['flipVert'] = Param(
+            flipVert, valType='bool', inputType='bool', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Flip vertical'),
+            hint=_translate(
+                'horiz = left-right reversed; vert = up-down reversed; $var = variable'
+            ),
+        )
+        self.params['overflow'] = Param(
+            overflow, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['visible', 'scroll', 'hidden'],
+            allowedLabels=[_translate('visible'), _translate('scroll'), _translate('hidden')],
+            label=_translate('Overflow'),
+            hint=_translate(
+                'If the text is bigger than the textbox, how should it behave?'
+            ),
+        )
+
+        # --- Formatting params ---
+        self.order += [
+            'font',
+            'letterHeight',
+            'lineSpacing',
+            'bold',
+            'italic',
+            'languageStyle',
+            'alignment',
+        ]
+        self.params['font'] = Param(
+            font, valType='str', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Font'),
+            hint=_translate(
+                'The font name (e.g. Comic Sans)'
+            ),
+        )
+        self.params['letterHeight'] = Param(
+            letterHeight, valType='num', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Letter height'),
+            hint=_translate(
+                'Specifies the height of the letter (the width is then determined by the font)'
+            ),
+        )
+        self.params['lineSpacing'] = Param(
+            lineSpacing, valType='num', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Line spacing'),
+            hint=_translate(
+                'Defines the space between lines'
+            ),
+        )
+        self.params['bold'] = Param(
+            bold, valType='bool', inputType='bool', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Bold'),
+            hint=_translate(
+                'Should text be bold?'
+            ),
+        )
+        self.params['italic'] = Param(
+            italic, valType='bool', inputType='bool', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Italic'),
+            hint=_translate(
+                'Should text be italic?'
+            ),
+        )
+        self.params['languageStyle'] = Param(
+            languageStyle, valType='str', inputType='choice', categ='Formatting',
+            updates=None, allowedUpdates=None,
+            allowedVals=['LTR', 'RTL', 'Arabic'],
+            allowedLabels=[_translate('LTR'), _translate('RTL'), _translate('Arabic')],
+            label=_translate('Language style'),
+            hint=_translate(
+                'Handle right-to-left (RTL) languages and Arabic reshaping'
+            ),
+        )
+        self.params['alignment'] = Param(
+            alignment, valType='str', inputType='choice', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Alignment'),
+            hint=_translate(
+                'How should text be laid out within the box?'
+            ),
+        )
+
+        # --- Data params ---
+        self.order += [
+            'autoLog',
+        ]
+        self.params['autoLog'] = Param(
+            autoLog, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Auto log'),
+            hint=_translate(
+                'Automatically record all changes to this in the log file'
+            ),
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

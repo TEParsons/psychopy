@@ -84,47 +84,87 @@ class TextComponent(BaseVisualComponent):
         self.type = 'Text'
         self.url = "https://www.psychopy.org/builder/components/text.html"
 
-        # params
-        _allow3 = ['constant', 'set every repeat', 'set every frame']  # list
+        # --- Basic params ---
+        self.order += [
+            'text',
+        ]
         self.params['text'] = Param(
-            text, valType='str', inputType="multi", allowedTypes=[], categ='Basic',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The text to be displayed"),
+            text, valType='str', inputType='multi', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Text'),
+            hint=_translate(
+                'The text to be displayed'
+            ),
             canBePath=False,
-            label=_translate("Text"))
-        self.params['font'] = Param(
-            font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The font name (e.g. Comic Sans)"),
-            label=_translate("Font"))
-        del self.params['size']  # because you can't specify width for text
-        self.params['letterHeight'] = Param(
-            letterHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("Specifies the height of the letter (the width"
-                            " is then determined by the font)"),
-            label=_translate("Letter height"))
+        )
 
-        self.params['wrapWidth'] = Param(
-            wrapWidth, valType='num', inputType="single", allowedTypes=[], categ='Layout',
-            updates='constant', allowedUpdates=['constant'],
-            hint=_translate("How wide should the text get when it wraps? (in"
-                            " the specified units)"),
-            label=_translate("Wrap width"))
-        self.params['flip'] = Param(
-            flip, valType='str', inputType="single", allowedTypes=[], categ='Layout',
-            allowedVals=["horiz", "vert", "None"], updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("horiz = left-right reversed; vert = up-down"
-                            " reversed; $var = variable"),
-            label=_translate("Flip (mirror)"))
-        self.params['languageStyle'] = Param(
-            languageStyle, valType='str', inputType="choice", categ='Formatting',
-            allowedVals=['LTR', 'RTL', 'Arabic'],
-            hint=_translate("Handle right-to-left (RTL) languages and Arabic reshaping"),
-            label=_translate("Language style"))
+        # --- Appearance params ---
 
         del self.params['fillColor']
         del self.params['borderColor']
+
+        # --- Layout params ---
+        self.order += [
+            'wrapWidth',
+            'flip',
+        ]
+        self.params['wrapWidth'] = Param(
+            wrapWidth, valType='num', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=['constant'],
+            allowedLabels=[],
+            label=_translate('Wrap width'),
+            hint=_translate(
+                'How wide should the text get when it wraps? (in the specified units)'
+            ),
+        )
+        self.params['flip'] = Param(
+            flip, valType='str', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedVals=['horiz', 'vert', 'None'],
+            allowedLabels=[_translate('horiz'), _translate('vert'), _translate('None')],
+            label=_translate('Flip (mirror)'),
+            hint=_translate(
+                'horiz = left-right reversed; vert = up-down reversed; $var = variable'
+            ),
+        )
+
+        del self.params['size']
+
+        # --- Formatting params ---
+        self.order += [
+            'font',
+            'letterHeight',
+            'languageStyle',
+        ]
+        self.params['font'] = Param(
+            font, valType='str', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Font'),
+            hint=_translate(
+                'The font name (e.g. Comic Sans)'
+            ),
+        )
+        self.params['letterHeight'] = Param(
+            letterHeight, valType='num', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Letter height'),
+            hint=_translate(
+                'Specifies the height of the letter (the width is then determined by the font)'
+            ),
+        )
+        self.params['languageStyle'] = Param(
+            languageStyle, valType='str', inputType='choice', categ='Formatting',
+            updates=None, allowedUpdates=None,
+            allowedVals=['LTR', 'RTL', 'Arabic'],
+            allowedLabels=[_translate('LTR'), _translate('RTL'), _translate('Arabic')],
+            label=_translate('Language style'),
+            hint=_translate(
+                'Handle right-to-left (RTL) languages and Arabic reshaping'
+            ),
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

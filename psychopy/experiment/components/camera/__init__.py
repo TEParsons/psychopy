@@ -104,23 +104,40 @@ class CameraComponent(BaseDeviceComponent):
         self.exp.requireImport(importName="camera", importFrom="psychopy.hardware")
         self.exp.requireImport(importName="microphone", importFrom="psychopy.sound")
 
-        # Define some functions for live populating listCtrls
-        def getResolutionsForDevice(cameraLib, deviceName):
+        def getCameraNames():
+            """
+            Similar to getCameraDescriptions, only returns camera names
+            as a list of strings.
+
+            Returns
+            -------
+            list
+                Array of camera device names, preceeded by "default"
+            """
+            if self.params['cameraLib'] == "opencv":
+                return ["default"]
+            # enter a try statement in case ffpyplayer isn't installed
+            try:
+                # import
+                from psychopy.hardware.camera import Camera
+                connectedCameras = Camera.getCameras(cameraLib=self.params['cameraLib'].val)
+
+                return ["default"] + list(connectedCameras)
+            except:
+                return ["default"]
+
+        def getResolutionsForDevice():
             """
                 Get a list of resolutions available for the given device.
-
-                Parameters
-                ----------
-                cameraLib : Param
-                    Param object containing name of backend library
-                deviceName : Param
-                    Param object containing device name/index
 
                 Returns
                 -------
                 list
                     List of resolutions, specified as strings in the format `(width, height)`
                 """
+            cameraLib = self.params['cameraLib']
+            deviceName = self.params['device']
+
             if cameraLib == "opencv":
                 return [""]
             try:
@@ -147,22 +164,19 @@ class CameraComponent(BaseDeviceComponent):
             except:
                 return [""]
 
-        def getFrameRatesForDevice(cameraLib, deviceName, resolution=None):
+        def getFrameRatesForDevice():
             """
                 Get a list of frame rates available for the given device.
-
-                Parameters
-                ----------
-                cameraLib : Param
-                    Param object containing name of backend library
-                deviceName : Param
-                    Param object containing device name/index
 
                 Returns
                 -------
                 list
                     List of frame rates
                 """
+            cameraLib = self.params['cameraLib']
+            deviceName = self.params['device']
+            resolution = self.params['resolution']
+
             if cameraLib == "opencv":
                 return [""]
             try:
@@ -195,154 +209,6 @@ class CameraComponent(BaseDeviceComponent):
             except:
                 return [""]
 
-        # --- Device params ---
-        self.order += [
-            "cameraLib",
-            "device",
-            "deviceManual",
-            "resolution",
-            "resolutionManual",
-            "frameRate",
-            "frameRateManual",
-        ]
-        self.params['cameraLib'] = Param(
-            cameraLib, valType='str', inputType="choice", categ="Device",
-            allowedVals=["ffpyplayer", "opencv"], allowedLabels=["FFPyPlayer", "OpenCV"],
-            hint=_translate("Python package to use behind the scenes."),
-            label=_translate("Backend")
-        )
-        msg = _translate(
-                "What device would you like to use to record video? This will only affect local "
-                "experiments - online experiments ask the participant which device to use."
-            )
-
-        def getCameraNames():
-            """
-            Similar to getCameraDescriptions, only returns camera names
-            as a list of strings.
-
-            Returns
-            -------
-            list
-                Array of camera device names, preceeded by "default"
-            """
-            if self.params['cameraLib'] == "opencv":
-                return ["default"]
-            # enter a try statement in case ffpyplayer isn't installed
-            try:
-                # import
-                from psychopy.hardware.camera import Camera
-                connectedCameras = Camera.getCameras(cameraLib=self.params['cameraLib'].val)
-
-                return ["default"] + list(connectedCameras)
-            except:
-                return ["default"]
-
-        self.params['device'] = Param(
-            device, valType='str', inputType="choice", categ="Device",
-            allowedVals=getCameraNames, allowedLabels=getCameraNames,
-            hint=msg,
-            label=_translate("Video device")
-        )
-        self.depends.append({
-            "dependsOn": 'cameraLib',  # if...
-            "condition": "",  # meets...
-            "param": 'device',  # then...
-            "true": "populate",  # should...
-            "false": "populate",  # otherwise...
-        })
-        self.params['deviceManual'] = Param(
-            deviceManual, valType='code', inputType="single", categ="Device",
-            hint=msg,
-            label=_translate("Video device")
-        )
-        msg = _translate("Resolution (w x h) to record to, leave blank to use device default.")
-        conf = functools.partial(getResolutionsForDevice, self.params['cameraLib'], self.params['device'])
-        self.params['resolution'] = Param(
-            resolution, valType='list', inputType="choice", categ="Device",
-            allowedVals=conf, allowedLabels=conf,
-            hint=msg,
-            label=_translate("Resolution")
-        )
-        self.depends.append({
-            "dependsOn": 'device',  # if...
-            "condition": "",  # meets...
-            "param": 'resolution',  # then...
-            "true": "populate",  # should...
-            "false": "populate",  # otherwise...
-        })
-        self.params['resolutionManual'] = Param(
-            resolutionManual, valType='list', inputType="single", categ="Device",
-            hint=msg,
-            label=_translate("Resolution")
-        )
-        msg = _translate("Frame rate (frames per second) to record at, leave "
-                         "blank to use device default.")
-        conf = functools.partial(
-            getFrameRatesForDevice, 
-            self.params['cameraLib'], 
-            self.params['device'], 
-            self.params['resolution'])
-        self.params['frameRate'] = Param(
-            frameRate, valType='int', inputType="choice", categ="Device",
-            allowedVals=conf, allowedLabels=conf,
-            hint=msg,
-            label=_translate("Frame rate")
-        )
-        self.depends.append({
-            "dependsOn": 'device',  # if...
-            "condition": "",  # meets...
-            "param": 'frameRate',  # then...
-            "true": "populate",  # should...
-            "false": "populate",  # otherwise...
-        })
-
-        msg += _translate(
-            " For some cameras, you may need to use "
-            "`camera.CAMERA_FRAMERATE_NTSC` or "
-            "`camera.CAMERA_FRAMERATE_NTSC / 2`.")
-        self.params['frameRateManual'] = Param(
-            frameRateManual, valType='int', inputType="single", categ="Device",
-            hint=msg,
-            label=_translate("Frame rate")
-        )
-
-        # add dependencies for manual spec under open cv
-        for param in ("device", "resolution", "frameRate"):
-            # hide the choice ctrl
-            self.depends.append({
-                "dependsOn": 'cameraLib',  # if...
-                "condition": "=='opencv'",  # meets...
-                "param": param,  # then...
-                "true": "hide",  # should...
-                "false": "show",  # otherwise...
-            })
-            # show to manual ctrl
-            self.depends.append({
-                "dependsOn": 'cameraLib',  # if...
-                "condition": "=='opencv'",  # meets...
-                "param": param + "Manual",  # then...
-                "true": "show",  # should...
-                "false": "hide",  # otherwise...
-            })
-
-        # --- Audio params ---
-        self.order += [
-            "micDeviceLabel",
-            "mic",
-            "micChannels",
-            "micSampleRate",
-            "micMaxRecSize"
-        ]
-        self.params['micDeviceLabel'] = Param(
-            micDeviceLabel, valType="str", inputType="single", categ="Audio",
-            label=_translate("Microphone device label"),
-            hint=_translate(
-                "A label to refer to this Component's associated microphone device by. If using "
-                "the same device for multiple components, be sure to use the same label here."
-            )
-        )
-
         def getMicDeviceIndices():
             from psychopy.hardware.microphone import MicrophoneDevice
             profiles = MicrophoneDevice.getAvailableDevices()
@@ -355,49 +221,221 @@ class CameraComponent(BaseDeviceComponent):
 
             return ["default"] + [profile['deviceName'] for profile in profiles]
 
-        msg = _translate(
-            "What microphone device would you like the use to record? This "
-            "will only affect local experiments - online experiments ask the "
-            "participant which mic to use.")
+        # --- Device params ---
+        self.order += [
+            'cameraLib',
+            'device',
+            'deviceManual',
+            'resolution',
+            'resolutionManual',
+            'frameRate',
+            'frameRateManual',
+        ]
+        self.params['cameraLib'] = Param(
+            cameraLib, valType='str', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedVals=['ffpyplayer', 'opencv'],
+            allowedLabels=[_translate('FFPyPlayer'), _translate('OpenCV')],
+            label=_translate('Backend'),
+            hint=_translate(
+                'Python package to use behind the scenes.'
+            ),
+        )
+        self.params['device'] = Param(
+            device, valType='str', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedVals=getCameraNames,
+            allowedLabels=getCameraNames,
+            label=_translate('Video device'),
+            hint=_translate(
+                'What device would you like to use to record video? This will only affect local experiments - online experiments ask the participant which device to use.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': '',  # meets...
+            'param': 'device',  # then...
+            'true': 'populate',  # should...
+            'false': 'populate',  # otherwise...
+        })
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': "=='opencv'",  # meets...
+            'param': 'device',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
+        self.params['deviceManual'] = Param(
+            deviceManual, valType='code', inputType='single', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Video device'),
+            hint=_translate(
+                'What device would you like to use to record video? This will only affect local experiments - online experiments ask the participant which device to use.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': "=='opencv'",  # meets...
+            'param': 'deviceManual',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['resolution'] = Param(
+            resolution, valType='list', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedVals=getResolutionsForDevice,
+            allowedLabels=getResolutionsForDevice,
+            label=_translate('Resolution'),
+            hint=_translate(
+                'Resolution (w x h) to record to, leave blank to use device default.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'device',  # if...
+            'condition': '',  # meets...
+            'param': 'resolution',  # then...
+            'true': 'populate',  # should...
+            'false': 'populate',  # otherwise...
+        })
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': "=='opencv'",  # meets...
+            'param': 'resolution',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
+        self.params['resolutionManual'] = Param(
+            resolutionManual, valType='list', inputType='single', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Resolution'),
+            hint=_translate(
+                'Resolution (w x h) to record to, leave blank to use device default.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': "=='opencv'",  # meets...
+            'param': 'resolutionManual',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['frameRate'] = Param(
+            frameRate, valType='int', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedVals=getFrameRatesForDevice,
+            allowedLabels=getFrameRatesForDevice,
+            label=_translate('Frame rate'),
+            hint=_translate(
+                'Frame rate (frames per second) to record at, leave blank to use device default.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'device',  # if...
+            'condition': '',  # meets...
+            'param': 'frameRate',  # then...
+            'true': 'populate',  # should...
+            'false': 'populate',  # otherwise...
+        })
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': "=='opencv'",  # meets...
+            'param': 'frameRate',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
+        self.params['frameRateManual'] = Param(
+            frameRateManual, valType='int', inputType='single', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Frame rate'),
+            hint=_translate(
+                'Frame rate (frames per second) to record at, leave blank to use device default. For some cameras, you may need to use `camera.CAMERA_FRAMERATE_NTSC` or `camera.CAMERA_FRAMERATE_NTSC / 2`.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'cameraLib',  # if...
+            'condition': "=='opencv'",  # meets...
+            'param': 'frameRateManual',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+
+        # --- Audio params ---
+        self.order += [
+            'micDeviceLabel',
+            'mic',
+            'micChannels',
+            'micSampleRate',
+            'micMaxRecSize',
+        ]
+        self.params['micDeviceLabel'] = Param(
+            micDeviceLabel, valType='str', inputType='single', categ='Audio',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Microphone device label'),
+            hint=_translate(
+                "A label to refer to this Component's associated microphone device by. If using the same device for multiple components, be sure to use the same label here."
+            ),
+        )
         self.params['mic'] = Param(
-            mic, valType='str', inputType="choice", categ="Audio",
+            mic, valType='str', inputType='choice', categ='Audio',
+            updates=None, allowedUpdates=None,
             allowedVals=getMicDeviceIndices,
             allowedLabels=getMicDeviceNames,
-            hint=msg,
-            label=_translate("Microphone")
+            label=_translate('Microphone'),
+            hint=_translate(
+                'What microphone device would you like the use to record? This will only affect local experiments - online experiments ask the participant which mic to use.'
+            ),
         )
-        msg = _translate(
-            "Record two channels (stereo) or one (mono, smaller file). Select "
-            "'auto' to use as many channels as the selected device allows.")
-        
         self.params['micChannels'] = Param(
-            micChannels, valType='str', inputType="choice", categ='Audio',
+            micChannels, valType='str', inputType='choice', categ='Audio',
+            updates=None, allowedUpdates=None,
             allowedVals=['auto', 'mono', 'stereo'],
-            hint=msg,
-            label=_translate("Channels"))
-
-        msg = _translate(
-            "How many samples per second (Hz) to record at")
+            allowedLabels=[_translate('auto'), _translate('mono'), _translate('stereo')],
+            label=_translate('Channels'),
+            hint=_translate(
+                "Record two channels (stereo) or one (mono, smaller file). Select 'auto' to use as many channels as the selected device allows."
+            ),
+        )
         self.params['micSampleRate'] = Param(
-            micSampleRate, valType='num', inputType="choice", categ='Audio',
-            allowedVals=list(micSampleRates),
-            hint=msg, direct=False,
-            label=_translate("Sample rate (hz)"))
-
-        msg = _translate(
-            "To avoid excessively large output files, what is the biggest file "
-            "size you are likely to expect?")
+            micSampleRate, valType='num', inputType='choice', categ='Audio',
+            updates=None, allowedUpdates=None,
+            allowedVals=['Telephone/Two-way radio (8kHz)', 'Voice (16kHz)', 'CD Audio (44.1kHz)',
+                         'DVD Audio (48kHz)', 'High-Def (96kHz)', 'Ultra High-Def (192kHz)'],
+            allowedLabels=[_translate('Telephone/Two-way radio (8kHz)'),
+                           _translate('Voice (16kHz)'), _translate('CD Audio (44.1kHz)'),
+                           _translate('DVD Audio (48kHz)'), _translate('High-Def (96kHz)'),
+                           _translate('Ultra High-Def (192kHz)')],
+            label=_translate('Sample rate (hz)'),
+            hint=_translate(
+                'How many samples per second (Hz) to record at'
+            ),
+            direct=False,
+        )
         self.params['micMaxRecSize'] = Param(
-            micMaxRecSize, valType='num', inputType="single", categ='Audio',
-            hint=msg,
-            label=_translate("Max recording size (kb)"))
+            micMaxRecSize, valType='num', inputType='single', categ='Audio',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Max recording size (kb)'),
+            hint=_translate(
+                'To avoid excessively large output files, what is the biggest file size you are likely to expect?'
+            ),
+        )
 
         # --- Data params ---
-        msg = _translate("Save webcam output to a file?")
+        self.order += [
+            'saveFile',
+        ]
         self.params['saveFile'] = Param(
-            saveFile, valType='bool', inputType="bool", categ="Data",
-            hint=msg,
-            label=_translate("Save file?")
+            saveFile, valType='bool', inputType='bool', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Save file?'),
+            hint=_translate(
+                'Save webcam output to a file?'
+            ),
         )
 
     @staticmethod

@@ -124,145 +124,191 @@ class SliderComponent(BaseVisualComponent):
         self.url = "https://www.psychopy.org/builder/components/slider.html"
         self.exp.requirePsychopyLibs(['visual', 'event'])
 
-        # params
-        self.order += ['forceEndRoutine',  # Basic tab
-                       'contrast', 'styles', 'styleTweaks', # Appearance tab
-                       'font',  # Formatting tab
-                       'flip',  # Layout tab
-                       'ticks', 'labels',  'granularity', 'readOnly',  # Data tab
-                      ]
-        self.order.insert(self.order.index("colorSpace"), "style")
-        self.order.insert(self.order.index("units"), "Item Padding")
-
-        # normal params:
-        # = the usual as inherited from BaseVisual plus:
-        self.params['ticks'] = Param(
-                ticks, valType='list', inputType="single", allowedTypes=[], categ='Basic',
-                updates='constant',
-                hint=_translate("Tick positions (numerical) on the scale, "
-                                "separated by commas"),
-                label=_translate("Ticks"))
-        self.depends.append(
-            {
-                # if...
-                "dependsOn": "styles",
-                # meets...
-                "condition": "=='radio'",
-                # then...
-                "param": "ticks",
-                # should...
-                "true": "disable",
-                # otherwise...
-                "false": "enable",
-            }
+        # --- Basic params ---
+        self.order += [
+            'forceEndRoutine',
+            'styles',
+            'ticks',
+            'labels',
+            'granularity',
+            'initVal',
+        ]
+        self.params['forceEndRoutine'] = Param(
+            forceEndRoutine, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Force end of Routine'),
+            hint=_translate(
+                'Should setting a rating (releasing the mouse) cause the end of the Routine (e.g. trial)?'
+            ),
         )
+        self.params['styles'] = Param(
+            styles, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['slider', 'rating', 'radio', 'scrollbar', 'choice'],
+            allowedLabels=[_translate('slider'), _translate('rating'), _translate('radio'),
+                           _translate('scrollbar'), _translate('choice')],
+            label=_translate('Styles'),
+            hint=_translate(
+                'Discrete styles to control the overall appearance of the slider.'
+            ),
+        )
+        self.params['ticks'] = Param(
+            ticks, valType='list', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Ticks'),
+            hint=_translate(
+                'Tick positions (numerical) on the scale, separated by commas'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'styles',  # if...
+            'condition': "=='radio'",  # meets...
+            'param': 'ticks',  # then...
+            'true': 'disable',  # should...
+            'false': 'enable',  # otherwise...
+        })
         self.params['labels'] = Param(
-                labels, valType='list', inputType="single", allowedTypes=[], categ='Basic',
-                updates='constant',
-                hint=_translate("Labels for the tick marks on the scale, "
-                                "separated by commas"),
-                label=_translate("Labels"))
-        self.params['initVal'] = Param(
-            initVal, valType='code', inputType="single", categ='Basic',
-            hint=_translate("Value of the slider befre any response, leave blank to hide the marker until clicked on"),
-            label=_translate("Starting value")
+            labels, valType='list', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Labels'),
+            hint=_translate(
+                'Labels for the tick marks on the scale, separated by commas'
+            ),
         )
         self.params['granularity'] = Param(
-                granularity, valType='num', inputType="single", allowedTypes=[], categ='Basic',
-                updates='constant',
-                hint=_translate("Specifies the minimum step size "
-                                "(0 for a continuous scale, 1 for integer "
-                                "rating scale)"),
-                label=_translate("Granularity"))
-        self.depends.append(
-            {
-                # if...
-                "dependsOn": "styles",
-                # meets...
-                "condition": "=='radio'",
-                # then...
-                "param": "granularity",
-                # should...
-                "true": "disable",
-                # otherwise...
-                "false": "enable",
-            }
+            granularity, valType='num', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Granularity'),
+            hint=_translate(
+                'Specifies the minimum step size (0 for a continuous scale, 1 for integer rating scale)'
+            ),
         )
-        self.params['forceEndRoutine'] = Param(
-                forceEndRoutine, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-                updates='constant', allowedUpdates=[],
-                hint=_translate("Should setting a rating (releasing the mouse) "
-                                "cause the end of the Routine (e.g. trial)?"),
-                label=_translate("Force end of Routine"))
-        self.params['readOnly'] = Param(
-            readOnly, valType='bool', allowedTypes=[], categ='Data',
-            updates='constant', allowedUpdates=[],
-            hint=_translate("Should participant be able to change the rating on the Slider?"),
-            label=_translate("Read only"))
+        self.depends.append({
+            'dependsOn': 'styles',  # if...
+            'condition': "=='radio'",  # meets...
+            'param': 'granularity',  # then...
+            'true': 'disable',  # should...
+            'false': 'enable',  # otherwise...
+        })
+        self.params['initVal'] = Param(
+            initVal, valType='code', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Starting value'),
+            hint=_translate(
+                'Value of the slider befre any response, leave blank to hide the marker until clicked on'
+            ),
+        )
 
-        # advanced params:
-        self.params['flip'] = Param(
-                flip, valType='bool', inputType="bool", categ='Layout',
-                updates='constant', allowedUpdates=[],
-                hint=_translate(
-                        "By default the labels will be on the bottom or "
-                        "left of the scale, but this can be flipped to the "
-                        "other side."),
-                label=_translate("Flip"))
-
-        # Color changes
-        self.params['color'].label = _translate("Label color")
-        self.params['color'].hint = _translate("Color of all labels on this slider (might be overridden by the style setting)")
-        self.params['fillColor'].label = _translate("Marker color")
-        self.params['fillColor'].hint = _translate("Color of the marker on this slider (might be overridden by the style setting)")
-        self.params['borderColor'].label = _translate("Line color")
-        self.params['borderColor'].hint = _translate("Color of all lines on this slider (might be overridden by the style setting)")
-
-        self.params['font'] = Param(
-                font, valType='str', inputType="single", categ='Formatting',
-                updates='constant',
-                hint=_translate(
-                        "Font for the labels"),
-                label=_translate("Font"))
-
-        self.params['letterHeight'] = Param(
-                letterHeight, valType='num', inputType="single", categ='Formatting',
-                updates='constant',
-                hint=_translate(
-                        "Letter height for text in labels"),
-                label=_translate("Letter height"))
-
-        self.params['styles'] = Param(
-                styles, valType='str', inputType="choice", categ='Basic',
-                updates='constant', allowedVals=knownStyles,
-                hint=_translate(
-                        "Discrete styles to control the overall appearance of the slider."),
-                label=_translate("Styles"))
-
+        # --- Appearance params ---
+        self.order += [
+            'styleTweaks',
+        ]
+        self.params['color'].label = _translate('Label color')
+        self.params['color'].hint = _translate(
+            'Color of all labels on this slider (might be overridden by the style setting)')
+        self.params['fillColor'].label = _translate('Marker color')
+        self.params['fillColor'].hint = _translate(
+            'Color of the marker on this slider (might be overridden by the style setting)')
+        self.params['borderColor'].label = _translate('Line color')
+        self.params['borderColor'].hint = _translate(
+            'Color of all lines on this slider (might be overridden by the style setting)')
         self.params['styleTweaks'] = Param(
-                styleTweaks, valType='list', inputType="multiChoice", categ='Appearance',
-                updates='constant', allowedVals=knownStyleTweaks,
-                hint=_translate(
-                        "Tweaks to change the appearance of the slider beyond its style."),
-                label=_translate("Style tweaks"))
+            styleTweaks, valType='list', inputType='multiChoice', categ='Appearance',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['labels45', 'triangleMarker'],
+            allowedLabels=[_translate('labels45'), _translate('triangleMarker')],
+            label=_translate('Style tweaks'),
+            hint=_translate(
+                'Tweaks to change the appearance of the slider beyond its style.'
+            ),
+        )
 
-        # data params
+        # --- Layout params ---
+        self.order += [
+            'flip',
+        ]
+        self.params['flip'] = Param(
+            flip, valType='bool', inputType='bool', categ='Layout',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Flip'),
+            hint=_translate(
+                'By default the labels will be on the bottom or left of the scale, but this can be flipped to the other side.'
+            ),
+        )
+
+        # --- Formatting params ---
+        self.order += [
+            'font',
+            'letterHeight',
+        ]
+        self.params['font'] = Param(
+            font, valType='str', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Font'),
+            hint=_translate(
+                'Font for the labels'
+            ),
+        )
+        self.params['letterHeight'] = Param(
+            letterHeight, valType='num', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Letter height'),
+            hint=_translate(
+                'Letter height for text in labels'
+            ),
+        )
+
+        # --- Data params ---
+        self.order += [
+            'readOnly',
+            'storeRating',
+            'storeRatingTime',
+            'storeHistory',
+        ]
+        self.params['readOnly'] = Param(
+            readOnly, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Read only'),
+            hint=_translate(
+                'Should participant be able to change the rating on the Slider?'
+            ),
+        )
         self.params['storeRating'] = Param(
-                storeRating, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-                updates='constant', allowedUpdates=[],
-                hint=_translate("store the rating"),
-                label=_translate("Store rating"))
+            storeRating, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Store rating'),
+            hint=_translate(
+                'store the rating'
+            ),
+        )
         self.params['storeRatingTime'] = Param(
-                storeRatingTime, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-                updates='constant', allowedUpdates=[],
-                hint=_translate("Store the time taken to make the choice (in "
-                                "seconds)"),
-                label=_translate("Store rating time"))
+            storeRatingTime, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Store rating time'),
+            hint=_translate(
+                'Store the time taken to make the choice (in seconds)'
+            ),
+        )
         self.params['storeHistory'] = Param(
-                storeHistory, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-                updates='constant', allowedUpdates=[],
-                hint=_translate("store the history of (selection, time)"),
-                label=_translate("Store history"))
+            storeHistory, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Store history'),
+            hint=_translate(
+                'store the history of (selection, time)'
+            ),
+        )
 
     def writeInitCode(self, buff):
 

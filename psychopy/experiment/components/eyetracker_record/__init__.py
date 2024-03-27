@@ -67,30 +67,21 @@ class EyetrackerRecordComponent(BaseComponent):
         self.url = "https://www.psychopy.org/builder/components/eyetracker.html"
         self.exp.requirePsychopyLibs(['iohub', 'hardware'])
 
-        self.params['actionType'] = Param(actionType,
-            valType='str', inputType='choice', categ='Basic',
-            allowedVals=["Start and Stop", "Start Only", "Stop Only"],
-            hint=_translate("Should this Component start and / or stop eye tracker recording?"),
-            label=_translate("Record actions")
+        # --- Basic params ---
+        self.order += [
+            'actionType',
+        ]
+        self.params['actionType'] = Param(
+            actionType, valType='str', inputType='choice', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedVals=['Start and Stop', 'Start Only', 'Stop Only'],
+            allowedLabels=[_translate('Start and Stop'), _translate('Start Only'),
+                           _translate('Stop Only')],
+            label=_translate('Record actions'),
+            hint=_translate(
+                'Should this Component start and / or stop eye tracker recording?'
+            ),
         )
-
-        self.depends.append(
-             {"dependsOn": "actionType",  # must be param name
-              "condition": "=='Start Only'",  # val to check for
-              "param": "stop",  # param property to alter
-              "true": "hide",  # what to do with param if condition is True
-              "false": "show",  # permitted: hide, show, enable, disable
-              }
-         )
-
-        self.depends.append(
-             {"dependsOn": "actionType",  # must be param name
-              "condition": "=='Stop Only'",  # val to check for
-              "param": "start",  # param property to alter
-              "true": "hide",  # what to do with param if condition is True
-              "false": "show",  # permitted: hide, show, enable, disable
-              }
-         )
 
         # TODO: Display actionType control after component name.
         #       Currently, adding params before start / stop time

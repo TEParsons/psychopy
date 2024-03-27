@@ -56,62 +56,58 @@ class ResourceManagerComponent(BaseComponent):
         self.type = 'ResourceManager'
         self.url = "https://www.psychopy.org/builder/components/resourcemanager"
 
-        if not resources:
-            resources = []
-
-        self.params['resources'] = Param(resources,
-            valType='list', inputType="fileList", categ='Basic', updates='constant',
-            hint=_translate("Resources to download/check"),
-            direct=False, label=_translate("Resources"))
-
-        self.params['checkAll'] = Param(checkAll,
-            valType='bool', inputType="bool", categ='Basic',
-            hint=_translate("When checking these resources, also check for all currently downloading?"),
-            label=_translate("Check all"))
-
-        self.params['actionType'] = Param(actionType,
-            valType='str', inputType='choice', categ='Basic',
-            allowedVals=["Start and Check", "Start Only", "Check Only"],
-            hint=_translate("Should this Component start an / or check resource preloading?"),
-            label=_translate("Preload actions")
+        # --- Basic params ---
+        self.order += [
+            'resources',
+            'checkAll',
+            'actionType',
+            'forceEndRoutine',
+        ]
+        self.params['stopVal'].label = _translate('Check')
+        self.params['resources'] = Param(
+            resources, valType='list', inputType='fileList', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Resources'),
+            hint=_translate(
+                'Resources to download/check'
+            ),
+            direct=False,
         )
-
-        msg = _translate("Should we end the Routine when the resource download is complete?")
+        self.params['checkAll'] = Param(
+            checkAll, valType='bool', inputType='bool', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Check all'),
+            hint=_translate(
+                'When checking these resources, also check for all currently downloading?'
+            ),
+        )
+        self.params['actionType'] = Param(
+            actionType, valType='str', inputType='choice', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedVals=['Start and Check', 'Start Only', 'Check Only'],
+            allowedLabels=[_translate('Start and Check'), _translate('Start Only'),
+                           _translate('Check Only')],
+            label=_translate('Preload actions'),
+            hint=_translate(
+                'Should this Component start an / or check resource preloading?'
+            ),
+        )
         self.params['forceEndRoutine'] = Param(
-            forceEndRoutine, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=msg,
-            label=_translate("Force end Routine"))
-
-        self.params['stopVal'].label = _translate("Check")
-
-        self.depends.append(
-             {"dependsOn": "actionType",  # must be param name
-              "condition": "=='Start Only'",  # val to check for
-              "param": "stop",  # param property to alter
-              "true": "hide",  # what to do with param if condition is True
-              "false": "show",  # permitted: hide, show, enable, disable
-              }
-        )
-        self.depends.append(
-             {"dependsOn": "actionType",  # must be param name
-              "condition": "=='Check Only'",  # val to check for
-              "param": "start",  # param property to alter
-              "true": "hide",  # what to do with param if condition is True
-              "false": "show",  # permitted: hide, show, enable, disable
-              }
-        )
-        self.depends.append(
-             {"dependsOn": "actionType",  # must be param name
-              "condition": "=='Check Only'",  # val to check for
-              "param": "start",  # param property to alter
-              "true": "hide",  # what to do with param if condition is True
-              "false": "show",  # permitted: hide, show, enable, disable
-              }
+            forceEndRoutine, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Force end Routine'),
+            hint=_translate(
+                'Should we end the Routine when the resource download is complete?'
+            ),
         )
 
-        del self.params['syncScreenRefresh']
+        # --- Data params ---
+
         del self.params['saveStartStop']
+        del self.params['syncScreenRefresh']
 
     def writeInitCodeJS(self, buff):
         # Get initial values

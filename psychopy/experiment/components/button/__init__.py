@@ -101,112 +101,177 @@ class ButtonComponent(BaseVisualComponent):
         )
         self.type = 'Button'
         self.url = "https://www.psychopy.org/builder/components/button.html"
-        self.order += [  # controls order of params within tabs
-            "forceEndRoutine", "text", "callback", "oncePerClick", # Basic tab
-            "borderWidth", "opacity",  # Appearance tab
-            "font", "letterHeight", "lineSpacing", "bold", "italic",  # Formatting tab
-        ]
-        # params
-        _allow3 = ['constant', 'set every repeat', 'set every frame']  # list
-        self.params['color'].label = _translate("Text color")
 
+        # --- Basic params ---
+        self.order += [
+            'forceEndRoutine',
+            'text',
+            'callback',
+            'oncePerClick',
+        ]
         self.params['forceEndRoutine'] = Param(
-            forceEndRoutine, valType='bool', inputType="bool", categ='Basic',
-            updates='constant', direct=False,
-            hint=_translate("Should a response force the end of the Routine "
-                            "(e.g end the trial)?"),
-            label=_translate("Force end of Routine"))
-
-        # If force end routine, then once per click doesn't make sense
-        self.depends += [
-            {
-                "dependsOn": "forceEndRoutine",
-                "condition": "==True",
-                "param": "oncePerClick",
-                "true": "disable",  # what to do with param if condition is True
-                "false": "enable",  # permitted: hide, show, enable, disable
-            }
-        ]
-
-        self.params['oncePerClick'] = Param(
-            oncePerClick, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=_translate("Should the callback run once per click (True), or each frame until click is released (False)"),
-            label=_translate("Run once per click")
+            forceEndRoutine, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Force end of Routine'),
+            hint=_translate(
+                'Should a response force the end of the Routine (e.g end the trial)?'
+            ),
+            direct=False,
+        )
+        self.params['text'] = Param(
+            text, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Button text'),
+            hint=_translate(
+                'The text to be displayed'
+            ),
         )
         self.params['callback'] = Param(
-            callback, valType='extendedCode', inputType="multi", allowedTypes=[], categ='Basic',
-            updates='constant',
-            hint=_translate("Code to run when button is clicked"),
-            label=_translate("Callback function"))
-        self.params['text'] = Param(
-            text, valType='str', inputType="single", allowedTypes=[], categ='Basic',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The text to be displayed"),
-            label=_translate("Button text"))
-        self.params['font'] = Param(
-            font, valType='str', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("The font name (e.g. Comic Sans)"),
-            label=_translate("Font"))
-        self.params['letterHeight'] = Param(
-            letterHeight, valType='num', inputType="single", allowedTypes=[], categ='Formatting',
-            updates='constant', allowedUpdates=_allow3[:],  # copy the list
-            hint=_translate("Specifies the height of the letter (the width"
-                            " is then determined by the font)"),
-            label=_translate("Letter height"))
-        self.params['italic'] = Param(
-            italic, valType='bool', inputType="bool", allowedTypes=[], categ='Formatting',
-            updates='constant',
-            hint=_translate("Should text be italic?"),
-            label=_translate("Italic"))
-        self.params['bold'] = Param(
-            bold, valType='bool', inputType="bool", allowedTypes=[], categ='Formatting',
-            updates='constant',
-            hint=_translate("Should text be bold?"),
-            label=_translate("Bold"))
-        self.params['padding'] = Param(
-            padding, valType='num', inputType="single", allowedTypes=[], categ='Layout',
-            updates='constant', allowedUpdates=_allow3[:],
-            hint=_translate("Defines the space between text and the textbox border"),
-            label=_translate("Padding"))
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Should text anchor to the top, center or bottom of the box?"),
-            label=_translate("Anchor"))
-        self.params['borderWidth'] = Param(
-            borderWidth, valType='num', inputType="single", allowedTypes=[], categ='Appearance',
-            updates='constant', allowedUpdates=_allow3[:],
-            hint=_translate("Textbox border width"),
-            label=_translate("Border width"))
-        self.params['save'] = Param(
-            save, valType='str', inputType="choice", categ='Data',
-            allowedVals=['first click', 'last click', 'every click', 'none'],
+            callback, valType='extendedCode', inputType='multi', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Callback function'),
             hint=_translate(
-                "What clicks on this button should be saved to the data output?"),
-            direct=False,
-            label=_translate("Record clicks"))
-        self.params['timeRelativeTo'] = Param(
-            timeRelativeTo, valType='str', inputType="choice", categ='Data',
-            allowedVals=['button onset', 'experiment', 'routine'],
-            updates='constant',
-            direct=False,
+                'Code to run when button is clicked'
+            ),
+        )
+        self.params['oncePerClick'] = Param(
+            oncePerClick, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Run once per click'),
             hint=_translate(
-                "What should the values of mouse.time should be "
-                "relative to?"),
-            label=_translate("Time relative to"))
+                'Should the callback run once per click (True), or each frame until click is released (False)'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'forceEndRoutine',  # if...
+            'condition': '==True',  # meets...
+            'param': 'oncePerClick',  # then...
+            'true': 'disable',  # should...
+            'false': 'enable',  # otherwise...
+        })
 
+        # --- Appearance params ---
+        self.order += [
+            'borderWidth',
+        ]
+        self.params['color'].label = _translate('Text color')
+        self.params['borderWidth'] = Param(
+            borderWidth, valType='num', inputType='single', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Border width'),
+            hint=_translate(
+                'Textbox border width'
+            ),
+        )
+
+        # --- Layout params ---
+        self.order += [
+            'anchor',
+            'padding',
+        ]
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Should text anchor to the top, center or bottom of the box?'
+            ),
+        )
+        self.params['padding'] = Param(
+            padding, valType='num', inputType='single', categ='Layout',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Padding'),
+            hint=_translate(
+                'Defines the space between text and the textbox border'
+            ),
+        )
+
+        # --- Formatting params ---
+        self.order += [
+            'font',
+            'letterHeight',
+            'bold',
+            'italic',
+        ]
+        self.params['font'] = Param(
+            font, valType='str', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Font'),
+            hint=_translate(
+                'The font name (e.g. Comic Sans)'
+            ),
+        )
+        self.params['letterHeight'] = Param(
+            letterHeight, valType='num', inputType='single', categ='Formatting',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Letter height'),
+            hint=_translate(
+                'Specifies the height of the letter (the width is then determined by the font)'
+            ),
+        )
+        self.params['bold'] = Param(
+            bold, valType='bool', inputType='bool', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Bold'),
+            hint=_translate(
+                'Should text be bold?'
+            ),
+        )
+        self.params['italic'] = Param(
+            italic, valType='bool', inputType='bool', categ='Formatting',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Italic'),
+            hint=_translate(
+                'Should text be italic?'
+            ),
+        )
+
+        # --- Data params ---
+        self.order += [
+            'save',
+            'timeRelativeTo',
+        ]
+        self.params['save'] = Param(
+            save, valType='str', inputType='choice', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedVals=['first click', 'last click', 'every click', 'none'],
+            allowedLabels=[_translate('first click'), _translate('last click'),
+                           _translate('every click'), _translate('none')],
+            label=_translate('Record clicks'),
+            hint=_translate(
+                'What clicks on this button should be saved to the data output?'
+            ),
+            direct=False,
+        )
+        self.params['timeRelativeTo'] = Param(
+            timeRelativeTo, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['button onset', 'experiment', 'routine'],
+            allowedLabels=[_translate('button onset'), _translate('experiment'),
+                           _translate('routine')],
+            label=_translate('Time relative to'),
+            hint=_translate(
+                'What should the values of mouse.time should be relative to?'
+            ),
+            direct=False,
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

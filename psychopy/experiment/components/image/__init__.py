@@ -88,79 +88,103 @@ class ImageComponent(BaseVisualComponent):
         self.type = 'Image'
         self.url = "https://www.psychopy.org/builder/components/image.html"
         self.exp.requirePsychopyLibs(['visual'])
-        # params
-        self.order += ['image',  # Basic tab
-                       'mask', 'texture resolution',  # Texture tab
-                       ]
 
-        msg = _translate(
-            "The image to be displayed - a filename, including path")
+        # --- Basic params ---
+        self.order += [
+            'image',
+        ]
         self.params['image'] = Param(
-            image, valType='file', inputType="file", allowedTypes=[], categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Image"))
+            image, valType='file', inputType='file', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Image'),
+            hint=_translate(
+                'The image to be displayed - a filename, including path'
+            ),
+        )
 
-        msg = _translate(
-            "An image to define the alpha mask through which the image is "
-            "seen - gauss, circle, None or a filename (including path)")
-        self.params['mask'] = Param(
-            mask, valType='str', inputType="file", allowedTypes=[], categ='Texture',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Mask"))
-
-        msg = _translate("Resolution of the mask if one is used.")
-        self.params['texture resolution'] = Param(
-            textureResolution, valType='num', inputType="choice", categ='Texture',
-            allowedVals=['32', '64', '128', '256', '512'],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Texture resolution"))
-
-        msg = _translate(
-            "How should the image be interpolated if/when rescaled")
-        self.params['interpolate'] = Param(
-            interpolate, valType='str', inputType="choice", allowedVals=['linear', 'nearest'], categ='Texture',
-            updates='constant', allowedUpdates=[],
-            hint=msg, direct=False,
-            label=_translate("Interpolate"))
-
-        msg = _translate(
-            "Should the image be flipped vertically (top to bottom)?")
-        self.params['flipVert'] = Param(
-            flipVert, valType='bool', inputType="bool", categ='Layout',
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Flip vertically"))
-
-        msg = _translate(
-            "Should the image be flipped horizontally (left to right)?")
-        self.params['flipHoriz'] = Param(
-            flipHoriz, valType='bool', inputType="bool", categ='Layout',
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Flip horizontally"))
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the stimulus should be anchored to its exact position?"),
-            label=_translate("Anchor"))
+        # --- Appearance params ---
 
         del self.params['fillColor']
         del self.params['borderColor']
+
+        # --- Layout params ---
+        self.order += [
+            'anchor',
+            'flipVert',
+            'flipHoriz',
+        ]
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Which point on the stimulus should be anchored to its exact position?'
+            ),
+        )
+        self.params['flipVert'] = Param(
+            flipVert, valType='bool', inputType='bool', categ='Layout',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Flip vertically'),
+            hint=_translate(
+                'Should the image be flipped vertically (top to bottom)?'
+            ),
+        )
+        self.params['flipHoriz'] = Param(
+            flipHoriz, valType='bool', inputType='bool', categ='Layout',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Flip horizontally'),
+            hint=_translate(
+                'Should the image be flipped horizontally (left to right)?'
+            ),
+        )
+
+        # --- Texture params ---
+        self.order += [
+            'mask',
+            'texture resolution',
+            'interpolate',
+        ]
+        self.params['mask'] = Param(
+            mask, valType='str', inputType='file', categ='Texture',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Mask'),
+            hint=_translate(
+                'An image to define the alpha mask through which the image is seen - gauss, circle, None or a filename (including path)'
+            ),
+        )
+        self.params['texture resolution'] = Param(
+            textureResolution, valType='num', inputType='choice', categ='Texture',
+            updates='constant', allowedUpdates=[],
+            allowedVals=['32', '64', '128', '256', '512'],
+            allowedLabels=[_translate('32'), _translate('64'), _translate('128'), _translate('256'),
+                           _translate('512')],
+            label=_translate('Texture resolution'),
+            hint=_translate(
+                'Resolution of the mask if one is used.'
+            ),
+        )
+        self.params['interpolate'] = Param(
+            interpolate, valType='str', inputType='choice', categ='Texture',
+            updates='constant', allowedUpdates=[],
+            allowedVals=['linear', 'nearest'],
+            allowedLabels=[_translate('linear'), _translate('nearest')],
+            label=_translate('Interpolate'),
+            hint=_translate(
+                'How should the image be interpolated if/when rescaled'
+            ),
+            direct=False,
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

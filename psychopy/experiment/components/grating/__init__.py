@@ -91,92 +91,114 @@ class GratingComponent(BaseVisualComponent):
 
         self.type = 'Grating'
         self.url = "https://www.psychopy.org/builder/components/grating.html"
+
+        # --- Appearance params ---
         self.order += [
-            'tex', 'mask', 'phase', 'sf', 'texture resolution', 'interpolate',  # Texture tab
+            'blendmode',
         ]
-
-        # params
-        msg = _translate("The (2D) texture of the grating - can be sin, sqr,"
-                         " sinXsin... or a filename (including path)")
-        self.params['tex'] = Param(
-            tex, valType='file', inputType="file", allowedVals=["sin", "sqr", "sinXsin"], allowedTypes=[], categ='Texture',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Texture"))
-
-        msg = _translate("An image to define the alpha mask (ie shape)- "
-                         "gauss, circle... or a filename (including path)")
-        self.params['mask'] = Param(
-            mask, valType='file', inputType="file", allowedVals=["gauss", "circle"], allowedTypes=[], categ='Texture',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Mask"))
-
-        msg = _translate("Spatial frequency of image repeats across the "
-                         "grating in 1 or 2 dimensions, e.g. 4 or [2,3]")
-        self.params['sf'] = Param(
-            sf, valType='num', inputType="single",  allowedTypes=[], categ='Texture',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Spatial frequency"))
-
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the stimulus should be anchored to its exact position?"),
-            label=_translate("Anchor"))
-
-        msg = _translate("Spatial positioning of the image on the grating "
-                         "(wraps in range 0-1.0)")
-        self.params['phase'] = Param(
-            phase, valType='num', inputType="single", allowedTypes=[], categ='Texture',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Phase (in cycles)"))
-
-        msg = _translate(
-            "Resolution of the texture for standard ones such as sin, sqr "
-            "etc. For most cases a value of 256 pixels will suffice")
-        self.params['texture resolution'] = Param(
-            textureResolution,
-            valType='num', inputType="choice", allowedVals=['32', '64', '128', '256', '512'], categ='Texture',
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Texture resolution"))
-
-        msg = _translate("How should the image be interpolated if/when "
-                         "rescaled")
-        self.params['interpolate'] = Param(
-            interpolate, valType='str', inputType="choice", allowedVals=['linear', 'nearest'], categ='Texture',
-            updates='constant', allowedUpdates=[],
-            hint=msg, direct=False,
-            label=_translate("Interpolate"))
-
-        msg = _translate("OpenGL Blendmode: avg gives traditional transparency,"
-                         " add is important to combine gratings)]")
         self.params['blendmode'] = Param(
-            blendmode, valType='str', inputType="choice", allowedVals=['avg', 'add'], categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("OpenGL blend mode"))
+            blendmode, valType='str', inputType='choice', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedVals=['avg', 'add'],
+            allowedLabels=[_translate('avg'), _translate('add')],
+            label=_translate('OpenGL blend mode'),
+            hint=_translate(
+                'OpenGL Blendmode: avg gives traditional transparency, add is important to combine gratings)]'
+            ),
+        )
 
         del self.params['fillColor']
         del self.params['borderColor']
+
+        # --- Layout params ---
+        self.order += [
+            'anchor',
+        ]
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Which point on the stimulus should be anchored to its exact position?'
+            ),
+        )
+
+        # --- Texture params ---
+        self.order += [
+            'tex',
+            'mask',
+            'phase',
+            'sf',
+            'texture resolution',
+            'interpolate',
+        ]
+        self.params['tex'] = Param(
+            tex, valType='file', inputType='file', categ='Texture',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedVals=['sin', 'sqr', 'sinXsin'],
+            allowedLabels=[_translate('sin'), _translate('sqr'), _translate('sinXsin')],
+            label=_translate('Texture'),
+            hint=_translate(
+                'The (2D) texture of the grating - can be sin, sqr, sinXsin... or a filename (including path)'
+            ),
+        )
+        self.params['mask'] = Param(
+            mask, valType='file', inputType='file', categ='Texture',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedVals=['gauss', 'circle'],
+            allowedLabels=[_translate('gauss'), _translate('circle')],
+            label=_translate('Mask'),
+            hint=_translate(
+                'An image to define the alpha mask (ie shape)- gauss, circle... or a filename (including path)'
+            ),
+        )
+        self.params['phase'] = Param(
+            phase, valType='num', inputType='single', categ='Texture',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Phase (in cycles)'),
+            hint=_translate(
+                'Spatial positioning of the image on the grating (wraps in range 0-1.0)'
+            ),
+        )
+        self.params['sf'] = Param(
+            sf, valType='num', inputType='single', categ='Texture',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Spatial frequency'),
+            hint=_translate(
+                'Spatial frequency of image repeats across the grating in 1 or 2 dimensions, e.g. 4 or [2,3]'
+            ),
+        )
+        self.params['texture resolution'] = Param(
+            textureResolution, valType='num', inputType='choice', categ='Texture',
+            updates='constant', allowedUpdates=[],
+            allowedVals=['32', '64', '128', '256', '512'],
+            allowedLabels=[_translate('32'), _translate('64'), _translate('128'), _translate('256'),
+                           _translate('512')],
+            label=_translate('Texture resolution'),
+            hint=_translate(
+                'Resolution of the texture for standard ones such as sin, sqr etc. For most cases a value of 256 pixels will suffice'
+            ),
+        )
+        self.params['interpolate'] = Param(
+            interpolate, valType='str', inputType='choice', categ='Texture',
+            updates='constant', allowedUpdates=[],
+            allowedVals=['linear', 'nearest'],
+            allowedLabels=[_translate('linear'), _translate('nearest')],
+            label=_translate('Interpolate'),
+            hint=_translate(
+                'How should the image be interpolated if/when rescaled'
+            ),
+            direct=False,
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

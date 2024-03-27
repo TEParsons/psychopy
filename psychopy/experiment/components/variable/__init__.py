@@ -68,58 +68,97 @@ class VariableComponent(BaseComponent):
         categories = ['Custom']
         self.type = 'Variable'
         self.url = "https://www.psychopy.org/builder/components/variable.html"
-        self.order += ['startExpValue', 'saveStartExp', 'startRoutineValue',  # Basic tab
-                       'saveStartRoutine', 'startFrameValue', 'saveFrameValue', 'saveEndRoutine', 'saveEndExp',  # Data tab
-                       ]
 
-        # set parameters
-        hnt = _translate("The start value. A variable can be set to any value.")
+        # --- Basic params ---
+        self.order += [
+            'startExpValue',
+            'startRoutineValue',
+            'startFrameValue',
+        ]
         self.params['startExpValue'] = Param(
-            startExpValue, valType='code', inputType="single", allowedTypes=[], updates='constant', categ='Basic',
-            hint=hnt,
-            label=_translate("Experiment start value"))
-        hnt = _translate("Set the value for the beginning of each Routine.")
+            startExpValue, valType='code', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Experiment start value'),
+            hint=_translate(
+                'The start value. A variable can be set to any value.'
+            ),
+        )
         self.params['startRoutineValue'] = Param(
-            startRoutineValue, valType='code', inputType="single", allowedTypes=[], updates='constant', categ='Basic',
-            hint=hnt,
-            label=_translate("Routine start value"))
-        hnt = _translate("Set the value for the beginning of every screen refresh.")
+            startRoutineValue, valType='code', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Routine start value'),
+            hint=_translate(
+                'Set the value for the beginning of each Routine.'
+            ),
+        )
         self.params['startFrameValue'] = Param(
-            startFrameValue, valType='code', inputType="single", allowedTypes=[], categ='Basic',
-            hint=hnt,
-            label=_translate("Frame start value"))
-        # Save options
-        hnt = _translate("Save the experiment start value in data file.")
+            startFrameValue, valType='code', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Frame start value'),
+            hint=_translate(
+                'Set the value for the beginning of every screen refresh.'
+            ),
+        )
+
+        # --- Data params ---
+        self.order += [
+            'saveStartExp',
+            'saveStartRoutine',
+            'saveFrameValue',
+            'saveEndRoutine',
+            'saveEndExp',
+        ]
         self.params['saveStartExp'] = Param(
-            saveStartExp, valType='bool', inputType="bool", categ='Data',
-            updates='constant',
-            hint=hnt,
-            label=_translate("Save exp start value"))
-        hnt = _translate("Save the experiment end value in data file.")
-        self.params['saveEndExp'] = Param(
-            saveEndExp, valType='bool', inputType="bool", categ='Data',
-            updates='constant',
-            hint=hnt,
-            label=_translate("Save exp end value"))
-        hnt = _translate("Save the Routine start value in data file.")
+            saveStartExp, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Save exp start value'),
+            hint=_translate(
+                'Save the experiment start value in data file.'
+            ),
+        )
         self.params['saveStartRoutine'] = Param(
-            saveStartRoutine, valType='bool', inputType="bool", categ='Data',
-            updates='constant',
-            hint=hnt,
-            label=_translate("Save Routine start value"))
-        hnt = _translate("Save the Routine end value in data file.")
-        self.params['saveEndRoutine'] = Param(
-            saveEndRoutine, valType='bool', inputType="bool", categ='Data',
-            updates='constant',
-            hint=hnt,
-            label=_translate("Save Routine end value"))
-        hnt = _translate("Save choice of frame value in data file.")
+            saveStartRoutine, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Save Routine start value'),
+            hint=_translate(
+                'Save the Routine start value in data file.'
+            ),
+        )
         self.params['saveFrameValue'] = Param(
-            saveFrameValue, valType='str', inputType="choice", categ='Data',
+            saveFrameValue, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
             allowedVals=['first', 'last', 'all', 'never'],
-            updates='constant', direct=False,
-            hint=hnt,
-            label=_translate("Save frame value"))
+            allowedLabels=[_translate('first'), _translate('last'), _translate('all'),
+                           _translate('never')],
+            label=_translate('Save frame value'),
+            hint=_translate(
+                'Save choice of frame value in data file.'
+            ),
+            direct=False,
+        )
+        self.params['saveEndRoutine'] = Param(
+            saveEndRoutine, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Save Routine end value'),
+            hint=_translate(
+                'Save the Routine end value in data file.'
+            ),
+        )
+        self.params['saveEndExp'] = Param(
+            saveEndExp, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Save exp end value'),
+            hint=_translate(
+                'Save the experiment end value in data file.'
+            ),
+        )
 
     def writeInitCode(self, buff):
         """Write variable initialisation code."""

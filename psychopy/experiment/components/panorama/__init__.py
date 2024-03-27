@@ -81,234 +81,294 @@ class PanoramaComponent(BaseVisualComponent):
         )
         self.type = 'Panorama'
 
+        # --- Basic params ---
         self.order += [
-            "image",
-            "posCtrl",
-            "azimuth", "elevation",
-            "upKey", "leftKey", "downKey", "rightKey", "stopKey",
-            "posSensitivity",
-            "smooth",
-            "zoomCtrl",
-            "zoom",
-            "inKey", "outKey",
-            "zoomSensitivity"
+            'image',
+            'posCtrl',
+            'azimuth',
+            'elevation',
+            'upKey',
+            'leftKey',
+            'downKey',
+            'rightKey',
+            'stopKey',
+            'posSensitivity',
+            'smooth',
+            'zoomCtrl',
+            'zoom',
+            'inKey',
+            'outKey',
+            'zoomSensitivity',
+            'interpolate',
         ]
-
-        msg = _translate(
-            "The image to be displayed - a filename, including path"
-        )
         self.params['image'] = Param(
-            image, valType='file', inputType="file", allowedTypes=[], categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Image"))
-
-        msg = _translate(
-            "How should the image be interpolated if/when rescaled")
-        self.params['interpolate'] = Param(
-            interpolate, valType='str', inputType="choice",
-            allowedVals=['linear', 'nearest'], categ='Basic',
-            updates='constant', allowedUpdates=[],
-            hint=msg, direct=False,
-            label=_translate("Interpolate"))
-
-        # Position controls
-        
-        msg = _translate(
-            "How to control looking around the panorama scene"
+            image, valType='file', inputType='file', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Image'),
+            hint=_translate(
+                'The image to be displayed - a filename, including path'
+            ),
         )
         self.params['posCtrl'] = Param(
-            posCtrl, valType='str', inputType="choice", categ="Basic",
-            allowedVals=[
-                "mouse", "drag", "arrows", "wasd", "keymap", "custom"],
-            allowedLabels=[
-                "Mouse", "Drag", "Keyboard (Arrow Keys)", "Keyboard (WASD)", "Keyboard (Custom keys)", "Custom"],
-            updates="constant",
-            hint=msg,
-            label=_translate("Position control")
-        )
-        
-        self.depends.append(
-            {
-                "dependsOn": "posCtrl",  # if...
-                "condition": "=='custom'",  # meets...
-                "param": "azimuth",  # then...
-                "true": "show",  # should...
-                "false": "hide",  # otherwise...
-            }
-        )
-        msg = _translate(
-            "Horizontal look position, ranging from -1 (fully left) to 1 (fully right)"
+            posCtrl, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['mouse', 'drag', 'arrows', 'wasd', 'keymap', 'custom'],
+            allowedLabels=[_translate('Mouse'), _translate('Drag'),
+                           _translate('Keyboard (Arrow Keys)'), _translate('Keyboard (WASD)'),
+                           _translate('Keyboard (Custom keys)'), _translate('Custom')],
+            label=_translate('Position control'),
+            hint=_translate(
+                'How to control looking around the panorama scene'
+            ),
         )
         self.params['azimuth'] = Param(
             azimuth, valType='code', inputType='single', categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Azimuth")
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Azimuth'),
+            hint=_translate(
+                'Horizontal look position, ranging from -1 (fully left) to 1 (fully right)'
+            ),
         )
-        
-        self.depends.append(
-            {
-                "dependsOn": "posCtrl",  # if...
-                "condition": "=='custom'",  # meets...
-                "param": "elevation",  # then...
-                "true": "show",  # should...
-                "false": "hide",  # otherwise...
-            }
-        )
-        msg = _translate(
-            "Vertical look position, ranging from -1 (fully down) to 1 (fully up)"
-        )
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='custom'",  # meets...
+            'param': 'azimuth',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['elevation'] = Param(
             elevation, valType='code', inputType='single', categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Elevation")
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Elevation'),
+            hint=_translate(
+                'Vertical look position, ranging from -1 (fully down) to 1 (fully up)'
+            ),
         )
-        keys = {'upKey': upKey, 'leftKey': leftKey, 'downKey': downKey, 'rightKey': rightKey, 'stopKey': stopKey}
-        labels = {'upKey': _translate("Up"), 'leftKey': _translate("Left"), 'downKey': _translate("Down"),
-                  'rightKey': _translate("Right"), 'stopKey': _translate("Stop")}
-        for key, val in keys.items():
-            # Only show key controls if control type is custom keys
-            self.depends.append(
-                {
-                    "dependsOn": "posCtrl",  # if...
-                    "condition": "=='keymap'",  # meets...
-                    "param": key,  # then...
-                    "true": "show",  # should...
-                    "false": "hide",  # otherwise...
-                }
-            )
-            # Add a ctrl for each key
-            msg = _translate("What key corresponds to the view action '{}'?")
-            self.params[key] = Param(
-                val, valType='str', inputType='single', categ='Basic',
-                updates='constant',
-                hint=msg.format(labels[key]),
-                label=labels[key]
-            )
-
-        self.depends.append(
-            {
-                "dependsOn": "posCtrl",  # if...
-                "condition": "in ('custom', 'mouse')",  # meets...
-                "param": "smooth",  # then...
-                "true": "hide",  # should...
-                "false": "show",  # otherwise...
-            }
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='custom'",  # meets...
+            'param': 'elevation',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['upKey'] = Param(
+            upKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Up'),
+            hint=_translate(
+                "What key corresponds to the view action 'Up'?"
+            ),
         )
-        msg = _translate(
-            "Should movement be smoothed, so the view keeps moving a little after a change?"
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'upKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['leftKey'] = Param(
+            leftKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Left'),
+            hint=_translate(
+                "What key corresponds to the view action 'Left'?"
+            ),
         )
-        self.params['smooth'] = Param(
-            smooth, valType='bool', inputType="bool", categ="Basic",
-            updates="constant",
-            hint=msg,
-            label=_translate("Smooth?")
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'leftKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['downKey'] = Param(
+            downKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Down'),
+            hint=_translate(
+                "What key corresponds to the view action 'Down'?"
+            ),
         )
-        self.depends.append(
-            {
-                "dependsOn": "posCtrl",  # if...
-                "condition": "=='custom'",  # meets...
-                "param": "posSensitivity",  # then...
-                "true": "hide",  # should...
-                "false": "show",  # otherwise...
-            }
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'downKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['rightKey'] = Param(
+            rightKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Right'),
+            hint=_translate(
+                "What key corresponds to the view action 'Right'?"
+            ),
         )
-        msg = _translate(
-            "Multiplier to apply to view changes. 1 means that moving the mouse from the center of the screen to the "
-            "edge or holding down a key for 2s will rotate 180°."
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'rightKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['stopKey'] = Param(
+            stopKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Stop'),
+            hint=_translate(
+                "What key corresponds to the view action 'Stop'?"
+            ),
         )
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'stopKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['posSensitivity'] = Param(
-            posSensitivity, valType='code', inputType="single", categ="Basic",
-            hint=msg,
-            label=_translate("Movement sensitivity")
+            posSensitivity, valType='code', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Movement sensitivity'),
+            hint=_translate(
+                'Multiplier to apply to view changes. 1 means that moving the mouse from the center of the screen to the edge or holding down a key for 2s will rotate 180°.'
+            ),
         )
-
-        # Zoom controls
-
-        msg = _translate(
-            "How to control zooming in and out of the panorama scene"
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "=='custom'",  # meets...
+            'param': 'posSensitivity',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
+        self.params['smooth'] = Param(
+            smooth, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Smooth?'),
+            hint=_translate(
+                'Should movement be smoothed, so the view keeps moving a little after a change?'
+            ),
         )
+        self.depends.append({
+            'dependsOn': 'posCtrl',  # if...
+            'condition': "in ('custom', 'mouse')",  # meets...
+            'param': 'smooth',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
         self.params['zoomCtrl'] = Param(
-            zoomCtrl, valType='str', inputType="choice", categ="Basic",
-            allowedVals=[
-                "wheel", "invwheel", "arrows", "plusmin", "keymap", "custom"],
-            allowedLabels=[
-                "Mouse Wheel", "Mouse Wheel (Inverted)", "Keyboard (Arrow Keys)", "Keyboard (+-)", "Keyboard (Custom keys)", "Custom"],
-            updates="constant",
-            hint=msg,
-            label=_translate("Zoom control")
-        )
-
-        keys = {'inKey': inKey, 'outKey': outKey}
-        labels = {'inKey': _translate("Zoom in"), 'outKey': _translate("Zoom out")}
-        for key, val in keys.items():
-            # Only show key controls if zoom type is custom keys
-            self.depends.append(
-                {
-                    "dependsOn": "zoomCtrl",  # if...
-                    "condition": "=='keymap'",  # meets...
-                    "param": key,  # then...
-                    "true": "show",  # should...
-                    "false": "hide",  # otherwise...
-                },
-            )
-            # Add a ctrl for each key
-            msg = _translate("What key corresponds to the view action '{}'?")
-            self.params[key] = Param(
-                val, valType='str', inputType='single', categ='Basic',
-                updates='constant',
-                hint=msg.format(labels[key]),
-                label=labels[key]
-            )
-
-        self.depends.append(
-            {
-                "dependsOn": "zoomCtrl",  # if...
-                "condition": "=='custom'",  # meets...
-                "param": "zoom",  # then...
-                "true": "show",  # should...
-                "false": "hide",  # otherwise...
-            }
-        )
-        msg = _translate(
-            "How zoomed in the scene is, with 1 being no adjustment."
+            zoomCtrl, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['wheel', 'invwheel', 'arrows', 'plusmin', 'keymap', 'custom'],
+            allowedLabels=[_translate('Mouse Wheel'), _translate('Mouse Wheel (Inverted)'),
+                           _translate('Keyboard (Arrow Keys)'), _translate('Keyboard (+-)'),
+                           _translate('Keyboard (Custom keys)'), _translate('Custom')],
+            label=_translate('Zoom control'),
+            hint=_translate(
+                'How to control zooming in and out of the panorama scene'
+            ),
         )
         self.params['zoom'] = Param(
             zoom, valType='code', inputType='single', categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Zoom")
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Zoom'),
+            hint=_translate(
+                'How zoomed in the scene is, with 1 being no adjustment.'
+            ),
         )
-
-        self.depends.append(
-            {
-                "dependsOn": "zoomCtrl",  # if...
-                "condition": "=='custom'",  # meets...
-                "param": "zoomSensitivity",  # then...
-                "true": "hide",  # should...
-                "false": "show",  # otherwise...
-            }
+        self.depends.append({
+            'dependsOn': 'zoomCtrl',  # if...
+            'condition': "=='custom'",  # meets...
+            'param': 'zoom',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['inKey'] = Param(
+            inKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Zoom in'),
+            hint=_translate(
+                "What key corresponds to the view action 'Zoom in'?"
+            ),
         )
-        msg = _translate(
-            "Multiplier to apply to zoom changes. 1 means that pressing the zoom in key for 1s or scrolling the mouse "
-            "wheel 100% zooms in 100%."
+        self.depends.append({
+            'dependsOn': 'zoomCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'inKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
+        self.params['outKey'] = Param(
+            outKey, valType='str', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Zoom out'),
+            hint=_translate(
+                "What key corresponds to the view action 'Zoom out'?"
+            ),
         )
+        self.depends.append({
+            'dependsOn': 'zoomCtrl',  # if...
+            'condition': "=='keymap'",  # meets...
+            'param': 'outKey',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['zoomSensitivity'] = Param(
-            zoomSensitivity, valType='code', inputType="single", categ="Basic",
-            hint=msg,
-            label=_translate("Zoom sensitivity")
+            zoomSensitivity, valType='code', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Zoom sensitivity'),
+            hint=_translate(
+                'Multiplier to apply to zoom changes. 1 means that pressing the zoom in key for 1s or scrolling the mouse wheel 100% zooms in 100%.'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'zoomCtrl',  # if...
+            'condition': "=='custom'",  # meets...
+            'param': 'zoomSensitivity',  # then...
+            'true': 'hide',  # should...
+            'false': 'show',  # otherwise...
+        })
+        self.params['interpolate'] = Param(
+            interpolate, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=[],
+            allowedVals=['linear', 'nearest'],
+            allowedLabels=[_translate('linear'), _translate('nearest')],
+            label=_translate('Interpolate'),
+            hint=_translate(
+                'How should the image be interpolated if/when rescaled'
+            ),
+            direct=False,
         )
 
+        # --- Layout params ---
 
-        # Most params don't apply to 3d stim, so delete them
-        for key in ["color", "fillColor", "borderColor", "colorSpace", "opacity", "contrast", "size", "pos", "units", "ori"]:
-            del self.params[key]
+        del self.params['units']
+        del self.params['pos']
+        del self.params['size']
+        del self.params['ori']
+
+        # --- Appearance params ---
+
+        del self.params['color']
+        del self.params['colorSpace']
+        del self.params['fillColor']
+        del self.params['borderColor']
+        del self.params['opacity']
+        del self.params['contrast']
 
     def writeStartCode(self, buff):
         pass

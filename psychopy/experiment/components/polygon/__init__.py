@@ -93,93 +93,114 @@ class PolygonComponent(BaseVisualComponent):
         self.type = 'Polygon'
         self.url = "https://www.psychopy.org/builder/components/polygon.html"
         self.exp.requirePsychopyLibs(['visual'])
-        self.order += ['shape', 'nVertices',  # Basic tab
-                      ]
-        self.depends = [  # allows params to turn each other off/on
-            {"dependsOn": "shape",  # must be param name
-             "condition": "=='regular polygon...'",  # val to check for
-             "param": "nVertices",  # param property to alter
-             "true": "show",  # what to do with param if condition is True
-             "false": "hide",  # permitted: hide, show, enable, disable
-             },
-            {"dependsOn": "shape",  # must be param name
-             "condition": "=='custom polygon...'",  # val to check for
-             "param": "vertices",  # param property to alter
-             "true": "show",  # what to do with param if condition is True
-             "false": "hide",  # permitted: hide, show, enable, disable
-             },
+
+        # --- Basic params ---
+        self.order += [
+            'shape',
+            'nVertices',
+            'vertices',
         ]
-
-        # params
-        msg = _translate("How many vertices in your regular polygon?")
+        self.params['shape'] = Param(
+            shape, valType='str', inputType='choice', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedVals=['line', 'triangle', 'rectangle', 'circle', 'cross', 'star7', 'arrow',
+                         'regular polygon...', 'custom polygon...'],
+            allowedLabels=[_translate('Line'), _translate('Triangle'), _translate('Rectangle'),
+                           _translate('Circle'), _translate('Cross'), _translate('Star'),
+                           _translate('Arrow'), _translate('Regular polygon...'),
+                           _translate('Custom polygon...')],
+            label=_translate('Shape'),
+            hint=_translate(
+                "What shape is this? With 'regular polygon...' you can set number of vertices and with 'custom polygon...' you can set vertices"
+            ),
+            direct=False,
+        )
         self.params['nVertices'] = Param(
-            nVertices, valType='int', inputType="single", categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Num. vertices"))
-
-        msg = _translate("What are the vertices of your polygon? Should be an nx2 array or a list of [x, y] lists")
+            nVertices, valType='int', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Num. vertices'),
+            hint=_translate(
+                'How many vertices in your regular polygon?'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'shape',  # if...
+            'condition': "=='regular polygon...'",  # meets...
+            'param': 'nVertices',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['vertices'] = Param(
             vertices, valType='list', inputType='single', categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Vertices")
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Vertices'),
+            hint=_translate(
+                'What are the vertices of your polygon? Should be an nx2 array or a list of [x, y] lists'
+            ),
         )
-        self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the stimulus should be anchored to its exact position?"),
-            label=_translate("Anchor"))
+        self.depends.append({
+            'dependsOn': 'shape',  # if...
+            'condition': "=='custom polygon...'",  # meets...
+            'param': 'vertices',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
 
-        msg = _translate("What shape is this? With 'regular polygon...' you "
-                         "can set number of vertices and with 'custom "
-                         "polygon...' you can set vertices")
-        self.params['shape'] = Param(
-            shape, valType='str', inputType="choice", categ='Basic',
-            allowedVals=["line", "triangle", "rectangle", "circle", "cross", "star7", "arrow",
-                         "regular polygon...", "custom polygon..."],
-            allowedLabels=["Line", "Triangle", "Rectangle", "Circle", "Cross", "Star", "Arrow",
-                           "Regular polygon...", "Custom polygon..."],
-            hint=msg, direct=False,
-            label=_translate("Shape"))
-
-        msg = _translate("Width of the shape's line (always in pixels - this"
-                         " does NOT use 'units')")
+        # --- Appearance params ---
+        self.order += [
+            'lineWidth',
+        ]
         self.params['lineWidth'] = Param(
-            lineWidth, valType='num', inputType="single", allowedTypes=[], categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate("Line width"))
-
-        msg = _translate(
-            "How should the image be interpolated if/when rescaled")
-        self.params['interpolate'] = Param(
-            interpolate, valType='str', inputType="choice", allowedVals=['linear', 'nearest'], categ='Texture',
-            updates='constant', allowedUpdates=[], direct=False,
-            hint=msg,
-            label=_translate("Interpolate"))
-
-
-        self.params['size'].hint = _translate(
-            "Size of this stimulus [w,h]. Note that for a line only the "
-            "first value is used, for triangle and rect the [w,h] is as "
-            "expected,\n but for higher-order polygons it represents the "
-            "[w,h] of the ellipse that the polygon sits on!! ")
+            lineWidth, valType='num', inputType='single', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Line width'),
+            hint=_translate(
+                "Width of the shape's line (always in pixels - this does NOT use 'units')"
+            ),
+        )
 
         del self.params['color']
+
+        # --- Layout params ---
+        self.order += [
+            'anchor',
+        ]
+        self.params['size'].hint = _translate(
+            'Size of this stimulus [w,h]. Note that for a line only the first value is used, for triangle and rect the [w,h] is as expected,\n but for higher-order polygons it represents the [w,h] of the ellipse that the polygon sits on!! ')
+        self.params['anchor'] = Param(
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Which point on the stimulus should be anchored to its exact position?'
+            ),
+        )
+
+        # --- Texture params ---
+        self.order += [
+            'interpolate',
+        ]
+        self.params['interpolate'] = Param(
+            interpolate, valType='str', inputType='choice', categ='Texture',
+            updates='constant', allowedUpdates=[],
+            allowedVals=['linear', 'nearest'],
+            allowedLabels=[_translate('linear'), _translate('nearest')],
+            label=_translate('Interpolate'),
+            hint=_translate(
+                'How should the image be interpolated if/when rescaled'
+            ),
+            direct=False,
+        )
 
     def writeInitCode(self, buff):
         # do we need units code?

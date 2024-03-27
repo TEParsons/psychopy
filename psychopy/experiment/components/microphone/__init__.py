@@ -111,21 +111,6 @@ class MicrophoneComponent(BaseDeviceComponent):
         self.url = "https://www.psychopy.org/builder/components/microphone.html"
         self.exp.requirePsychopyLibs(['sound'])
 
-        self.order += []
-
-        self.params['stopType'].allowedVals = ['duration (s)']
-        msg = _translate(
-            'The duration of the recording in seconds; blank = 0 sec')
-        self.params['stopType'].hint = msg
-
-        # --- Device params ---
-        self.order += [
-            "device",
-            "channels",
-            "sampleRate",
-            "maxSize",
-        ]
-
         def getDeviceIndices():
             from psychopy.hardware.microphone import MicrophoneDevice
             profiles = MicrophoneDevice.getAvailableDevices()
@@ -138,173 +123,240 @@ class MicrophoneComponent(BaseDeviceComponent):
 
             return ["default"] + [profile['deviceName'] for profile in profiles]
 
+        # --- Basic params ---
+        self.params['stopType'].hint = _translate(
+            'The duration of the recording in seconds; blank = 0 sec')
+
+        # --- Device params ---
+        self.order += [
+            'device',
+            'channels',
+            'sampleRate',
+            'maxSize',
+        ]
         self.params['device'] = Param(
-            device, valType='code', inputType="choice", categ="Device",
+            device, valType='code', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
             allowedVals=getDeviceIndices,
             allowedLabels=getDeviceNames,
-            label=_translate("Device"),
+            label=_translate('Device'),
             hint=_translate(
-                "What microphone device would you like the use to record? This will only affect "
-                "local experiments - online experiments ask the participant which mic to use."
-            )
+                'What microphone device would you like the use to record? This will only affect local experiments - online experiments ask the participant which mic to use.'
+            ),
         )
-        if stereo is not None:
-            # If using a legacy mic component, work out channels from old bool value of stereo
-            channels = ['mono', 'stereo'][stereo]
         self.params['channels'] = Param(
-            channels, valType='str', inputType="choice", categ='Device',
+            channels, valType='str', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
             allowedVals=['auto', 'mono', 'stereo'],
-            allowedLabels=[_translate("Auto"), _translate("Mono"), _translate("Stereo")],
-            label=_translate("Channels"),
+            allowedLabels=[_translate('Auto'), _translate('Mono'), _translate('Stereo')],
+            label=_translate('Channels'),
             hint=_translate(
-                "Record two channels (stereo) or one (mono, smaller file). Select 'auto' to use as "
-                "many channels as the selected device allows."
-            )
+                "Record two channels (stereo) or one (mono, smaller file). Select 'auto' to use as many channels as the selected device allows."
+            ),
         )
         self.params['sampleRate'] = Param(
-            sampleRate, valType='num', inputType="choice", categ='Device',
-            allowedVals=list(sampleRates),
-            label=_translate("Sample rate (hz)"),
+            sampleRate, valType='num', inputType='choice', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedVals=['Telephone/Two-way radio (8kHz)', 'Voice (16kHz)', 'CD Audio (44.1kHz)',
+                         'DVD Audio (48kHz)', 'High-Def (96kHz)', 'Ultra High-Def (192kHz)'],
+            allowedLabels=[_translate('Telephone/Two-way radio (8kHz)'),
+                           _translate('Voice (16kHz)'), _translate('CD Audio (44.1kHz)'),
+                           _translate('DVD Audio (48kHz)'), _translate('High-Def (96kHz)'),
+                           _translate('Ultra High-Def (192kHz)')],
+            label=_translate('Sample rate (hz)'),
             hint=_translate(
-                "How many samples per second (Hz) to record at"
+                'How many samples per second (Hz) to record at'
             ),
-            direct=False
+            direct=False,
         )
         self.params['maxSize'] = Param(
-            maxSize, valType='num', inputType="single", categ='Device',
-            label=_translate("Max recording size (kb)"),
+            maxSize, valType='num', inputType='single', categ='Device',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Max recording size (kb)'),
             hint=_translate(
-                "To avoid excessively large output files, what is the biggest file size you are "
-                "likely to expect?"
-            )
+                'To avoid excessively large output files, what is the biggest file size you are likely to expect?'
+            ),
         )
 
-        # --- Data params ---
-        msg = _translate(
-            "What file type should output audio files be saved as?")
-        self.params['outputType'] = Param(
-            outputType, valType='code', inputType='choice', categ='Data',
-            allowedVals=["default"] + at.AUDIO_SUPPORTED_CODECS,
-            hint=msg,
-            label=_translate("Output file type")
-        )
-
-        msg = _translate(
-            "Tick this to save times when the participant starts and stops speaking")
-        self.params['speakTimes'] = Param(
-            speakTimes, valType='bool', inputType='bool', categ='Data',
-            hint=msg,
-            label=_translate("Speaking start / stop times")
-        )
-
-        msg = _translate(
-            "Trim periods of silence from the output file")
-        self.params['trimSilent'] = Param(
-            trimSilent, valType='bool', inputType='bool', categ='Data',
-            hint=msg,
-            label=_translate("Trim silent")
-        )
-
-        # Transcription params
+        # --- Transcription params ---
         self.order += [
             'transcribe',
             'transcribeBackend',
             'transcribeLang',
             'transcribeWords',
+            'transcribeWhisperModel',
+            'transcribeWhisperDevice',
         ]
         self.params['transcribe'] = Param(
             transcribe, valType='bool', inputType='bool', categ='Transcription',
-            hint=_translate("Whether to transcribe the audio recording and store the transcription"),
-            label=_translate("Transcribe audio")
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Transcribe audio'),
+            hint=_translate(
+                'Whether to transcribe the audio recording and store the transcription'
+            ),
         )
-
-        # whisper specific params
-        whisperParams = [
-            'transcribeBackend', 
-            'transcribeLang', 
-            'transcribeWords', 
-            'transcribeWhisperModel',
-            'transcribeWhisperDevice'
-        ]
-
-        for depParam in whisperParams:
-            self.depends.append({
-                "dependsOn": "transcribe",
-                "condition": "==True",
-                "param": depParam,
-                "true": "enable",  # what to do with param if condition is True
-                "false": "disable",  # permitted: hide, show, enable, disable
-            })
-
         self.params['transcribeBackend'] = Param(
             transcribeBackend, valType='code', inputType='choice', categ='Transcription',
-            allowedLabels=list(allTranscribers), allowedVals=list(allTranscribers.values()),
+            updates=None, allowedUpdates=None,
+            allowedVals=['GOOGLE', 'whisper'],
+            allowedLabels=[_translate('Google'), _translate('Whisper')],
+            label=_translate('Transcription backend'),
+            hint=_translate(
+                'What transcription service to use to transcribe audio?'
+            ),
             direct=False,
-            hint=_translate("What transcription service to use to transcribe audio?"),
-            label=_translate("Transcription backend")
         )
-
+        self.depends.append({
+            'dependsOn': 'transcribe',  # if...
+            'condition': '==True',  # meets...
+            'param': 'transcribeBackend',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
         self.params['transcribeLang'] = Param(
             transcribeLang, valType='str', inputType='single', categ='Transcription',
-            hint=_translate("What language you expect the recording to be spoken in, e.g. en-US for English"),
-            label=_translate("Transcription language")
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Transcription language'),
+            hint=_translate(
+                'What language you expect the recording to be spoken in, e.g. en-US for English'
+            ),
         )
         self.depends.append({
-            "dependsOn": "transcribeBackend",
-            "condition": "=='Google'",
-            "param": "transcribeLang",
-            "true": "show",  # what to do with param if condition is True
-            "false": "hide",  # permitted: hide, show, enable, disable
+            'dependsOn': 'transcribe',  # if...
+            'condition': '==True',  # meets...
+            'param': 'transcribeLang',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
         })
-
+        self.depends.append({
+            'dependsOn': 'transcribeBackend',  # if...
+            'condition': "=='Google'",  # meets...
+            'param': 'transcribeLang',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['transcribeWords'] = Param(
             transcribeWords, valType='list', inputType='single', categ='Transcription',
-            hint=_translate("Set list of words to listen for - if blank will listen for all words in chosen language. \n\n"
-                            "If using the built-in transcriber, you can set a minimum % confidence level using a colon "
-                            "after the word, e.g. 'red:100', 'green:80'. Otherwise, default confidence level is 80%."),
-            label=_translate("Expected words")
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Expected words'),
+            hint=_translate(
+                "Set list of words to listen for - if blank will listen for all words in chosen language. \n\nIf using the built-in transcriber, you can set a minimum % confidence level using a colon after the word, e.g. 'red:100', 'green:80'. Otherwise, default confidence level is 80%."
+            ),
         )
         self.depends.append({
-            "dependsOn": "transcribeBackend",
-            "condition": "=='Google'",
-            "param": "transcribeWords",
-            "true": "show",  # what to do with param if condition is True
-            "false": "hide",  # permitted: hide, show, enable, disable
+            'dependsOn': 'transcribe',  # if...
+            'condition': '==True',  # meets...
+            'param': 'transcribeWords',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
         })
-
+        self.depends.append({
+            'dependsOn': 'transcribeBackend',  # if...
+            'condition': "=='Google'",  # meets...
+            'param': 'transcribeWords',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['transcribeWhisperModel'] = Param(
             transcribeWhisperModel, valType='code', inputType='choice', categ='Transcription',
-            allowedVals=["tiny", "base", "small", "medium", "large", "tiny.en", "base.en", "small.en", "medium.en"],
+            updates=None, allowedUpdates=None,
+            allowedVals=['tiny', 'base', 'small', 'medium', 'large', 'tiny.en', 'base.en',
+                         'small.en', 'medium.en'],
+            allowedLabels=[_translate('tiny'), _translate('base'), _translate('small'),
+                           _translate('medium'), _translate('large'), _translate('tiny.en'),
+                           _translate('base.en'), _translate('small.en'), _translate('medium.en')],
+            label=_translate('Whisper model'),
             hint=_translate(
-                "Which model of Whisper AI should be used for transcription? Details of each model are available here at github.com/openai/whisper"),
-            label=_translate("Whisper model")
+                'Which model of Whisper AI should be used for transcription? Details of each model are available here at github.com/openai/whisper'
+            ),
         )
         self.depends.append({
-            "dependsOn": "transcribeBackend",
-            "condition": "=='Whisper'",
-            "param": "transcribeWhisperModel",
-            "true": "show",  # what to do with param if condition is True
-            "false": "hide",  # permitted: hide, show, enable, disable
+            'dependsOn': 'transcribe',  # if...
+            'condition': '==True',  # meets...
+            'param': 'transcribeWhisperModel',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
         })
-
-        # settings for whisper we might want, we'll need to get these from the
-        # plugin itself at some point
+        self.depends.append({
+            'dependsOn': 'transcribeBackend',  # if...
+            'condition': "=='Whisper'",  # meets...
+            'param': 'transcribeWhisperModel',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
         self.params['transcribeWhisperDevice'] = Param(
-            transcribeWhisperDevice, valType='code', inputType='choice', 
-            categ='Transcription',
-            allowedVals=["auto", "gpu", "cpu"],
+            transcribeWhisperDevice, valType='code', inputType='choice', categ='Transcription',
+            updates=None, allowedUpdates=None,
+            allowedVals=['auto', 'gpu', 'cpu'],
+            allowedLabels=[_translate('auto'), _translate('gpu'), _translate('cpu')],
+            label=_translate('Whisper device'),
             hint=_translate(
-                "Which device to use for transcription?"),
-            label=_translate("Whisper device")
+                'Which device to use for transcription?'
+            ),
         )
         self.depends.append({
-            "dependsOn": "transcribeBackend",
-            "condition": "=='Whisper'",
-            "param": "transcribeWhisperDevice",
-            "true": "show",  # what to do with param if condition is True
-            "false": "hide",  # permitted: hide, show, enable, disable
+            'dependsOn': 'transcribe',  # if...
+            'condition': '==True',  # meets...
+            'param': 'transcribeWhisperDevice',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
+        self.depends.append({
+            'dependsOn': 'transcribeBackend',  # if...
+            'condition': "=='Whisper'",  # meets...
+            'param': 'transcribeWhisperDevice',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
         })
 
+        # --- Data params ---
+        self.order += [
+            'outputType',
+            'speakTimes',
+            'trimSilent',
+        ]
+        self.params['outputType'] = Param(
+            outputType, valType='code', inputType='choice', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedVals=['default', 'aiff', 'au', 'avr', 'caf', 'flac', 'htk', 'svx', 'mat4',
+                         'mat5', 'mpc2k', 'mp3', 'ogg', 'paf', 'pvf', 'raw', 'rf64', 'sd2', 'sds',
+                         'ircam', 'voc', 'w64', 'wav', 'nist', 'wavex', 'wve', 'xi'],
+            allowedLabels=[_translate('default'), _translate('aiff'), _translate('au'),
+                           _translate('avr'), _translate('caf'), _translate('flac'),
+                           _translate('htk'), _translate('svx'), _translate('mat4'),
+                           _translate('mat5'), _translate('mpc2k'), _translate('mp3'),
+                           _translate('ogg'), _translate('paf'), _translate('pvf'),
+                           _translate('raw'), _translate('rf64'), _translate('sd2'),
+                           _translate('sds'), _translate('ircam'), _translate('voc'),
+                           _translate('w64'), _translate('wav'), _translate('nist'),
+                           _translate('wavex'), _translate('wve'), _translate('xi')],
+            label=_translate('Output file type'),
+            hint=_translate(
+                'What file type should output audio files be saved as?'
+            ),
+        )
+        self.params['speakTimes'] = Param(
+            speakTimes, valType='bool', inputType='bool', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Speaking start / stop times'),
+            hint=_translate(
+                'Tick this to save times when the participant starts and stops speaking'
+            ),
+        )
+        self.params['trimSilent'] = Param(
+            trimSilent, valType='bool', inputType='bool', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Trim silent'),
+            hint=_translate(
+                'Trim periods of silence from the output file'
+            ),
+        )
 
     def writeDeviceCode(self, buff):
         """

@@ -70,53 +70,108 @@ class SerialOutComponent(BaseComponent):
         self.url = "https://www.psychopy.org/builder/components/serialout.html"
         self.exp.requireImport('serial')
 
+        # --- Basic params ---
+        self.order += [
+            'port',
+            'startdata',
+            'stopdata',
+        ]
         self.params['port'] = Param(
-            port, valType='str', inputType="single", categ='Basic',
-            hint=_translate("Serial port to connect to"),
-            label=_translate("Port")
+            port, valType='str', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Port'),
+            hint=_translate(
+                'Serial port to connect to'
+            ),
         )
+        self.params['startdata'] = Param(
+            startdata, valType='str', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Start data'),
+            hint=_translate(
+                'Data to be sent at start of pulse. Data will be converted to bytes, so to specify anumeric value directly use $chr(...).'
+            ),
+        )
+        self.params['stopdata'] = Param(
+            stopdata, valType='str', inputType='single', categ='Basic',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Stop data'),
+            hint=_translate(
+                'String data to be sent at end of pulse. Data will be converted to bytes, so to specify anumeric value directly use $chr(...).'
+            ),
+        )
+
+        # --- Data params ---
+        self.order += [
+            'getResponse',
+        ]
+        self.params['getResponse'] = Param(
+            getResponse, valType='bool', inputType='bool', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Get response?'),
+            hint=_translate(
+                'After sending a signal, should PsychoPy read and record a response from the port?'
+            ),
+        )
+
+        # --- Hardware params ---
+        self.order += [
+            'baudrate',
+            'bytesize',
+            'stopbits',
+            'parity',
+            'timeout',
+        ]
         self.params['baudrate'] = Param(
-            baudrate, valType='int', inputType="single", categ='Hardware',
-            hint=_translate("The baud rate, or speed, of the connection."),
-            label=_translate("Baud rate")
+            baudrate, valType='int', inputType='single', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Baud rate'),
+            hint=_translate(
+                'The baud rate, or speed, of the connection.'
+            ),
         )
         self.params['bytesize'] = Param(
-            bytesize, valType='int', inputType="single", categ='Hardware',
-            hint=_translate("Size of bits to be sent."),
-            label=_translate("Data bits")
+            bytesize, valType='int', inputType='single', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Data bits'),
+            hint=_translate(
+                'Size of bits to be sent.'
+            ),
         )
         self.params['stopbits'] = Param(
-            stopbits, valType='int', inputType="single", categ='Hardware',
-            hint=_translate("Size of bits to be sent on stop."),
-            label=_translate("Stop bits")
+            stopbits, valType='int', inputType='single', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Stop bits'),
+            hint=_translate(
+                'Size of bits to be sent on stop.'
+            ),
         )
         self.params['parity'] = Param(
-            parity, valType='str', inputType="choice", categ='Hardware',
-            allowedVals=('N', 'E', 'O', 'M', 'S'),
-            allowedLabels=("None", "Even", "Off", "Mark", "Space"),
-            hint=_translate("Parity mode."),
-            label=_translate("Parity")
+            parity, valType='str', inputType='choice', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedVals=['N', 'E', 'O', 'M', 'S'],
+            allowedLabels=[_translate('None'), _translate('Even'), _translate('Off'),
+                           _translate('Mark'), _translate('Space')],
+            label=_translate('Parity'),
+            hint=_translate(
+                'Parity mode.'
+            ),
         )
-
         self.params['timeout'] = Param(
-            timeout, valType='int', inputType="single", allowedTypes=[], categ='Hardware',
-            hint=_translate("Time at which to give up listening for a response (leave blank for no limit)"),
-            label=_translate("Timeout"))
-
-        self.params['startdata'] = Param(
-            startdata, valType='str', inputType="single", allowedTypes=[], categ='Basic',
-            hint=_translate("Data to be sent at start of pulse. Data will be converted to bytes, so to specify a"
-                            "numeric value directly use $chr(...)."),
-            label=_translate("Start data"))
-        self.params['stopdata'] = Param(
-            stopdata, valType='str', inputType="single", allowedTypes=[], categ='Basic',
-            hint=_translate("String data to be sent at end of pulse. Data will be converted to bytes, so to specify a"
-                            "numeric value directly use $chr(...)."),
-            label=_translate("Stop data"))
-        self.params['getResponse'] = Param(
-            getResponse, valType='bool', inputType='bool', categ="Data",
-            hint=_translate("After sending a signal, should PsychoPy read and record a response from the port?"),
-            label=_translate("Get response?")
+            timeout, valType='int', inputType='single', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Timeout'),
+            hint=_translate(
+                'Time at which to give up listening for a response (leave blank for no limit)'
+            ),
         )
 
     def writeRunOnceInitCode(self, buff):

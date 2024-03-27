@@ -70,83 +70,97 @@ class JoystickComponent(BaseComponent):
         self.type = 'Joystick'
         self.url = "https://www.psychopy.org/builder/components/joystick.html"
         self.exp.requirePsychopyLibs(['event'])
-        self.categories = ['Inputs']
 
-        self.order += ['forceEndRoutine',  # Basic tab
-                       'saveJoystickState', 'timeRelativeTo', 'clickable', 'saveParamsClickable', 'allowedButtons',  # Data tab
-                       'deviceNumber',  # Hardware tab
-                       ]
-        # params
-        msg = _translate(
-            "How often should the joystick state (x,y,buttons) be stored? "
-            "On every video frame, every click or just at the end of the "
-            "Routine?")
-        self.params['saveJoystickState'] = Param(
-            saveJoystickState, valType='str', inputType="choice", categ='Data',
-            allowedVals=['final', 'on click', 'every frame', 'never'],
-            hint=msg, direct=False,
-            label=_translate("Save joystick state"))
-
-        msg = _translate("Should a button press force the end of the Routine"
-                         " (e.g end the trial)?")
-        if forceEndRoutineOnPress is True:
-            forceEndRoutineOnPress = 'any click'
-        elif forceEndRoutineOnPress is False:
-            forceEndRoutineOnPress = 'never'
+        # --- Basic params ---
+        self.order += [
+            'forceEndRoutineOnPress',
+        ]
         self.params['forceEndRoutineOnPress'] = Param(
-            forceEndRoutineOnPress, valType='str', inputType="choice", categ='Basic',
+            forceEndRoutineOnPress, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
             allowedVals=['never', 'any click', 'valid click'],
-            updates='constant',
-            hint=msg, direct=False,
-            label=_translate("End Routine on press"))
+            allowedLabels=[_translate('never'), _translate('any click'), _translate('valid click')],
+            label=_translate('End Routine on press'),
+            hint=_translate(
+                'Should a button press force the end of the Routine (e.g end the trial)?'
+            ),
+            direct=False,
+        )
 
-        msg = _translate("What should the values of joystick.time should be "
-                         "relative to?")
+        # --- Data params ---
+        self.order += [
+            'saveJoystickState',
+            'timeRelativeTo',
+            'clickable',
+            'saveParamsClickable',
+            'allowedButtons',
+        ]
+        self.params['saveJoystickState'] = Param(
+            saveJoystickState, valType='str', inputType='choice', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedVals=['final', 'on click', 'every frame', 'never'],
+            allowedLabels=[_translate('final'), _translate('on click'), _translate('every frame'),
+                           _translate('never')],
+            label=_translate('Save joystick state'),
+            hint=_translate(
+                'How often should the joystick state (x,y,buttons) be stored? On every video frame, every click or just at the end of the Routine?'
+            ),
+            direct=False,
+        )
         self.params['timeRelativeTo'] = Param(
-            timeRelativeTo, valType='str', inputType="choice", categ='Data',
+            timeRelativeTo, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
             allowedVals=['joystick onset', 'experiment', 'routine'],
-            updates='constant', direct=False,
-            hint=msg,
-            label=_translate("Time relative to"))
-
-        msg = _translate('A comma-separated list of your stimulus names that '
-                         'can be "clicked" by the participant. '
-                         'e.g. target, foil'
-                         )
+            allowedLabels=[_translate('joystick onset'), _translate('experiment'),
+                           _translate('routine')],
+            label=_translate('Time relative to'),
+            hint=_translate(
+                'What should the values of joystick.time should be relative to?'
+            ),
+            direct=False,
+        )
         self.params['clickable'] = Param(
-            clickable, valType='list', inputType="single", categ='Data',
-            updates='constant',
-            hint=msg,
-            label=_translate("Clickable stimuli"))
-
-        msg = _translate('The params (e.g. name, text), for which you want '
-                         'to store the current value, for the stimulus that was'
-                         '"clicked" by the joystick. Make sure that all the '
-                         'clickable objects have all these params.'
-                         )
+            clickable, valType='list', inputType='single', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Clickable stimuli'),
+            hint=_translate(
+                'A comma-separated list of your stimulus names that can be "clicked" by the participant. e.g. target, foil'
+            ),
+        )
         self.params['saveParamsClickable'] = Param(
-            saveParamsClickable, valType='list', inputType="single", categ='Data',
+            saveParamsClickable, valType='list', inputType='single', categ='Data',
             updates='constant', allowedUpdates=[],
-            hint=msg, direct=False,
-            label=_translate("Store params for clicked"))
-
-        msg = _translate('Device number, if you have multiple devices which'
-                         ' one do you want (0, 1, 2...)')
-
-        self.params['deviceNumber'] = Param(
-            deviceNumber, valType='int', inputType="single", allowedTypes=[], categ='Hardware',
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Device number"))
-
-        msg = _translate('Buttons to be read (blank for any) numbers separated by '
-                         'commas')
-
+            allowedLabels=[],
+            label=_translate('Store params for clicked'),
+            hint=_translate(
+                'The params (e.g. name, text), for which you want to store the current value, for the stimulus that was"clicked" by the joystick. Make sure that all the clickable objects have all these params.'
+            ),
+            direct=False,
+        )
         self.params['allowedButtons'] = Param(
-            allowedButtons, valType='list', inputType="single", allowedTypes=[], categ='Data',
+            allowedButtons, valType='list', inputType='single', categ='Data',
             updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Allowed buttons"))
+            allowedLabels=[],
+            label=_translate('Allowed buttons'),
+            hint=_translate(
+                'Buttons to be read (blank for any) numbers separated by commas'
+            ),
+        )
+
+        # --- Hardware params ---
+        self.order += [
+            'deviceNumber',
+        ]
+        self.params['deviceNumber'] = Param(
+            deviceNumber, valType='int', inputType='single', categ='Hardware',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Device number'),
+            hint=_translate(
+                'Device number, if you have multiple devices which one do you want (0, 1, 2...)'
+            ),
+        )
 
     @property
     def _clickableParamsList(self):

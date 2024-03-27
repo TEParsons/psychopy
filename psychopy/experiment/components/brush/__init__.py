@@ -68,50 +68,69 @@ class BrushComponent(BaseVisualComponent):
         self.type = 'Brush'
         self.url = "https://www.psychopy.org/builder/components/brush.html"
         self.exp.requirePsychopyLibs(['visual'])
-        self.order.remove("opacity")  # Move opacity to the end
+
+        # --- Basic params ---
         self.order += [
-            "lineWidth", "lineColor", "lineColorSpace", "opacity"  # Appearance tab
+            'buttonRequired',
         ]
-
-        # params
-        msg = _translate("Fill color of this brush")
-        self.params['lineColor'] = Param(
-            lineColor, valType='color', inputType="color", allowedTypes=[], categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat'],
-            hint=msg,
-            label= _translate("Brush color"))
-
-        msg = _translate("Width of the brush's line (always in pixels and limited to 10px max width)")
-        self.params['lineWidth'] = Param(
-            lineWidth, valType='num', inputType="spin", allowedTypes=[], categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat'],
-            hint=msg,
-            label= _translate("Brush size"))
-
-        self.params['lineColorSpace'] = self.params['colorSpace']
-        del self.params['colorSpace']
-
-        msg = _translate("The line opacity")
-        self.params['opacity'].hint=msg
-
-        msg = _translate("Whether a button needs to be pressed to draw (True/False)")
         self.params['buttonRequired'] = Param(
-            buttonRequired, valType='bool', inputType="bool", allowedTypes=[], categ='Basic',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat'],
-            hint=msg,
-            label= _translate("Press button"))
+            buttonRequired, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=['constant', 'set every repeat'],
+            allowedLabels=[],
+            label=_translate('Press button'),
+            hint=_translate(
+                'Whether a button needs to be pressed to draw (True/False)'
+            ),
+        )
 
-        # Remove BaseVisual params which are not needed
-        del self.params['color']  # because color is defined by lineColor
+        # --- Appearance params ---
+        self.order += [
+            'lineWidth',
+            'lineColor',
+            'lineColorSpace',
+        ]
+        self.params['lineWidth'] = Param(
+            lineWidth, valType='num', inputType='spin', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat'],
+            allowedLabels=[],
+            label=_translate('Brush size'),
+            hint=_translate(
+                "Width of the brush's line (always in pixels and limited to 10px max width)"
+            ),
+        )
+        self.params['lineColor'] = Param(
+            lineColor, valType='color', inputType='color', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat'],
+            allowedLabels=[],
+            label=_translate('Brush color'),
+            hint=_translate(
+                'Fill color of this brush'
+            ),
+        )
+        self.params['lineColorSpace'] = Param(
+            lineColorSpace, valType='str', inputType='choice', categ='Appearance',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['rgb', 'dkl', 'lms', 'hsv'],
+            allowedLabels=[_translate('rgb'), _translate('dkl'), _translate('lms'),
+                           _translate('hsv')],
+            label=_translate('Color space'),
+            hint=_translate(
+                'In what format (color space) have you specified the colors? (rgb, dkl, lms, hsv)'
+            ),
+        )
+        self.params['opacity'].hint = _translate('The line opacity')
+
+        del self.params['color']
+        del self.params['colorSpace']
         del self.params['fillColor']
         del self.params['borderColor']
-        del self.params['size']  # because size determined by lineWidth
-        del self.params['ori']
+
+        # --- Layout params ---
+
+        del self.params['units']
         del self.params['pos']
-        del self.params['units']  # always in pix
+        del self.params['size']
+        del self.params['ori']
 
     def writeInitCode(self, buff):
         inits = getInitVals(self.params)

@@ -69,100 +69,112 @@ class MouseComponent(BaseComponent):
         self.url = "https://www.psychopy.org/builder/components/mouse.html"
         self.exp.requirePsychopyLibs(['event'])
 
+        # --- Basic params ---
         self.order += [
-            'forceEndRoutineOnPress',  # Basic tab
-            'saveMouseState', 'timeRelativeTo', 'newClicksOnly', 'clickable', 'saveParamsClickable',  # Data tab
-            ]
-
-        # params
-        msg = _translate(
-            "How often should the mouse state (x,y,buttons) be stored? "
-            "On every video frame, every click or just at the end of the "
-            "Routine?")
-        self.params['saveMouseState'] = Param(
-            saveMouseState, valType='str', inputType="choice", categ='Data',
-            allowedVals=['final', 'on click', 'on valid click', 'every frame', 'never'],
-            hint=msg, direct=False,
-            label=_translate("Save mouse state"))
-
-        msg = _translate("Should a button press force the end of the Routine"
-                         " (e.g end the trial)?")
-        if forceEndRoutineOnPress is True:
-            forceEndRoutineOnPress = 'any click'
-        elif forceEndRoutineOnPress is False:
-            forceEndRoutineOnPress = 'never'
-        self.params['forceEndRoutineOnPress'] = Param(
-            forceEndRoutineOnPress, valType='str', inputType="choice", categ='Basic',
-            allowedVals=['never', 'any click', 'valid click', 'correct click'],
-            updates='constant', direct=False,
-            hint=msg,
-            label=_translate("End Routine on press"))
-
-        msg = _translate("What should the values of mouse.time should be "
-                         "relative to?")
-        self.params['timeRelativeTo'] = Param(
-            timeRelativeTo, valType='str', inputType="choice", categ='Data',
-            allowedVals=['mouse onset', 'experiment', 'routine'],
-            updates='constant',
-            hint=msg, direct=False,
-            label=_translate("Time relative to"))
-
-        msg = _translate('If the mouse button is already down when we start '
-                         'checking then wait for it to be released before '
-                         'recording as a new click.'
-                         )
-        self.params['newClicksOnly'] = Param(
-            newClicksOnly, valType='bool', inputType="bool", categ='Basic',
-            updates='constant',
-            hint=msg,
-            label=_translate("New clicks only"))
-
-        msg = _translate('A comma-separated list of your stimulus names that '
-                         'can be "clicked" by the participant. '
-                         'e.g. target, foil'
-                         )
-        self.params['clickable'] = Param(
-            clickable, valType='list', inputType="single", categ='Basic',
-            updates='constant',
-            hint=msg,
-            label=_translate("Clickable stimuli"))
-
-        msg = _translate('The params (e.g. name, text), for which you want '
-                         'to store the current value, for the stimulus that was'
-                         '"clicked" by the mouse. Make sure that all the '
-                         'clickable objects have all these params.'
-                         )
-        self.params['saveParamsClickable'] = Param(
-            saveParamsClickable, valType='list', inputType="single", categ='Data',
-            updates='constant', allowedUpdates=[], direct=False,
-            hint=msg,
-            label=_translate("Store params for clicked"))
-
-        msg = _translate("Do you want to save the response as "
-                         "correct/incorrect?")
-        self.params['storeCorrect'] = Param(
-            storeCorrect, valType='bool', inputType="bool", allowedTypes=[], categ='Data',
-            updates='constant',
-            hint=msg,
-            label=_translate("Store correct"))
-
-        self.depends += [  # allows params to turn each other off/on
-            {"dependsOn": "storeCorrect",  # must be param name
-             "condition": "== True",  # val to check for
-             "param": "correctAns",  # param property to alter
-             "true": "enable",  # what to do with param if condition is True
-             "false": "disable",  # permitted: hide, show, enable, disable
-             }
+            'forceEndRoutineOnPress',
+            'newClicksOnly',
+            'clickable',
         ]
+        self.params['forceEndRoutineOnPress'] = Param(
+            forceEndRoutineOnPress, valType='str', inputType='choice', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['never', 'any click', 'valid click', 'correct click'],
+            allowedLabels=[_translate('never'), _translate('any click'), _translate('valid click'),
+                           _translate('correct click')],
+            label=_translate('End Routine on press'),
+            hint=_translate(
+                'Should a button press force the end of the Routine (e.g end the trial)?'
+            ),
+            direct=False,
+        )
+        self.params['newClicksOnly'] = Param(
+            newClicksOnly, valType='bool', inputType='bool', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('New clicks only'),
+            hint=_translate(
+                'If the mouse button is already down when we start checking then wait for it to be released before recording as a new click.'
+            ),
+        )
+        self.params['clickable'] = Param(
+            clickable, valType='list', inputType='single', categ='Basic',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Clickable stimuli'),
+            hint=_translate(
+                'A comma-separated list of your stimulus names that can be "clicked" by the participant. e.g. target, foil'
+            ),
+        )
 
-        msg = _translate(
-            "What is the 'correct' object? To specify an area, remember that you can create a shape Component with 0 "
-            "opacity.")
+        # --- Data params ---
+        self.order += [
+            'saveMouseState',
+            'timeRelativeTo',
+            'saveParamsClickable',
+            'storeCorrect',
+            'correctAns',
+        ]
+        self.params['saveMouseState'] = Param(
+            saveMouseState, valType='str', inputType='choice', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedVals=['final', 'on click', 'on valid click', 'every frame', 'never'],
+            allowedLabels=[_translate('final'), _translate('on click'),
+                           _translate('on valid click'), _translate('every frame'),
+                           _translate('never')],
+            label=_translate('Save mouse state'),
+            hint=_translate(
+                'How often should the mouse state (x,y,buttons) be stored? On every video frame, every click or just at the end of the Routine?'
+            ),
+            direct=False,
+        )
+        self.params['timeRelativeTo'] = Param(
+            timeRelativeTo, valType='str', inputType='choice', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['mouse onset', 'experiment', 'routine'],
+            allowedLabels=[_translate('mouse onset'), _translate('experiment'),
+                           _translate('routine')],
+            label=_translate('Time relative to'),
+            hint=_translate(
+                'What should the values of mouse.time should be relative to?'
+            ),
+            direct=False,
+        )
+        self.params['saveParamsClickable'] = Param(
+            saveParamsClickable, valType='list', inputType='single', categ='Data',
+            updates='constant', allowedUpdates=[],
+            allowedLabels=[],
+            label=_translate('Store params for clicked'),
+            hint=_translate(
+                'The params (e.g. name, text), for which you want to store the current value, for the stimulus that was"clicked" by the mouse. Make sure that all the clickable objects have all these params.'
+            ),
+            direct=False,
+        )
+        self.params['storeCorrect'] = Param(
+            storeCorrect, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Store correct'),
+            hint=_translate(
+                'Do you want to save the response as correct/incorrect?'
+            ),
+        )
         self.params['correctAns'] = Param(
-            correctAns, valType='list', inputType="single", allowedTypes=[], categ='Data',
-            updates='constant',
-            hint=msg, direct=False,
-            label=_translate("Correct answer"))
+            correctAns, valType='list', inputType='single', categ='Data',
+            updates='constant', allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Correct answer'),
+            hint=_translate(
+                "What is the 'correct' object? To specify an area, remember that you can create a shape Component with 0 opacity."
+            ),
+            direct=False,
+        )
+        self.depends.append({
+            'dependsOn': 'storeCorrect',  # if...
+            'condition': '== True',  # meets...
+            'param': 'correctAns',  # then...
+            'true': 'enable',  # should...
+            'false': 'disable',  # otherwise...
+        })
 
     @property
     def _clickableParamsList(self):

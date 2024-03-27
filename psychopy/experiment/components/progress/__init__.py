@@ -87,55 +87,58 @@ class ProgressComponent(BaseVisualComponent):
         )
         self.type = 'Progress'
 
-        # Change labels for color params
-        self.params['color'].label = _translate("Bar color")
-        self.params['color'].hint = _translate(
-            "Color of the filled part of the progress bar."
-        )
-        self.params['fillColor'].label = _translate("Back color")
-        self.params['fillColor'].hint = _translate(
-            "Color of the empty part of the progress bar."
-        )
-        self.params['borderColor'].label = _translate("Border color")
-        self.params['borderColor'].hint = _translate(
-            "Color of the line around the progress bar."
-        )
-
-        # --- Basic ---
+        # --- Basic params ---
+        self.order += [
+            'progress',
+        ]
         self.params['progress'] = Param(
-            progress, valType='code', inputType="single", categ='Basic',
+            progress, valType='code', inputType='single', categ='Basic',
             updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Progress'),
             hint=_translate(
-                "Value between 0 (not started) and 1 (complete) to set the progress bar to."
+                'Value between 0 (not started) and 1 (complete) to set the progress bar to.'
             ),
-            label=_translate("Progress"))
+        )
 
-        # --- Appearance ---
-        msg = _translate("Width of the shape's line (always in pixels - this"
-                         " does NOT use 'units')")
+        # --- Appearance params ---
+        self.order += [
+            'lineWidth',
+        ]
+        self.params['color'].label = _translate('Bar color')
+        self.params['color'].hint = _translate('Color of the filled part of the progress bar.')
+        self.params['fillColor'].label = _translate('Back color')
+        self.params['fillColor'].hint = _translate('Color of the empty part of the progress bar.')
+        self.params['borderColor'].hint = _translate('Color of the line around the progress bar.')
         self.params['lineWidth'] = Param(
-            lineWidth, valType='num', inputType="single", allowedTypes=[], categ='Appearance',
-            updates='constant',
-            allowedUpdates=['constant', 'set every repeat', 'set every frame'],
-            hint=msg,
-            label=_translate('Line width'))
+            lineWidth, valType='num', inputType='single', categ='Appearance',
+            updates='constant', allowedUpdates=['constant', 'set every repeat', 'set every frame'],
+            allowedLabels=[],
+            label=_translate('Line width'),
+            hint=_translate(
+                "Width of the shape's line (always in pixels - this does NOT use 'units')"
+            ),
+        )
 
-        # --- Layout ---
+        # --- Layout params ---
+        self.order += [
+            'anchor',
+        ]
         self.params['anchor'] = Param(
-            anchor, valType='str', inputType="choice", categ='Layout',
-            allowedVals=['center',
-                         'top-center',
-                         'bottom-center',
-                         'center-left',
-                         'center-right',
-                         'top-left',
-                         'top-right',
-                         'bottom-left',
-                         'bottom-right',
-                         ],
-            updates='constant',
-            hint=_translate("Which point on the stimulus should be anchored to its exact position?"),
-            label=_translate('Anchor'))
+            anchor, valType='str', inputType='choice', categ='Layout',
+            updates='constant', allowedUpdates=None,
+            allowedVals=['center', 'top-center', 'bottom-center', 'center-left', 'center-right',
+                         'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+            allowedLabels=[_translate('center'), _translate('top-center'),
+                           _translate('bottom-center'), _translate('center-left'),
+                           _translate('center-right'), _translate('top-left'),
+                           _translate('top-right'), _translate('bottom-left'),
+                           _translate('bottom-right')],
+            label=_translate('Anchor'),
+            hint=_translate(
+                'Which point on the stimulus should be anchored to its exact position?'
+            ),
+        )
 
     def writeInitCode(self, buff):
         # Get inits

@@ -64,55 +64,74 @@ class ParallelOutComponent(BaseComponent):
         self.url = "https://www.psychopy.org/builder/components/parallelout.html"
         self.exp.requirePsychopyLibs(['parallel'])
 
-        # params
+        # --- Data params ---
         self.order += [
-            'startData', 'stopData',  # Data tab
-            'address',  'register',   # Hardware tab
+            'startData',
+            'stopData',
+            'syncScreen',
         ]
-
-        # main parameters
-        addressOptions = prefs.hardware['parallelPorts'] + [u'LabJack U3'] + [u'USB2TTL8'] 
-        if not address:
-            address = addressOptions[0]
-
-        msg = _translate("Parallel port to be used (you can change these "
-                         "options in preferences>general)")
-        self.params['address'] = Param(
-            address, valType='str', inputType="choice", allowedVals=addressOptions,
-            categ='Hardware', hint=msg, label=_translate("Port address"))
-
-        self.depends.append(
-            {"dependsOn": "address",  # must be param name
-             "condition": "=='LabJack U3'",  # val to check for
-             "param": "register",  # param property to alter
-             "true": "show",  # what to do with param if condition is True
-             "false": "hide",  # permitted: hide, show, enable, disable
-             }
+        self.params['startData'] = Param(
+            startData, valType='code', inputType='single', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Start data'),
+            hint=_translate(
+                "Data to be sent at 'start'"
+            ),
+        )
+        self.params['stopData'] = Param(
+            stopData, valType='code', inputType='single', categ='Data',
+            updates=None, allowedUpdates=None,
+            allowedLabels=[],
+            label=_translate('Stop data'),
+            hint=_translate(
+                "Data to be sent at 'end'"
+            ),
+        )
+        self.params['syncScreen'] = Param(
+            syncScreen, valType='bool', inputType='bool', categ='Data',
+            updates='constant', allowedUpdates=[],
+            allowedVals=[True, False],
+            allowedLabels=[_translate(True), _translate(False)],
+            label=_translate('Sync to screen'),
+            hint=_translate(
+                'If the parallel port data relates to visual stimuli then sync its pulse to the screen refresh'
+            ),
         )
 
-        msg = _translate("U3 Register to write byte to")
-        self.params['register'] = Param(register, valType='str',
-                                        inputType="choice", allowedVals=['EIO', 'FIO'],
-                                        categ='Hardware', hint=msg, label=_translate("U3 register"))
-
-        self.params['startData'] = Param(
-            startData, valType='code', inputType="single", allowedTypes=[], categ='Data',
-            hint=_translate("Data to be sent at 'start'"),
-            label=_translate("Start data"))
-
-        self.params['stopData'] = Param(
-            stopData, valType='code', inputType="single", allowedTypes=[], categ='Data',
-            hint=_translate("Data to be sent at 'end'"),
-            label=_translate("Stop data"))
-
-        msg = _translate("If the parallel port data relates to visual "
-                         "stimuli then sync its pulse to the screen refresh")
-        self.params['syncScreen'] = Param(
-            syncScreen, valType='bool', inputType="bool", categ='Data',
-            allowedVals=[True, False],
-            updates='constant', allowedUpdates=[],
-            hint=msg,
-            label=_translate("Sync to screen"))
+        # --- Hardware params ---
+        self.order += [
+            'address',
+            'register',
+        ]
+        self.params['address'] = Param(
+            address, valType='str', inputType='choice', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedVals=['0x0378', '0x03BC', 'LabJack U3', 'USB2TTL8'],
+            allowedLabels=[_translate('0x0378'), _translate('0x03BC'), _translate('LabJack U3'),
+                           _translate('USB2TTL8')],
+            label=_translate('Port address'),
+            hint=_translate(
+                'Parallel port to be used (you can change these options in preferences>general)'
+            ),
+        )
+        self.params['register'] = Param(
+            register, valType='str', inputType='choice', categ='Hardware',
+            updates=None, allowedUpdates=None,
+            allowedVals=['EIO', 'FIO'],
+            allowedLabels=[_translate('EIO'), _translate('FIO')],
+            label=_translate('U3 register'),
+            hint=_translate(
+                'U3 Register to write byte to'
+            ),
+        )
+        self.depends.append({
+            'dependsOn': 'address',  # if...
+            'condition': "=='LabJack U3'",  # meets...
+            'param': 'register',  # then...
+            'true': 'show',  # should...
+            'false': 'hide',  # otherwise...
+        })
 
     def writeInitCode(self, buff):
         if self.params['address'].val == 'LabJack U3':
