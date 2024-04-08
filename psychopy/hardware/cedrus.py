@@ -32,5 +32,14 @@ except Exception as e:
         "Error encountered while loading `psychopy-cedrus`. Check logs for "
         "more information.")
 
+
+class RB730:
+    """
+    `psychopy.hardware.cedrus.RB730` is now located within the `psychopy-cedrus`
+    plugin. You can find the documentation for it
+    [here](https://psychopy.github.io/psychopy-cedrus/coder/NoiseStim/)
+    """
+
+
 if __name__ == "__main__":
     pass
