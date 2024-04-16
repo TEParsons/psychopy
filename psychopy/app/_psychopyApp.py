@@ -664,8 +664,7 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         # Load plugins here after everything is realized, make sure that we
         # refresh UI elements which are affected by plugins (e.g. the component
         # panel in Builder).
-        from psychopy.plugins import activatePlugins
-        activatePlugins()
+        from psychopy import plugins
         self._refreshComponentPanels()
 
         # flush any errors to the last run log file

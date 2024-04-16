@@ -1350,5 +1350,15 @@ def _registerPhotometer(ep):
             "`{}`".format(fqn))
 
 
+# try to activate plugins on import
+try:
+    activatePlugins(which="all")
+    print("Activating plugins")
+except Exception as err:
+    logging.error(
+        "Failed to activate plugins."
+    )
+
+
 if __name__ == "__main__":
     pass

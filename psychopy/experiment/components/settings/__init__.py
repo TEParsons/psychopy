@@ -885,8 +885,8 @@ class SettingsComponent:
             "\n"
             "from psychopy import locale_setup\n"
             "from psychopy import prefs\n"
+            "# importing psychopy.plugins loads plugins\n"
             "from psychopy import plugins\n"
-            "plugins.activatePlugins()\n"  # activates plugins
         )
         # adjust the prefs for this study if needed
         if self.params['Audio lib'].val.lower() != 'use prefs':
