@@ -229,7 +229,7 @@ class Dlg(QtWidgets.QDialog):
 
         return textLabel
 
-    def addField(self, key, label='', initial='', color='', choices=None, tip='',
+    def addField(self, key, initial='', label=None, color='', choices=None, tip='',
                  required=False, enabled=True):
         """Adds a (labelled) input field to the dialogue box,
         optional text color and tooltip.
@@ -240,6 +240,10 @@ class Dlg(QtWidgets.QDialog):
 
         Returns a handle to the field (but not to the label).
         """
+        # if no label, use key
+        if label is None:
+            label = key
+        # add label
         self.inputFieldNames.append(label)
         if choices:
             self.inputFieldTypes[label] = str
