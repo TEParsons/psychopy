@@ -78,7 +78,7 @@ from psychopy.scripts.psyexpCompile import generateScript
 alwaysHidden = [
     'SettingsComponent', 'RoutineSettingsComponent', 'UnknownComponent', 'UnknownRoutine',
     'UnknownStandaloneRoutine', 'UnknownPluginComponent', 'BaseComponent', 'BaseStandaloneRoutine',
-    'BaseValidatorRoutine'
+    'BaseValidatorRoutine', 'BaseWindowRoutine'
 ]
 
 

@@ -250,6 +250,44 @@ class BaseStandaloneRoutine:
         self.params['disabled'].val = value
 
 
+class BaseWindowRoutine(BaseStandaloneRoutine):
+    """
+    Subcategory of Standalone Routine, which sets up a window.
+    """
+    categories = ['Window']
+    targets = ["PsychoPy"]
+    iconFile = Path(__file__).parent / "unknown" / "unknown.png"
+    tooltip = _translate(
+        "Add a Window to the experiment. You need at least one of these!"
+    )
+    # what version was this Routine added in?
+    version = "2024.2.0"
+
+    def __init__(
+        self,
+        exp,
+        # basic
+        name="win",
+        # testing
+        disabled=False
+    ):
+        # initialise base Routine
+        BaseStandaloneRoutine.__init__(
+            self,
+            exp=exp,
+            # basic
+            name=name,
+            # testing
+            disabled=disabled
+        )
+        # remove stop params - we simply make the window and move on
+        del self.params['stopVal']
+        del self.params['stopType']
+    
+    def writeMainCode(self, buff):
+        raise NotImplementedError()
+
+
 class BaseValidatorRoutine(BaseStandaloneRoutine):
     """
     Subcategory of Standalone Routine, which sets up a "validator" - an object which is linked to in the Testing tab
