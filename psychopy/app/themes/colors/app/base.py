@@ -1,80 +1,70 @@
-import numpy
-import wx
-
-from . import theme
-
-
-class BaseColor(wx.Colour):
-    """
-    Essentially a wx.Colour with some extra features for convenience
-    """
-    def __add__(self, other):
-        # Get own RGB value
-        rgb = numpy.array([self.Red(), self.Green(), self.Blue()])
-        # Get adjustment
-        adj = self._getAdj(other)
-        # Do addition
-        result = numpy.clip(rgb + adj, 0, 255)
-        # Create new wx.Colour object from result
-        return wx.Colour(result[0], result[1], result[2], self.Alpha())
-
-    def __sub__(self, other):
-        # Get own RGB value
-        rgb = numpy.array([self.Red(), self.Green(), self.Blue()])
-        # Get adjustment
-        adj = self._getAdj(other)
-        # Do subtraction
-        result = numpy.clip(rgb - adj, 0, 255)
-        # Create new wx.Colour object from result
-        return wx.Colour(result[0], result[1], result[2], self.Alpha())
-
-    def __mul__(self, other):
-        assert isinstance(other, (int, float)), (
-            "BaseColor can only be multiplied by a float (0-1) or int (0-255), as this sets its alpha."
-        )
-        # If given as a float, convert to 255
-        if isinstance(other, float):
-            other = round(other * 255)
-        # Set alpha
-        return wx.Colour(self.Red(), self.Green(), self.Blue(), alpha=other)
-
-    @staticmethod
-    def _getAdj(other):
-        """
-        Get the adjustment indicated by another object given to this as an operator for __add__ or __sub__
-        """
-        # If other is also a wx.Colour, adjustment is its RGBA value
-        if isinstance(other, wx.Colour):
-            adj = numpy.array([other.Red(), other.Green(), other.Blue()])
-        # If other is an int, adjustment is itself*15
-        elif isinstance(other, int):
-            adj = other * 15
-        # Otherwise, just treat it as an RGBA array
-        else:
-            adj = numpy.array(other)
-
-        return adj
-
-
-# PsychoPy brand colours
-scheme = {
-    'none': BaseColor(0, 0, 0, 0),
-    'white': BaseColor(255, 255, 255, 255),
-    'offwhite': BaseColor(242, 242, 242, 255),
-    'grey': BaseColor(102, 102, 110, 255),
-    'lightgrey': BaseColor(172, 172, 176, 255),
-    'black': BaseColor(0, 0, 0, 255),
-    'red': BaseColor(242, 84, 91, 255),
-    'purple': BaseColor(195, 190, 247, 255),
-    'blue': BaseColor(2, 169, 234, 255),
-    'green': BaseColor(108, 204, 116, 255),
-    'yellow': BaseColor(241, 211, 2, 255),
-    'orange': BaseColor(236, 151, 3, 255),
-}
+from psychopy import logging
+from psychopy.app.themes.colors import scheme
 
 
 class AppColors(dict):
-    light = {
+    def __getitem__(self, item):
+        # get current theme
+        from psychopy.app.themes import theme
+        # When getting an attribute of this object, return the key from the theme-appropriate dict
+        return getattr(self, theme.app)[item]
+
+
+app = AppColors()
+
+
+class BaseAppColorScheme:
+    """
+    Base class for all app color schemes. When a subclass is imported, its colors are added
+    to the app-wide AppColors object and become accessible by PsychoPy themes.
+    """
+    # color scheme needs a name so it can be referred to in theme spec
+    name = None
+    # dict to store app colors
+    colors = {}
+
+    def __init_subclass__(cls, **kwargs):
+        # if name is unset, use class name
+        name = cls.name
+        if name is None:
+            name = cls.__name__
+        # make sure all keys are present
+        for key in (
+            "text",
+            "frame_bg",
+            "docker_bg",
+            "docker_fg",
+            "panel_bg",
+            "tab_bg",
+            "bmpbutton_bg_hover",
+            "bmpbutton_fg_hover",
+            "txtbutton_bg_hover",
+            "txtbutton_fg_hover",
+            "rt_timegrid",
+            "rt_comp",
+            "rt_comp_force",
+            "rt_comp_disabled",
+            "rt_static",
+            "rt_static_disabled",
+            "fl_routine_fg",
+            "fl_routine_bg_slip",
+            "fl_routine_bg_nonslip",
+            "fl_flowline_bg",
+            "fl_flowline_fg",
+        ):
+            if key not in cls.colors:
+                # if any aren't, log an error and give up
+                logging.error(
+                    f"Could not load app color scheme {name} as it is missing a color for '{key}'"
+                )
+                return
+        # assign colors to global AppColors cls
+        setattr(AppColors, name, cls.colors)
+
+
+class LightColorScheme(BaseAppColorScheme):
+    name = "light"
+    colors = {
         "text": scheme['black'],
         "frame_bg": scheme['offwhite'] - 1,
         "docker_bg": scheme['offwhite'] - 2,
@@ -97,7 +87,11 @@ class AppColors(dict):
         "fl_flowline_bg": scheme['grey'],
         "fl_flowline_fg": scheme['white'] + 1,
     }
-    dark = {
+
+
+class DarkColorScheme(BaseAppColorScheme):
+    name = "dark"
+    colors = {
         "text": scheme['offwhite'],
         "frame_bg": scheme['grey'] - 1,
         "docker_bg": scheme['grey'] - 2,
@@ -120,7 +114,11 @@ class AppColors(dict):
         "fl_flowline_bg": scheme['offwhite'] - 1,
         "fl_flowline_fg": scheme['black'],
     }
-    contrast_white = {
+
+
+class ContrastWhiteColorScheme(BaseAppColorScheme):
+    name = "contrast_white"
+    colors = {
         "text": scheme['black'],
         "frame_bg": scheme['offwhite'] + 1,
         "docker_bg": scheme['yellow'],
@@ -144,7 +142,10 @@ class AppColors(dict):
         "fl_flowline_fg": scheme['offwhite'] + 1,
     }
 
-    contrast_black = {
+
+class ContrastBlackColorScheme(BaseAppColorScheme):
+    name = "contrast_black"
+    colors = {
         "text": scheme['offwhite'],
         "frame_bg": scheme['black'],
         "docker_bg": "#800080",
@@ -168,7 +169,10 @@ class AppColors(dict):
         "fl_flowline_fg": scheme['black'],
     }
 
-    pink = {
+
+class PinkColorScheme(BaseAppColorScheme):
+    name = "pink"
+    colors = {
         "text": scheme['red'] - 10,
         "frame_bg": scheme['red'] + 8,
         "docker_bg": scheme['red'] + 7,
@@ -192,10 +196,4 @@ class AppColors(dict):
         "fl_flowline_fg": scheme['red'] - 10,
     }
 
-    def __getitem__(self, item):
-        # When getting an attribute of this object, return the key from the theme-appropriate dict
-        return getattr(self, theme.app)[item]
-
-
-app = AppColors()
 
