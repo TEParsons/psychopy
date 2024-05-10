@@ -1221,6 +1221,8 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
         prefs.saveUserPrefs()
         # Reset icon cache
         icons.iconCache.clear()
+        # load plugin themes
+        themes.theme.loadPluginThemes()
         # Set theme at module level
         themes.theme.set(value)
         # Apply to frames
