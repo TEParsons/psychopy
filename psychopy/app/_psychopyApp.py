@@ -952,6 +952,15 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
 
         if event is not None:
             event.Skip()
+    
+    def layoutHelper(self, event=None):
+        """
+        Open the layout helper dialog.
+        """
+        from psychopy.app.utils import LayoutHelperDlg
+
+        dlg = LayoutHelperDlg()
+        dlg.Show()
 
     def openMonitorCenter(self, event):
         from psychopy.monitors import MonitorCenter

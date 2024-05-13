@@ -2969,11 +2969,17 @@ class CoderRibbon(ribbon.FrameRibbon):
         self.addSection(
             "experiment", label=_translate("Experiment"), icon="experiment"
         )
-        # settings
+        # color picker
         self.addButton(
             section="experiment", name='color', label=_translate('Color picker'), icon="color",
-            tooltip=_translate("Open a tool for choosing colors"),
+            tooltip=_translate("Open a tool for choosing colors."),
             callback=parent.app.colorPicker
+        )
+        # layout helper
+        self.addButton(
+            section="experiment", name='layout', label=_translate('Layout helper'), icon="layout",
+            tooltip=_translate("Open a tool for choosing size, position and units."),
+            callback=parent.app.layoutHelper
         )
         # switch run/pilot
         runPilotSwitch = self.addSwitchCtrl(

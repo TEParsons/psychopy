@@ -1678,3 +1678,143 @@ def sanitize(inStr):
         inStr = re.sub(pattern, repl, inStr)
 
     return inStr
+
+
+class LayoutHelperDlg(wx.Frame):
+    """
+    Open a preview of how a stimulus will look in PsychoPy.
+    """
+    def __init__(
+            self, 
+            startPos=(0, 0), 
+            startSize=(1, 1), 
+            startUnits="height"
+        ):
+        # init parent class
+        scr = wx.DisplaySize()
+        wx.Frame.__init__(
+            self, 
+            parent=None,
+            pos=(240 + 1080, 240),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+        )
+        self.SetTitle(
+            _translate("PsychoPy Layout Helper")
+        )
+        self.SetMinSize((360, 720))
+        # setup sizer
+        self.frameSizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.frameSizer)
+        # create panel
+        self.pnl = wx.Panel(self)
+        self.frameSizer.Add(self.pnl, proportion=1, flag=wx.EXPAND | wx.ALL)
+        # setup panel sizers
+        self.border = wx.BoxSizer(wx.VERTICAL)
+        self.pnl.SetSizer(self.border)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.border.Add(self.sizer, proportion=1, border=12, flag=wx.EXPAND | wx.ALL)
+
+        # position label
+        self.posLbl = wx.StaticText(
+            self.pnl, label=_translate("Position [x, y]")
+        )
+        self.sizer.Add(self.posLbl, border=6, flag=wx.EXPAND | wx.ALL)
+        # position ctrl
+        self.posCtrl = wx.TextCtrl(
+            self.pnl, value=str(startPos)
+        )
+        self.sizer.Add(self.posCtrl, border=6, flag=wx.EXPAND | wx.ALL)
+        self.posCtrl.Bind(wx.EVT_TEXT, self.updatePreview)
+        # size label
+        self.sizeLbl = wx.StaticText(
+            self.pnl, label=_translate("Size [w, h]")
+        )
+        self.sizer.Add(self.sizeLbl, border=6, flag=wx.EXPAND | wx.ALL)
+        # size ctrl
+        self.sizeCtrl = wx.TextCtrl(
+            self.pnl, value=str(startSize)
+        )
+        self.sizer.Add(self.sizeCtrl, border=6, flag=wx.EXPAND | wx.ALL)
+        self.sizeCtrl.Bind(wx.EVT_TEXT, self.updatePreview)
+        # units label
+        self.unitsLbl = wx.StaticText(
+            self.pnl, label=_translate("Spatial units")
+        )
+        self.sizer.Add(self.unitsLbl, border=6, flag=wx.EXPAND | wx.ALL)
+        # units ctrl
+        self.unitsCtrl = wx.ListBox(
+            self.pnl, choices=["height", "norm", "deg", "cm", "pix"], style=wx.LB_SINGLE
+        )
+        self.unitsCtrl.SetStringSelection(startUnits)
+        self.sizer.Add(self.unitsCtrl, border=6, flag=wx.EXPAND | wx.ALL)
+        self.unitsCtrl.Bind(wx.EVT_LISTBOX, self.updatePreview)
+        
+        # window to preview the stimulus
+        from psychopy import visual
+        self.win = visual.Window(
+            size=(1080, 720),
+            pos=(240, 240),
+            color="grey",
+            checkTiming=False,
+        )
+        self.win.title = _translate(
+            "PsychoPy Layout Helper: Preview"
+        )
+        # stimulus preview
+        self.preview = visual.Rect(
+            self.win,
+            fillColor="white",
+            size=startSize,
+            pos=startPos,
+            units=startUnits,
+        )
+        # do first flip
+        self.preview.draw()
+        self.win.flip()
+
+        # layout
+        self.Layout()
+        self.Fit()
+    
+    def updatePreview(self, evt=None):
+        """
+        On change to any of the ctrls, update the preview object's size and position.
+        """
+        import json
+
+        # get units value
+        units = self.unitsCtrl.GetString(self.unitsCtrl.GetSelection())
+        # set units
+        self.preview.units = units
+
+        # get raw pos value
+        pos = self.posCtrl.GetValue()
+        # replace () with [] (for json)
+        pos = pos.replace("(", "[").replace(")", "]")
+        # parse position
+        try:
+            self.preview.pos = json.loads(pos)
+            self.posCtrl.ForegroundColor = "black"
+        except:
+            self.posCtrl.ForegroundColor = "red"
+        
+        # get raw size value
+        size = self.sizeCtrl.GetValue()
+        # replace () with [] (for json)
+        size = size.replace("(", "[").replace(")", "]")
+        # parse position
+        try:
+            self.preview.size = json.loads(size)
+            self.sizeCtrl.ForegroundColor = "black"
+        except:
+            self.sizeCtrl.ForegroundColor = "red"
+
+        # draw
+        self.preview.draw()
+        self.win.flip()
+
+    def __del__(self):
+        """
+        On deletion, close the associated window.
+        """
+        self.win.close()
