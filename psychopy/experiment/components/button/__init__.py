@@ -218,7 +218,7 @@ class ButtonComponent(BaseVisualComponent):
                 "pos: %(pos)s,\n"
                 "letterHeight: %(letterHeight)s,\n"
                 "size: %(size)s,\n"
-                "ori: %(ori)s\n,"
+                "ori: %(ori)s\n,\n"
                 "depth: %(depth)s\n"
         )
         buff.writeIndentedLines(code % inits)
