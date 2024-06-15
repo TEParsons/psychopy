@@ -493,22 +493,27 @@ class BaseComponent:
 
         if self.params['stopType'].val == 'time (s)':
             code = (f"# is it time to stop? (based on local clock)\n"
-                    f"if tThisFlip > {params['stopVal']}-frameTolerance:\n"
+                    f"if tThisFlip > {params['stopVal']}-frameTolerance"
                     )
         # duration in time (s)
         elif (self.params['stopType'].val == 'duration (s)'):
             code = (f"# is it time to stop? (based on global clock, using actual start)\n"
-                    f"if tThisFlipGlobal > {params['name']}.tStartRefresh + {params['stopVal']}-frameTolerance:\n")
+                    f"if tThisFlipGlobal > {params['name']}.tStartRefresh + {params['stopVal']}-frameTolerance")
         elif self.params['stopType'].val == 'duration (frames)':
-            code = (f"if frameN >= ({params['name']}.frameNStart + {params['stopVal']}):\n")
+            code = (f"if frameN >= ({params['name']}.frameNStart + {params['stopVal']})")
         elif self.params['stopType'].val == 'frame N':
-            code = f"if frameN >= {params['stopVal']}:\n"
+            code = f"if frameN >= {params['stopVal']}"
         elif self.params['stopType'].val == 'condition':
-            code = f"if bool({params['stopVal']}):\n"
+            code = f"if bool({params['stopVal']})"
         else:
             msg = (f"Didn't write any stop line for startType={params['startType']}, "
                    f"stopType={params['stopType']}")
             raise CodeGenerationException(msg)
+
+        if '_extraStopCondition' in self.params:
+            code += f" or {self.params['_extraStopCondition']}:\n"
+        else:
+            code += ":\n"
 
         buff.writeIndentedLines(code)
         buff.setIndentLevel(+1, relative=True)

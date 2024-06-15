@@ -223,25 +223,13 @@ class SoundComponent(BaseDeviceComponent):
         buff.setIndentLevel(-indented, relative=True)
 
         # write code for stopping
+        self.params['_extraStopCondition'] = "%(name)s.isFinished" % self.params
         indented = self.writeStopTestCode(buff)
         if indented:
             code = ("%(name)s.stop()\n")
             buff.writeIndentedLines(code % self.params)
         # because of the 'if' statement of the time test
         buff.setIndentLevel(-indented, relative=True)
-
-        # write code to run while active
-        indented = self.writeActiveTestCode(buff)
-        if indented:
-            # update status according to playback
-            code = (
-                "# if sound is finished but %(name)s has time left, finish it now\n"
-                "if %(name)s.isFinished:\n"
-                "    %(name)s.status = FINISHED\n" 
-            )
-            buff.writeIndentedLines(code % self.params)
-            # dedent
-            buff.setIndentLevel(-indented, relative=True)
 
     def writeFrameCodeJS(self, buff):
         """Write the code that will be called every frame
