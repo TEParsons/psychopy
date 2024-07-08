@@ -1006,17 +1006,19 @@ class Form(BaseVisualStim, ContainerMixin, ColorMixin):
 
     @opacity.setter
     def opacity(self, value):
-        BaseVisualStim.opacity.fset(self, value)
-        self.fillColor = self._fillColor
-        self.borderColor = self._borderColor
-        if hasattr(self, "_foreColor"):
-            self._foreColor.alpha = value
-        if hasattr(self, "_itemColor"):
-            self._itemColor.alpha = value
-        if hasattr(self, "_responseColor"):
-            self._responseColor.alpha = value
-        if hasattr(self, "_markerColor"):
-            self._markerColor.alpha = value
+        if value is not None:
+            if hasattr(self, "_fillColor"):
+                self.fillColor = self._fillColor
+            if hasattr(self, "_borderColor"):
+                self.borderColor = self._borderColor
+            if hasattr(self, "_foreColor"):
+                self._foreColor.alpha = value
+            if hasattr(self, "_itemColor"):
+                self._itemColor.alpha = value
+            if hasattr(self, "_responseColor"):
+                self._responseColor.alpha = value
+            if hasattr(self, "_markerColor"):
+                self._markerColor.alpha = value
 
     @property
     def complete(self):

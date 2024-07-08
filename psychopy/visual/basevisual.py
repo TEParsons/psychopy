@@ -1747,6 +1747,8 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         self.units = units
         self._rotationMatrix = [[1., 0.], [0., 1.]]  # no rotation by default
         self.mouse = None
+        # start off with full opacity
+        self.opacity = 1
         # self.autoLog is set at end of MinimalStim.__init__
         super(BaseVisualStim, self).__init__(name=name, autoLog=autoLog)
         if self.autoLog:
@@ -1762,6 +1764,9 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
         (transparent). :ref:`Operations <attrib-operations>` are supported.
         Precisely how this is used depends on the :ref:`blendMode`.
         """
+        if hasattr(self, "_opacity") and self._opacity is not None:
+            return self._opacity
+        
         alphas = []
         if hasattr(self, '_foreColor'):
             alphas.append(self._foreColor.alpha)
@@ -1776,18 +1781,15 @@ class BaseVisualStim(MinimalStim, WindowMixin, LegacyVisualMixin):
 
     @opacity.setter
     def opacity(self, value):
-        # Setting opacity as a single value makes all colours the same opacity
-        if value is None:
-            # If opacity is set to be None, this indicates that each color should handle its own opacity
-            return
-        if hasattr(self, '_foreColor'):
-            if self._foreColor != None:
+        # store opacity
+        self._opacity = value
+        # set opacity of each color
+        if value is not None:
+            if hasattr(self, '_foreColor') and self._foreColor.alpha is not None:
                 self._foreColor.alpha = value
-        if hasattr(self, '_fillColor'):
-            if self._fillColor != None:
+            if hasattr(self, '_fillColor') and self._fillColor.alpha is not None:
                 self._fillColor.alpha = value
-        if hasattr(self, '_borderColor'):
-            if self._borderColor != None:
+            if hasattr(self, '_borderColor') and self._borderColor.alpha is not None:
                 self._borderColor.alpha = value
 
     def updateOpacity(self):
