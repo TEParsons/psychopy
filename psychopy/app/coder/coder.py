@@ -1313,7 +1313,7 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.SendSizeEvent()
         self.app.trackFrame(self)
 
-        self.theme = colors.theme
+        self.theme = currentTheme
 
     @property
     def useAutoComp(self):

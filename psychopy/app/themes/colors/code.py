@@ -1,3 +1,4 @@
+import wx.stc as stc
 from pygments.style import Style, Token
 
 
@@ -5,6 +6,12 @@ __all__ = [
     "BaseCodeColors",
     "allCodeColorSchemes",
 ]
+
+
+# mapping of stc tags (which wx requires for styling) to pygments tokens (which we use for themes)
+stc2pygments = {
+    stc.STC_STYLE_DEFAULT: Token,
+}
 
 
 # global variable to keep track of all known code color schemes
@@ -36,6 +43,9 @@ class BaseCodeColorScheme(Style):
         'red': "#f2545b",
         'lavender': "#c3bef7",
     }
+
+    # font family
+    font_family = "JetBrains Mono"
 
     # parameters for the text control itself
     background_color = scheme['base']
@@ -83,6 +93,7 @@ class BaseCodeColorScheme(Style):
         # Token.Generic.Deleted: "inherit",
         # console
         Token.Generic.Output: scheme['text'],
+        Token.Generic.Warning: scheme['orange'],
         Token.Generic.Error: scheme['red'],
         Token.Generic.Traceback: scheme['red'],
         Token.Error: scheme['red'],
@@ -91,6 +102,42 @@ class BaseCodeColorScheme(Style):
         Token.Keyword.Reserved: f"{scheme['blue']} bold italic",
     }
 
+    # dict that's updated with wx.Font objects when one is created for a given style
+    _stcCache = {}
+
+    @classmethod
+    def wxFontForToken(cls, token):
+        """
+        Get the wx font described by a pygments style.
+
+        Parameters
+        ----------
+        token : pygments.token.Token
+            Token to get wx font for
+
+        Returns
+        -------
+        wx.richtext.TextAttr
+            TextAttr object describing the pygments style
+        """
+        import wx, wx.richtext
+
+        if token not in cls._stcCache:
+            # get pygments style for token
+            pygStyle = cls.style_for_token(token)
+            # convert to a wx.TextAttr object
+            font = wx.richtext.RichTextAttr()
+            font.SetFontPointSize(12)
+            font.SetFontFaceName(cls.font_family)
+            font.SetTextColour(pygStyle['color'])
+            font.SetBackgroundColour(pygStyle['bgcolor'])
+            font.SetFontWeight(wx.FONTWEIGHT_BOLD if pygStyle['bold'] else wx.FONTWEIGHT_NORMAL)
+            font.SetFontStyle(wx.FONTSTYLE_ITALIC if pygStyle['italic'] else wx.FONTSTYLE_NORMAL)
+            font.SetFontUnderlined(pygStyle['underline'])
+            # cache
+            cls._stcCache[token] = font
+
+        return cls._stcCache[token]
 
 
 class PsychoPyLight(BaseCodeColorScheme):

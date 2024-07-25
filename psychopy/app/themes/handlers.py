@@ -1,6 +1,7 @@
 from copy import deepcopy
 
-from . import colors, icons, currentTheme
+from psychopy.app.themes import icons, currentTheme
+from psychopy.app.themes.colors.code import Token, stc2pygments
 from ...preferences.preferences import prefs
 
 # --- Functions to handle specific subclasses of wx.Window ---
@@ -56,23 +57,17 @@ def styleNotebook(target):
 
 
 def styleCodeEditor(target):
-    from . import fonts
-    fonts.coderTheme.load(theme.code)
-
     target.SetBackgroundColour(currentTheme.app.mantle)
     # Set margin
-    margin = fonts.coderTheme.margin
-    target.SetFoldMarginColour(True, margin.backColor)
-    target.SetFoldMarginHiColour(True, margin.backColor)
+    target.SetFoldMarginColour(True, currentTheme.code.line_number_background_color)
+    target.SetFoldMarginHiColour(True, currentTheme.code.line_number_special_background_color)
     # Set caret colour
-    caret = fonts.coderTheme.caret
-    target.SetCaretForeground(caret.foreColor)
-    target.SetCaretLineBackground(caret.backColor)
-    target.SetCaretWidth(1 + (caret.bold))
+    target.SetCaretForeground(currentTheme.code.styles[Token])
+    target.SetCaretLineBackground(currentTheme.code.highlight_color)
+    target.SetCaretWidth(1)
     # Set selection colour
-    select = fonts.coderTheme.select
-    target.SetSelForeground(True, select.foreColor)
-    target.SetSelBackground(True, select.backColor)
+    target.SetSelForeground(True, currentTheme.code.styles[Token])
+    target.SetSelBackground(True, currentTheme.code.highlight_color)
     # Set wrap point
     target.edgeGuideColumn = prefs.coder['edgeGuideColumn']
     target.edgeGuideVisible = target.edgeGuideColumn > 0
@@ -82,53 +77,26 @@ def styleCodeEditor(target):
     target.SetExtraDescent(spacing)
 
     # Set styles
-    for tag, font in fonts.coderTheme.items():
-        if tag is None:
-            # Skip tags for e.g. margin, caret
-            continue
-        if isinstance(font, dict) and tag == target.GetLexer():
-            # If tag is the current lexer, then get styles from sub-dict
-            for subtag, subfont in font.items():
-                target.StyleSetSize(subtag, subfont.pointSize)
-                target.StyleSetFaceName(subtag, subfont.obj.GetFaceName())
-                target.StyleSetBold(subtag, subfont.bold)
-                target.StyleSetItalic(subtag, subfont.italic)
-                target.StyleSetForeground(subtag, subfont.foreColor)
-                target.StyleSetBackground(subtag, subfont.backColor)
-        elif isinstance(font, dict):
-            # If tag is another lexer, skip
-            continue
-        else:
-            # If tag is a direct style tag, apply
-            target.StyleSetSize(tag, font.pointSize)
-            target.StyleSetFaceName(tag, font.obj.GetFaceName())
-            target.StyleSetBold(tag, font.bold)
-            target.StyleSetItalic(tag, font.italic)
-            target.StyleSetForeground(tag, font.foreColor)
-            target.StyleSetBackground(tag, font.backColor)
-    # Update lexer keywords
-    lexer = target.GetLexer()
-    filename = ""
-    if hasattr(target, "filename"):
-        filename = target.filename
-    keywords = fonts.getLexerKeywords(lexer, filename)
-    for level, val in keywords.items():
-        target.SetKeyWords(level, " ".join(val))
+    for tag, token in stc2pygments.items():
+        # get wx.FontInfo object for this token
+        font = currentTheme.code.wxFontForToken(token)
+        # assign font to given tag
+        target.StyleSetSize(tag, font.GetFontSize())
+        target.StyleSetFaceName(tag, font.GetFontFaceName())
+        target.StyleSetBold(tag, font.GetFontWeight() == wx.FONTWEIGHT_BOLD)
+        target.StyleSetItalic(tag, font.GetFontStyle() == wx.FONTSTYLE_ITALIC)
+        target.StyleSetForeground(tag, font.GetTextColour())
+        target.StyleSetBackground(tag, font.GetBackgroundColour())
 
 
 def styleTextCtrl(target):
-    from . import fonts
-    fonts.coderTheme.load(theme.code)
-    font = fonts.coderTheme.base
-
     # Set background
-    target.SetBackgroundColour(font.backColor)
-    target.SetForegroundColour(font.foreColor)
+    target.SetBackgroundColour(currentTheme.code.background_color)
+    target.SetForegroundColour(currentTheme.code.styles[Token])
     # Construct style
     style = wx.TextAttr(
-        colText=font.foreColor,
-        colBack=font.backColor,
-        font=font.obj,
+        colText=currentTheme.code.background_color,
+        colBack=currentTheme.code.styles[Token],
     )
     if isinstance(target, wx.richtext.RichTextCtrl):
         style = wx.richtext.RichTextAttr(style)

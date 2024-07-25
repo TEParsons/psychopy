@@ -24,8 +24,8 @@ class ThemeSwitcher(wx.Menu):
         # make menu
         wx.Menu.__init__(self)
         # make buttons
-        for cls in allThemes:
-            item = self.AppendRadioItem(id=wx.ID_ANY, item=cls.name, help=cls.hint)
+        for name, cls in allThemes.items():
+            item = self.AppendRadioItem(id=wx.ID_ANY, item=cls.label, help=cls.hint)
             item.Check(cls is currentTheme)
             self.Bind(wx.EVT_MENU, self.onThemeChange, item)
         self.AppendSeparator()

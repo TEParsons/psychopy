@@ -5,6 +5,7 @@ import webbrowser
 import wx
 import re
 import wx.richtext
+from pygments.token import Token
 from pygments_gui.wx.richtext import WxRichTextCtrlFormatter
 import pygments.lexers, pygments.formatters
 import locale
@@ -27,7 +28,7 @@ import wx
 import wx.richtext
 import webbrowser
 from psychopy.localization import _translate
-from psychopy.app.themes import handlers, icons, colors, fonts
+from psychopy.app.themes import currentTheme, handlers, icons, colors
 
 _prefEncoding = locale.getpreferredencoding()
 
@@ -54,8 +55,7 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler, handlers.ThemeMixi
         # create a formatter for this ctrl
         self.formatter = WxRichTextCtrlFormatter()
         # set style according to theme
-        from psychopy.app.themes.colors.code.psychopyLight import PsychopyLight
-        self.formatter.set_style(PsychopyLight)
+        self.formatter.set_style(currentTheme.code)
 
         self.prefs = prefs
         self.paths = prefs.paths
@@ -74,37 +74,20 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler, handlers.ThemeMixi
     def _applyAppTheme(self):
         # do usual theme stuff
         handlers.ThemeMixin._applyAppTheme(self)
-        # get base font
-        font = fonts.coderTheme.base
-        self.SetFont(font.obj)
+        # set base font
+        self.SetFont(
+            currentTheme.code.wxFontForToken(Token).GetFont()
+        )
         # dict of styles
         self._styles = {
-            'base': wx.richtext.RichTextAttr(wx.TextAttr(
-                colText=font.foreColor,
-                colBack=font.backColor,
-                font=font.obj,
-            )),
-            'error': wx.richtext.RichTextAttr(wx.TextAttr(
-                colText=colors.scheme['red'],
-                colBack=font.backColor,
-                font=font.obj,
-            )),
-            'warning': wx.richtext.RichTextAttr(wx.TextAttr(
-                colText=colors.scheme['orange'],
-                colBack=font.backColor,
-                font=font.obj,
-            )),
-            'info': wx.richtext.RichTextAttr(wx.TextAttr(
-                colText=colors.scheme['lightgrey'],
-                colBack=font.backColor,
-                font=font.obj,
-            )),
-            'link': wx.richtext.RichTextAttr(wx.TextAttr(
-                colText=colors.scheme['blue'],
-                colBack=font.backColor,
-                font=font.obj,
-            )),
+            'base': currentTheme.code.wxFontForToken(Token),
+            'error': currentTheme.code.wxFontForToken(Token.Generic.Error),
+            'warning': currentTheme.code.wxFontForToken(Token.Generic.Warning),
+            'info': currentTheme.code.wxFontForToken(Token.Literal.String),
+            'link': currentTheme.code.wxFontForToken(Token.Literal.String),
         }
+        # force URLs to blue
+        self._styles['link'].SetTextColour(currentTheme.app.blue)
 
     def onURL(self, evt=None):
         wx.BeginBusyCursor()
@@ -289,10 +272,10 @@ class ScriptOutputPanel(wx.Panel, handlers.ThemeMixin):
 
         def _applyAppTheme(self):
             # Set background
-            self.SetBackgroundColour(fonts.coderTheme.base.backColor)
+            self.SetBackgroundColour(currentTheme.code.background_color)
             # Style buttons
             for btn in (self.clrBtn,):
-                btn.SetBackgroundColour(fonts.coderTheme.base.backColor)
+                btn.SetBackgroundColour(currentTheme.code.background_color)
             self.Refresh()
             self.Update()
 
@@ -327,11 +310,11 @@ class ScriptOutputPanel(wx.Panel, handlers.ThemeMixin):
     def _applyAppTheme(self):
         self.ctrl._applyAppTheme()
         # Set background
-        self.SetBackgroundColour(fonts.coderTheme.base.backColor)
+        self.SetBackgroundColour(currentTheme.code.background_color)
         self.Refresh()
         self.Update()
         # Match line
-        self.sep.SetBackgroundColour(fonts.coderTheme.margin.backColor)
+        self.sep.SetBackgroundColour(currentTheme.code.line_number_background_color)
         self.Refresh()
         self.Update()
 
