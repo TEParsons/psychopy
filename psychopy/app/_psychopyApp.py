@@ -17,7 +17,7 @@ import time
 import io
 import argparse
 
-from psychopy.app.themes import icons, colors, handlers
+from psychopy.app.themes import icons, colors, handlers, allThemes, currentTheme
 
 profiling = False  # turning on will save profile files in currDir
 
@@ -1190,21 +1190,21 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
     @theme.setter
     def theme(self, value):
         """The theme to be used through the application"""
-        # Make sure we just have a name
-        if isinstance(value, themes.Theme):
-            value = value.code
-        # Store new theme
+        # store new theme
         prefs.app['theme'] = value
         prefs.saveUserPrefs()
-        # Reset icon cache
+        # get theme object (fallback is PsychoPyLight)
+        theme = allThemes.get(value, "PsychoPyLight")
+        # set at global level
+        global currentTheme
+        currentTheme = theme
+        # clear icon cache
         icons.iconCache.clear()
-        # Set theme at module level
-        themes.theme.set(value)
-        # Apply to frames
+        # apply to frames
         for frameRef in self._allFrames:
             frame = frameRef()
             if isinstance(frame, handlers.ThemeMixin):
-                frame.theme = themes.theme
+                frame.theme = currentTheme
 
         # On OSX 10.15 Catalina at least calling SetFaceName with 'AppleSystemUIFont' fails.
         # So this fix checks to see if changing the font name invalidates the font.

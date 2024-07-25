@@ -8,12 +8,13 @@ import wx.stc as stc
 import re
 
 from ... import prefs
-from . import colors, theme, loadSpec
+from . import colors, currentTheme, loadSpec
+from pygments import Token
 
 
 # STC tags corresponding to words in theme spec
 tags = {
-    "base": stc.STC_STYLE_DEFAULT,
+    Token: stc.STC_STYLE_DEFAULT,
     "margin": stc.STC_STYLE_LINENUMBER,
     "caret": None,
     "select": None,
@@ -468,7 +469,7 @@ class AppTheme(dict):
 
     def load(self, name):
         # Make sure default color is up to date
-        AppFont.foreColor = colors.app['text']
+        AppFont.foreColor = currentTheme.app.text
         # If theme is unchanged, do nothing
         if name in self:
             return

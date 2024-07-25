@@ -2085,7 +2085,7 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # for rect in self.rects.values():
         #     self.pdc.DrawRectangle(rect)
 
-        self.SetBackgroundColour(colors.app['tab_bg'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
 
         # separate components according to whether they are drawn in separate
         # row
@@ -2255,8 +2255,8 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         xEnd = self.timeXposEnd
 
         # dc.SetId(wx.NewIdRef())
-        dc.SetPen(wx.Pen(colors.app['rt_timegrid']))
-        dc.SetTextForeground(wx.Colour(colors.app['rt_timegrid']))
+        dc.SetPen(wx.Pen(currentTheme.app.crust))
+        dc.SetTextForeground(wx.Colour(currentTheme.app.crust))
         self.setFontSize(self.fontBaseSize // self.dpi, dc)
 
         id = wx.NewIdRef()
@@ -2313,7 +2313,7 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
             dc.DrawText('t (sec)',
                         int(xEnd + 5),
                         yPosBottom - self.GetFullTextExtent('t')[1] // 2)
-        dc.SetTextForeground(colors.app['text'])
+        dc.SetTextForeground(currentTheme.app.text)
 
     def drawForceEndLine(self, dc, yPosBottom):
         id = wx.NewIdRef()
@@ -2323,10 +2323,10 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         if hardStop:
             # if hard stop, draw orange final line
             dc.SetPen(
-                wx.Pen(colors.app['rt_comp_force'], width=4)
+                wx.Pen(currentTheme.app.orange, width=4)
             )
             dc.SetTextForeground(
-                wx.Colour(colors.app['rt_comp_force'])
+                wx.Colour(currentTheme.app.orange)
             )
             # vertical line:
             dc.DrawLine(self.timeXposEnd,
@@ -2375,12 +2375,12 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         xScale = self.getSecsPerPixel()
 
         if component.params['disabled'].val:
-            dc.SetBrush(wx.Brush(colors.app['rt_static_disabled']))
-            dc.SetPen(wx.Pen(colors.app['rt_static_disabled']))
-
+            staticCol = wx.Color(currentTheme.app.grey)
         else:
-            dc.SetBrush(wx.Brush(colors.app['rt_static']))
-            dc.SetPen(wx.Pen(colors.app['rt_static']))
+            staticCol = wx.Color(currentTheme.app.red)
+        staticCol.SetOpacity(0.5)
+        dc.SetBrush(wx.Brush(staticCol))
+        dc.SetPen(wx.Pen(staticCol))
 
         xSt = self.timeXposStart + startTime // xScale
         w = duration // xScale + 1  # +1 b/c border alpha=0 in dc.SetPen
@@ -2424,25 +2424,25 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         iconYOffset = (6, 6, 0)[self.drawSize]
         # get default icon and bar color
         thisIcon = icons.ComponentIcon(component, size=self.iconSize).bitmap
-        thisColor = colors.app['rt_comp']
+        thisColor = currentTheme.app.blue
         thisStyle = wx.BRUSHSTYLE_SOLID
 
         # check True/False on ForceEndRoutine
         if 'forceEndRoutine' in component.params:
             if component.params['forceEndRoutine'].val:
-                thisColor = colors.app['rt_comp_force']
+                thisColor = currentTheme.app.orange
         # check True/False on ForceEndRoutineOnPress
         if 'forceEndRoutineOnPress' in component.params:
             if component.params['forceEndRoutineOnPress'].val in ['any click', 'correct click', 'valid click']:
-                thisColor = colors.app['rt_comp_force']
+                thisColor = currentTheme.app.orange
         # check True aliases on EndRoutineOn
         if 'endRoutineOn' in component.params:
             if component.params['endRoutineOn'].val in ['look at', 'look away']:
-                thisColor = colors.app['rt_comp_force']
+                thisColor = currentTheme.app.orange
         # grey bar if comp is disabled
         if component.params['disabled'].val:
             thisIcon = thisIcon.ConvertToDisabled()
-            thisColor = colors.app['rt_comp_disabled']
+            thisColor = currentTheme.app.grey
 
         dc.DrawBitmap(thisIcon, int(self.iconXpos) + 6, int(yPos + iconYOffset), True)
         fullRect = wx.Rect(
@@ -2516,10 +2516,10 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
             if useMax and overspill > 0:
                 # use disabled color
                 dc.SetBrush(
-                    wx.Brush(colors.app['rt_comp_disabled'], style=thisStyle)
+                    wx.Brush(currentTheme.app.grey, style=thisStyle)
                 )
                 dc.SetPen(
-                    wx.Pen(colors.app['rt_comp_disabled'], style=wx.TRANSPARENT)
+                    wx.Pen(currentTheme.app.grey, style=wx.TRANSPARENT)
                 )
                 # draw rest of bar
                 w = overspill // xScale + 1
@@ -2561,12 +2561,12 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         rect = wx.Rect(extent.TopLeft, extent.BottomRight)
         rect.Deflate(padding)
         # Draw rect
-        dc.SetPen(wx.Pen(colors.app['panel_bg']))
-        dc.SetBrush(wx.Brush(colors.app['tab_bg']))
+        dc.SetPen(wx.Pen(currentTheme.app.mantle))
+        dc.SetBrush(wx.Brush(currentTheme.app.mantle))
         dc.DrawRoundedRectangle(extent, 6)
         # Draw button
         dc.SetTextForeground(
-            wx.Colour(colors.app['text'])
+            wx.Colour(currentTheme.app.text)
         )
         dc.DrawLabel(
             lbl,
@@ -2722,7 +2722,7 @@ class StandaloneRoutineCanvas(scrolledpanel.ScrolledPanel):
         self.SetupScrolling(scroll_y=True)
 
     def _applyAppTheme(self):
-        self.SetBackgroundColour(colors.app['tab_bg'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
         self.helpBtn._applyAppTheme()
         self.Refresh()
         self.Update()
@@ -2919,8 +2919,8 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
 
         def _applyAppTheme(self):
             # Set colors
-            self.SetForegroundColour(colors.app['text'])
-            self.SetBackgroundColour(colors.app['panel_bg'])
+            self.SetForegroundColour(currentTheme.app.text)
+            self.SetBackgroundColour(currentTheme.app.mantle)
             # Set bitmap
             icon = icons.ComponentIcon(self.component, size=48)
             if hasattr(self.component, "beta") and self.component.beta:
@@ -2999,8 +2999,8 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
 
         def _applyAppTheme(self):
             # Set colors
-            self.SetForegroundColour(colors.app['text'])
-            self.SetBackgroundColour(colors.app['panel_bg'])
+            self.SetForegroundColour(currentTheme.app.text)
+            self.SetBackgroundColour(currentTheme.app.mantle)
             # Set bitmap
             icon = icons.ComponentIcon(self.routine, size=48)
             if hasattr(self.routine, "beta") and self.routine.beta:
@@ -3044,8 +3044,8 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
             self._applyAppTheme()
 
         def _applyAppTheme(self):
-            self.SetBackgroundColour(colors.app['panel_bg'])
-            self.label.SetForegroundColour(colors.app['text'])
+            self.SetBackgroundColour(currentTheme.app.mantle)
+            self.label.SetForegroundColour(currentTheme.app.text)
 
         def GetValue(self):
             return self.viewCtrl.GetValue()
@@ -3258,21 +3258,21 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
 
     def _applyAppTheme(self, target=None):
         # Style component panel
-        self.SetForegroundColour(colors.app['text'])
-        self.SetBackgroundColour(colors.app['panel_bg'])
+        self.SetForegroundColour(currentTheme.app.text)
+        self.SetBackgroundColour(currentTheme.app.mantle)
         # Style category labels
         for lbl in self.catLabels:
-            self.catLabels[lbl].SetForegroundColour(colors.app['text'])
+            self.catLabels[lbl].SetForegroundColour(currentTheme.app.text)
         # Style filter button
-        self.filterBtn.SetBackgroundColour(colors.app['panel_bg'])
+        self.filterBtn.SetBackgroundColour(currentTheme.app.mantle)
         icon = icons.ButtonIcon("filter", size=16).bitmap
         self.filterBtn.SetBitmap(icon)
         self.filterBtn.SetBitmapCurrent(icon)
         self.filterBtn.SetBitmapPressed(icon)
         self.filterBtn.SetBitmapFocus(icon)
         # Style plugin button
-        self.pluginBtn.SetBackgroundColour(colors.app['panel_bg'])
-        self.pluginBtn.SetForegroundColour(colors.app['text'])
+        self.pluginBtn.SetBackgroundColour(currentTheme.app.mantle)
+        self.pluginBtn.SetForegroundColour(currentTheme.app.text)
         icon = icons.ButtonIcon("plus", size=16).bitmap
         self.pluginBtn.SetBitmap(icon)
         self.pluginBtn.SetBitmapCurrent(icon)
@@ -3495,8 +3495,8 @@ class FlowPanel(wx.Panel, handlers.ThemeMixin):
         self.Layout()
 
     def _applyAppTheme(self):
-        self.SetBackgroundColour(colors.app['panel_bg'])
-        self.btnPanel.SetBackgroundColour(colors.app['panel_bg'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.btnPanel.SetBackgroundColour(currentTheme.app.mantle)
 
         self.Refresh()
 
@@ -3583,7 +3583,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
     def _applyAppTheme(self, target=None):
         """Apply any changes which have been made to the theme since panel was last loaded"""
         # Set background
-        self.SetBackgroundColour(colors.app['panel_bg'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
 
         self.draw()
 
@@ -4072,7 +4072,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # step through components in flow, get spacing from text size, etc
         currX = self.linePos[0]  # float
         lineId = wx.NewIdRef()
-        pdc.SetPen(wx.Pen(colour=colors.app['fl_flowline_bg']))
+        pdc.SetPen(wx.Pen(colour=currentTheme.app.grey))
         pdc.DrawLine(
             x1=linePosX - gap,
             y1=linePosY,
@@ -4104,7 +4104,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
             self.gapMidPoints.append(currX + gap // 2)
             self.gapNestLevels.append(nestLevel)
             pdc.SetId(lineId)
-            pdc.SetPen(wx.Pen(colour=colors.app['fl_flowline_bg']))
+            pdc.SetPen(wx.Pen(colour=currentTheme.app.grey))
             pdc.DrawLine(
                 x1=int(currX),
                 y1=linePosY,
@@ -4142,7 +4142,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
             if entry.getType() == 'Routine' or entry.getType() in getAllStandaloneRoutines():
                 currX = self.drawFlowRoutine(
                     pdc, entry, id=ii, pos=[currX, linePosY - 10])
-            pdc.SetPen(wx.Pen(wx.Pen(colour=colors.app['fl_flowline_bg'])))
+            pdc.SetPen(wx.Pen(wx.Pen(colour=currentTheme.app.grey)))
             pdc.DrawLine(
                 x1=int(currX),
                 y1=linePosY,
@@ -4167,7 +4167,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
                 id = wx.NewIdRef()
                 self.entryPointIDlist.append(id)
                 self.pdc.SetId(id)
-                self.pdc.SetBrush(wx.Brush(colors.app['fl_flowline_bg']))
+                self.pdc.SetBrush(wx.Brush(currentTheme.app.grey))
                 self.pdc.DrawCircle(pos, int(self.linePos[1]), ptSize)
                 r = self.pdc.GetIdBounds(id)
                 self.OffsetRect(r)
@@ -4207,8 +4207,8 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         dc.SetId(tmpId)
         ptSize = (9, 9, 12)[self.appData['flowSize']]
         thic = (1, 1, 2)[self.appData['flowSize']]
-        dc.SetBrush(wx.Brush(colors.app['fl_flowline_bg']))
-        dc.SetPen(wx.Pen(colors.app['fl_flowline_bg']))
+        dc.SetBrush(wx.Brush(currentTheme.app.grey))
+        dc.SetPen(wx.Pen(currentTheme.app.grey))
 
         posX, posY = pos
         dc.DrawPolygon(
@@ -4219,8 +4219,8 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # draws arrow at end of timeline
         tmpId = wx.NewId()
         dc.SetId(tmpId)
-        dc.SetBrush(wx.Brush(colors.app['fl_flowline_bg']))
-        dc.SetPen(wx.Pen(colors.app['fl_flowline_bg']))
+        dc.SetBrush(wx.Brush(currentTheme.app.grey))
+        dc.SetPen(wx.Pen(currentTheme.app.grey))
 
         posX, posY = pos
         dc.DrawPolygon([[0, -3], [5, 0], [0, 3]], int(posX), int(posY))
@@ -4254,8 +4254,8 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # draws direction arrow on left side of a loop
         tmpId = wx.NewIdRef()
         dc.SetId(tmpId)
-        dc.SetBrush(wx.Brush(colors.app['fl_flowline_bg']))
-        dc.SetPen(wx.Pen(colors.app['fl_flowline_bg']))
+        dc.SetBrush(wx.Brush(currentTheme.app.grey))
+        dc.SetPen(wx.Pen(currentTheme.app.grey))
 
         size = (3, 4, 5)[self.appData['flowSize']]
         offset = (3, 2, 0)[self.appData['flowSize']]
@@ -4307,17 +4307,17 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
 
         maxTime, nonSlip = routine.getMaxTime()
         if hasattr(routine, "disabled") and routine.disabled:
-            rtFill = colors.app['rt_comp_disabled']
-            rtEdge = colors.app['rt_comp_disabled']
-            rtText = colors.app['fl_routine_fg']
+            rtFill = currentTheme.app.grey
+            rtEdge = currentTheme.app.grey
+            rtText = currentTheme.app.hltext
         elif nonSlip:
-            rtFill = colors.app['fl_routine_bg_nonslip']
-            rtEdge = colors.app['fl_routine_bg_nonslip']
-            rtText = colors.app['fl_routine_fg']
+            rtFill = currentTheme.app.green
+            rtEdge = currentTheme.app.green
+            rtText = currentTheme.app.hltext
         else:
-            rtFill = colors.app['fl_routine_bg_slip']
-            rtEdge = colors.app['fl_routine_bg_slip']
-            rtText = colors.app['fl_routine_fg']
+            rtFill = currentTheme.app.blue
+            rtEdge = currentTheme.app.blue
+            rtText = currentTheme.app.hltext
 
         # get size based on text
         self.SetFont(font)
@@ -4371,7 +4371,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
 
         yy = [base, height + curve * up, height +
               curve * up // 2, height]  # for area
-        dc.SetPen(wx.Pen(colors.app['fl_flowline_bg']))
+        dc.SetPen(wx.Pen(currentTheme.app.grey))
         vertOffset = 0  # 1 is interesting too
         area = wx.Rect(startX, base + vertOffset,
                        endX - startX, max(yy) - min(yy))
@@ -4434,13 +4434,13 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # draw box
         rect = wx.Rect(int(x), int(y), int(w + pad), int(h + pad))
         # the edge should match the text
-        dc.SetPen(wx.Pen(colors.app['fl_flowline_bg']))
+        dc.SetPen(wx.Pen(currentTheme.app.grey))
         # try to make the loop fill brighter than the background canvas:
-        dc.SetBrush(wx.Brush(colors.app['fl_flowline_bg']))
+        dc.SetBrush(wx.Brush(currentTheme.app.grey))
 
         dc.DrawRoundedRectangle(rect, (4, 6, 8)[flowsize])
         # draw text
-        dc.SetTextForeground(colors.app['fl_flowline_fg'])
+        dc.SetTextForeground(currentTheme.app.hltext)
         dc.DrawText(name, x + pad // 2, y + pad // 2)
 
         self.componentFromID[id] = loop

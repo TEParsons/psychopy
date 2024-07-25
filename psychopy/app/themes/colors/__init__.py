@@ -1,1 +1,2 @@
-from .colors import BaseColor, scheme, AppColors, _AppColors, app, theme
+from .app import BaseAppColorScheme, allAppColorSchemes
+from .code import BaseCodeColorScheme, allCodeColorSchemes

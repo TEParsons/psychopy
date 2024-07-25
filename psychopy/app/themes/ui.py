@@ -4,7 +4,7 @@ from copy import copy
 
 import wx
 from pathlib import Path
-from . import theme, Theme
+from psychopy.app.themes import currentTheme, allThemes
 from psychopy.localization import _translate
 from psychopy.tools import filetools as ft
 from ... import prefs
@@ -20,27 +20,13 @@ class ThemeSwitcher(wx.Menu):
 
     def __init__(self, app):
         self.app = app
-        # Get list of themes
-        themeFolder = Path(prefs.paths['themes'])
-        themeList = []
-        for file in themeFolder.glob("*.json"):
-            themeList.append(Theme(file.stem))
-        # Reorder so that priority items are at the start
-        self.themes = []
-        order = copy(self.order)
-        order.reverse()
-        for name in order:
-            for i, obj in enumerate(themeList):
-                if obj.code == name:
-                    self.themes.append(themeList.pop())
-        self.themes.extend(themeList)
 
-        # Make menu
+        # make menu
         wx.Menu.__init__(self)
-        # Make buttons
-        for obj in self.themes:
-            item = self.AppendRadioItem(id=wx.ID_ANY, item=obj.code, help=obj.info)
-            item.Check(obj == theme)
+        # make buttons
+        for cls in allThemes:
+            item = self.AppendRadioItem(id=wx.ID_ANY, item=cls.name, help=cls.hint)
+            item.Check(cls is currentTheme)
             self.Bind(wx.EVT_MENU, self.onThemeChange, item)
         self.AppendSeparator()
         # Add Theme Folder button

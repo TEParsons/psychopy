@@ -19,7 +19,7 @@ import os
 import sys
 import subprocess
 import mimetypes
-from ..themes import icons, colors, handlers
+from ..themes import icons, colors, handlers, currentTheme
 from psychopy.localization import _translate
 
 # enums for file types
@@ -107,8 +107,8 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
         self.PopupMenu(menu, pos=evt.GetPoint())
 
     def _applyAppTheme(self, target=None):
-        self.SetBackgroundColour(colors.app['tab_bg'])
-        self.SetForegroundColour(colors.app['text'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.SetForegroundColour(currentTheme.app.text)
 
 
 class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
@@ -212,8 +212,8 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
 
     def _applyAppTheme(self, target=None):
         # Set background
-        self.SetBackgroundColour(colors.app['tab_bg'])
-        self.SetForegroundColour(colors.app['text'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.SetForegroundColour(currentTheme.app.text)
         # Style nav bar
         btns = {
             self.currentFileBtn: icons.ButtonIcon(stem="currentFile", size=16).bitmap,
@@ -221,14 +221,14 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
             self.browseBtn: icons.ButtonIcon(stem="fileopen", size=16).bitmap
         }
         for btn, bmp in btns.items():
-            btn.SetBackgroundColour(colors.app['tab_bg'])
+            btn.SetBackgroundColour(currentTheme.app.mantle)
             btn.SetBitmap(bmp)
             btn.SetBitmapFocus(bmp)
             btn.SetBitmapDisabled(bmp)
             btn.SetBitmapPressed(bmp)
             btn.SetBitmapCurrent(bmp)
         # Make sure directory label is correct color
-        self.lblDir.SetForegroundColour(colors.app['text'])
+        self.lblDir.SetForegroundColour(currentTheme.app.text)
         # Remake icons
         self.makeFileImgIcons()
         # Refresh

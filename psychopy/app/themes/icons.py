@@ -5,7 +5,7 @@ import numpy
 import wx
 from pathlib import Path
 from psychopy import prefs
-from . import theme as appTheme
+from .themes import currentTheme
 
 retStr = ""
 resources = Path(prefs.paths['resources'])
@@ -19,7 +19,7 @@ class BaseIcon:
         self._bitmap = None
         self.size = size
 
-        if theme in (appTheme.icons, None) and stem in iconCache:
+        if theme in (currentTheme.icons, None) and stem in iconCache:
             # Duplicate relevant attributes if relevant (depends on subclass)
             self.bitmaps = iconCache[stem].bitmaps
         else:
@@ -28,7 +28,7 @@ class BaseIcon:
             # Set size
             self.size = size
             # Store ref to self in iconCache if using app theme
-            if theme in (appTheme.icons, None):
+            if theme in (currentTheme.icons, None):
                 iconCache[stem] = self
 
     def _populate(self, stem, theme=None):
@@ -129,7 +129,7 @@ class ButtonIcon(BaseIcon):
     def _populate(self, stem, theme=None):
         # Use current theme if none requested
         if theme is None:
-            theme = appTheme.icons
+            theme = currentTheme.icons
         # Get all files in the resource folder containing the given stem
         matches = [f for f in resources.glob(f"**/{stem}*.png")]
         # Create blank arrays to store retina and non-retina files
@@ -195,7 +195,7 @@ class ComponentIcon(BaseIcon):
             )
         # Use current theme if none requested
         if theme is None:
-            theme = appTheme.icons
+            theme = currentTheme.icons
         # Get file from class
         filePath = Path(cls.iconFile)
         # Get icon file stem and root folder from iconFile value

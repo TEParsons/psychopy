@@ -574,10 +574,10 @@ class PluginBrowserList(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
         for obj in self.items:
             if obj == self.selected:
                 # Selected colors
-                bg = colors.app.light['panel_bg']
+                bg = "#f2f2f2"
             else:
                 # Deselected colors
-                bg = colors.app.light['tab_bg']
+                bg = "#ffffff"
             # Set color
             obj.SetBackgroundColour(bg)
             # Restyle item

@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from . import colors, icons, theme
+from . import colors, icons, currentTheme
 from ...preferences.preferences import prefs
 
 # --- Functions to handle specific subclasses of wx.Window ---
@@ -13,9 +13,9 @@ from wx.html import HtmlWindow
 
 def styleFrame(target):
     # Set background color
-    target.SetBackgroundColour(colors.app['frame_bg'])
+    target.SetBackgroundColour(currentTheme.app.crust)
     # Set foreground color
-    target.SetForegroundColour(colors.app['text'])
+    target.SetForegroundColour(currentTheme.app.text)
     # Set aui art provider
     if hasattr(target, 'getAuiManager'):
         target.getAuiManager().SetArtProvider(PsychopyDockArt())
@@ -24,16 +24,16 @@ def styleFrame(target):
 
 def stylePanel(target):
     # Set background color
-    target.SetBackgroundColour(colors.app['panel_bg'])
+    target.SetBackgroundColour(currentTheme.app.mantle)
     # Set text color
-    target.SetForegroundColour(colors.app['text'])
+    target.SetForegroundColour(currentTheme.app.text)
 
     target.Refresh()
 
 
 def styleToolbar(target):
     # Set background color
-    target.SetBackgroundColour(colors.app['frame_bg'])
+    target.SetBackgroundColour(currentTheme.app.crust)
     # Recreate tools
     target.makeTools()
     target.Realize()
@@ -48,7 +48,7 @@ def styleNotebook(target):
     for index in range(target.GetPageCount()):
         page = target.GetPage(index)
         # Set page background
-        page.SetBackgroundColour(colors.app['panel_bg'])
+        page.SetBackgroundColour(currentTheme.app.mantle)
         # If page points to an icon for the tab, set it
         if hasattr(page, "tabIcon"):
             btn = icons.ButtonIcon(page.tabIcon, size=(16, 16))
@@ -59,7 +59,7 @@ def styleCodeEditor(target):
     from . import fonts
     fonts.coderTheme.load(theme.code)
 
-    target.SetBackgroundColour(colors.app['tab_bg'])
+    target.SetBackgroundColour(currentTheme.app.mantle)
     # Set margin
     margin = fonts.coderTheme.margin
     target.SetFoldMarginColour(True, margin.backColor)
@@ -140,13 +140,13 @@ def styleTextCtrl(target):
 
 
 def styleListCtrl(target):
-    target.SetBackgroundColour(colors.app['tab_bg'])
-    target.SetTextColour(colors.app['text'])
+    target.SetBackgroundColour(currentTheme.app.mantle)
+    target.SetTextColour(currentTheme.app.text)
     target.Refresh()
 
 
 def styleHTMLCtrl(target):
-    target.SetBackgroundColour(colors.app['tab_bg'])
+    target.SetBackgroundColour(currentTheme.app.mantle)
 
 
 # Define dict linking object types to style functions
@@ -177,10 +177,10 @@ class ThemeMixin:
     @theme.setter
     def theme(self, value):
         # Skip method if theme value is unchanged
-        if value == self.theme:
+        if value is self.theme:
             return
         # Store value
-        self._theme = deepcopy(value)
+        self._theme = value
 
         # Do own styling
         self._applyAppTheme()
@@ -241,31 +241,31 @@ class PsychopyDockArt(aui.AuiDefaultDockArt):
         # Gradient
         self._gradient_type = aui.AUI_GRADIENT_NONE
         # Background
-        self._background_colour = colors.app['frame_bg']
-        self._background_gradient_colour = colors.app['frame_bg']
+        self._background_colour = currentTheme.app.crust
+        self._background_gradient_colour = currentTheme.app.crust
         self._background_brush = wx.Brush(self._background_colour)
         # Border
         self._border_size = 0
-        self._border_pen = wx.Pen(colors.app['frame_bg'])
+        self._border_pen = wx.Pen(currentTheme.app.crust)
         # Sash
         self._draw_sash = True
         self._sash_size = 5
-        self._sash_brush = wx.Brush(colors.app['frame_bg'])
+        self._sash_brush = wx.Brush(currentTheme.app.crust)
         # Gripper
-        self._gripper_brush = wx.Brush(colors.app['frame_bg'])
-        self._gripper_pen1 = wx.Pen(colors.app['frame_bg'])
-        self._gripper_pen2 = wx.Pen(colors.app['frame_bg'])
-        self._gripper_pen3 = wx.Pen(colors.app['frame_bg'])
+        self._gripper_brush = wx.Brush(currentTheme.app.crust)
+        self._gripper_pen1 = wx.Pen(currentTheme.app.crust)
+        self._gripper_pen2 = wx.Pen(currentTheme.app.crust)
+        self._gripper_pen3 = wx.Pen(currentTheme.app.crust)
         self._gripper_size = 0
         # Hint
-        self._hint_background_colour = colors.app['frame_bg']
+        self._hint_background_colour = currentTheme.app.crust
         # Caption bar
-        self._inactive_caption_colour = colors.app['docker_bg']
-        self._inactive_caption_gradient_colour = colors.app['docker_bg']
-        self._inactive_caption_text_colour = colors.app['docker_fg']
-        self._active_caption_colour = colors.app['docker_bg']
-        self._active_caption_gradient_colour = colors.app['docker_bg']
-        self._active_caption_text_colour = colors.app['docker_fg']
+        self._inactive_caption_colour = currentTheme.app.grey
+        self._inactive_caption_gradient_colour = currentTheme.app.grey
+        self._inactive_caption_text_colour = currentTheme.app.hltext
+        self._active_caption_colour = currentTheme.app.grey
+        self._active_caption_gradient_colour = currentTheme.app.grey
+        self._active_caption_text_colour = currentTheme.app.hltext
         # self._caption_font
         self._caption_size = 25
         self._button_size = 20
@@ -278,20 +278,21 @@ class PsychopyTabArt(aui.AuiDefaultTabArt):
         self.SetDefaultColours()
         self.SetAGWFlags(aui.AUI_NB_NO_TAB_FOCUS)
 
-        self.SetBaseColour(colors.app['tab_bg'])
-        self._background_top_colour = colors.app['panel_bg']
-        self._background_bottom_colour = colors.app['panel_bg']
+        self.SetBaseColour(currentTheme.app.base)
+        currentTheme.app.mantle
+        self._background_top_colour = currentTheme.app.mantle
+        self._background_bottom_colour = currentTheme.app.mantle
 
-        self._tab_text_colour = lambda page: colors.app['text']
-        self._tab_top_colour = colors.app['tab_bg']
-        self._tab_bottom_colour = colors.app['tab_bg']
-        self._tab_gradient_highlight_colour = colors.app['tab_bg']
-        self._border_colour = colors.app['tab_bg']
+        self._tab_text_colour = lambda page: currentTheme.app.text
+        self._tab_top_colour = currentTheme.app.mantle
+        self._tab_bottom_colour = currentTheme.app.mantle
+        self._tab_gradient_highlight_colour = currentTheme.app.mantle
+        self._border_colour = currentTheme.app.mantle
         self._border_pen = wx.Pen(self._border_colour)
 
-        self._tab_disabled_text_colour = colors.app['text']
-        self._tab_inactive_top_colour = colors.app['panel_bg']
-        self._tab_inactive_bottom_colour = colors.app['panel_bg']
+        self._tab_disabled_text_colour = currentTheme.app.text
+        self._tab_inactive_top_colour = currentTheme.app.mantle
+        self._tab_inactive_bottom_colour = currentTheme.app.mantle
 
     def DrawTab(self, dc, wnd, page, in_rect, close_button_state, paint_control=False):
         """
