@@ -62,11 +62,11 @@ def styleCodeEditor(target):
     target.SetFoldMarginColour(True, currentTheme.code.line_number_background_color)
     target.SetFoldMarginHiColour(True, currentTheme.code.line_number_special_background_color)
     # Set caret colour
-    target.SetCaretForeground(currentTheme.code.styles[Token])
+    target.SetCaretForeground(currentTheme.code.base.GetTextColour())
     target.SetCaretLineBackground(currentTheme.code.highlight_color)
     target.SetCaretWidth(1)
     # Set selection colour
-    target.SetSelForeground(True, currentTheme.code.styles[Token])
+    target.SetSelForeground(True, currentTheme.code.base.GetTextColour())
     target.SetSelBackground(True, currentTheme.code.highlight_color)
     # Set wrap point
     target.edgeGuideColumn = prefs.coder['edgeGuideColumn']
@@ -92,11 +92,11 @@ def styleCodeEditor(target):
 def styleTextCtrl(target):
     # Set background
     target.SetBackgroundColour(currentTheme.code.background_color)
-    target.SetForegroundColour(currentTheme.code.styles[Token])
+    target.SetForegroundColour(currentTheme.code.base.GetTextColour())
     # Construct style
     style = wx.TextAttr(
-        colText=currentTheme.code.background_color,
-        colBack=currentTheme.code.styles[Token],
+        colText=currentTheme.code.base.GetTextColour(),
+        colBack=currentTheme.code.background_color,
     )
     if isinstance(target, wx.richtext.RichTextCtrl):
         style = wx.richtext.RichTextAttr(style)

@@ -15,6 +15,7 @@ import webbrowser
 from pathlib import Path
 
 import PIL
+from pygments.token import Token
 import numpy
 import requests
 from wx.html import HtmlWindow
@@ -635,10 +636,8 @@ class MarkdownCtrl(wx.Panel, handlers.ThemeMixin):
         self.PopupMenu(menu)
 
     def _applyAppTheme(self):
-        from psychopy.app.themes import fonts
-        spec = fonts.coderTheme.base
         # Set raw text font from coder theme
-        self.rawTextCtrl.SetFont(spec.obj)
+        self.rawTextCtrl.SetFont(currentTheme.code.base.GetFont())
         # Always style text ctrl
         handlers.styleCodeEditor(self.rawTextCtrl)
         # Only style output if in a styled parent

@@ -65,11 +65,11 @@ class StdOutRich(wx.richtext.RichTextCtrl, _BaseErrorHandler, handlers.ThemeMixi
         handlers.ThemeMixin._applyAppTheme(self)
         # set base font
         self.SetFont(
-            currentTheme.code.wxFontForToken(Token).GetFont()
+            currentTheme.code.base.GetFont()
         )
         # dict of styles
         self._styles = {
-            'base': currentTheme.code.wxFontForToken(Token),
+            'base': currentTheme.code.base,
             'error': currentTheme.code.wxFontForToken(Token.Generic.Error),
             'warning': currentTheme.code.wxFontForToken(Token.Generic.Warning),
             'info': currentTheme.code.wxFontForToken(Token.Literal.String),

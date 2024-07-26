@@ -1,3 +1,4 @@
+from psychopy.preferences import prefs
 import wx.stc as stc
 from pygments.style import Style, Token
 
@@ -12,11 +13,6 @@ __all__ = [
 stc2pygments = {
     stc.STC_STYLE_DEFAULT: Token,
 }
-
-
-# global variable to keep track of all known code color schemes
-# this will be appended to whenever BaseAppColors is subclassed
-allCodeColorSchemes = []
 
 
 class BaseCodeColorScheme(Style):
@@ -127,7 +123,7 @@ class BaseCodeColorScheme(Style):
             pygStyle = cls.style_for_token(token)
             # convert to a wx.TextAttr object
             font = wx.richtext.RichTextAttr()
-            font.SetFontPointSize(12)
+            font.SetFontPointSize(int(prefs.coder['codeFontSize']))
             font.SetFontFaceName(cls.font_family)
             font.SetTextColour(pygStyle['color'])
             font.SetBackgroundColour(pygStyle['bgcolor'])
@@ -138,6 +134,10 @@ class BaseCodeColorScheme(Style):
             cls._stcCache[token] = font
 
         return cls._stcCache[token]
+
+    def __init_subclass__(cls):
+        # store base style
+        cls.base = cls.wxFontForToken(Token)
 
 
 class PsychoPyLight(BaseCodeColorScheme):

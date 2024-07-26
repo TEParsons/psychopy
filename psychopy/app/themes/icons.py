@@ -18,6 +18,7 @@ class BaseIcon:
         self.bitmaps = {}
         self._bitmap = None
         self.size = size
+        self.stem = stem
 
         if theme in (currentTheme.icons, None) and stem in iconCache:
             # Duplicate relevant attributes if relevant (depends on subclass)
@@ -183,6 +184,17 @@ class ButtonIcon(BaseIcon):
         for file in files.values():
             bmp = wx.Bitmap(str(file), wx.BITMAP_TYPE_PNG)
             self.bitmaps[(bmp.GetWidth(), bmp.GetHeight())] = bmp
+    
+    def reload(self, theme=None):
+        """
+        Get all images associated with this icon again. This is useful when changeing theme to one 
+        with different icons.
+        Parameters
+        ----------
+        theme : str, optional
+            Theme to get icons from, by default will use the current theme
+        """
+        self._populate(stem=self.stem, theme=theme)
 
 
 class ComponentIcon(BaseIcon):

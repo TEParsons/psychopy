@@ -56,7 +56,7 @@ if Version(wx.__version__) < Version('4.0.3'):
 from psychopy.localization import _translate
 from ... import experiment, prefs
 from .. import dialogs, utils, ribbon
-from ..themes import icons, colors, handlers
+from ..themes import icons, colors, handlers, currentTheme
 from ..themes.ui import ThemeSwitcher
 from ..ui import BaseAuiFrame
 from psychopy import logging, data
@@ -3366,9 +3366,8 @@ class ReadmeFrame(wx.Frame, handlers.ThemeMixin):
             self._applyAppTheme()
 
     def _applyAppTheme(self):
-        from psychopy.app.themes import fonts
-        self.SetBackgroundColour(fonts.coderTheme.base.backColor)
-        self.ctrl.SetBackgroundColour(fonts.coderTheme.base.backColor)
+        self.SetBackgroundColour(currentTheme.code.background_color)
+        self.ctrl.SetBackgroundColour(currentTheme.code.background_color)
         self.Update()
         self.Refresh()
 
@@ -4344,8 +4343,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         endX = pos[0] + w + pad
         # the edge should match the text, unless selected
         if draw:
-            dc.SetPen(wx.Pen(wx.Colour(rtEdge[0], rtEdge[1],
-                                       rtEdge[2], wx.ALPHA_OPAQUE)))
+            dc.SetPen(wx.Pen(wx.Colour(rtEdge)))
             dc.SetBrush(wx.Brush(rtFill))
             dc.DrawRoundedRectangle(
                 rect, (4, 6, 8)[self.appData['flowSize']])

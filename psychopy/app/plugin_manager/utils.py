@@ -11,7 +11,6 @@ class InstallErrorDlg(wx.Dialog, handlers.ThemeMixin):
     command was tried and what output was received.
     """
     def __init__(self, label, caption=_translate("PIP error"), cmd="", stdout="", stderr=""):
-        from psychopy.app.themes import fonts
         # Initialise
         wx.Dialog.__init__(
             self, None,
@@ -35,21 +34,18 @@ class InstallErrorDlg(wx.Dialog, handlers.ThemeMixin):
         self.title.Add(self.icon, border=6, flag=wx.ALL | wx.EXPAND)
         # Create title
         self.titleLbl = wx.StaticText(self, label=label)
-        self.titleLbl.SetFont(fonts.appTheme['h3'].obj)
         self.title.Add(self.titleLbl, proportion=1, border=6, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         # Show what we tried
         self.inLbl = wx.StaticText(self, label=_translate("We tried:"))
         self.sizer.Add(self.inLbl, border=6, flag=wx.ALL | wx.EXPAND)
         self.inCtrl = wx.TextCtrl(self, value=cmd, style=wx.TE_READONLY)
         self.inCtrl.SetBackgroundColour("white")
-        self.inCtrl.SetFont(fonts.appTheme['code'].obj)
         self.sizer.Add(self.inCtrl, border=6, flag=wx.ALL | wx.EXPAND)
         # Show what we got
         self.outLbl = wx.StaticText(self, label=_translate("We got:"))
         self.sizer.Add(self.outLbl, border=6, flag=wx.ALL | wx.EXPAND)
         self.outCtrl = wx.TextCtrl(self, value=f"{stdout}\n{stderr}",
                                    size=(-1, 620), style=wx.TE_READONLY | wx.TE_MULTILINE)
-        self.outCtrl.SetFont(fonts.appTheme['code'].obj)
         self.sizer.Add(self.outCtrl, proportion=1, border=6, flag=wx.ALL | wx.EXPAND)
 
         # Make buttons

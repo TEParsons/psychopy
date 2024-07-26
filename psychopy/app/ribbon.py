@@ -769,8 +769,8 @@ class PavloviaUserCtrl(FrameRibbonDropdownButton):
     def _applyAppTheme(self):
         # set color
         for obj in (self, self.button, self.drop):
-            obj.SetBackgroundColour(colors.app['frame_bg'])
-            obj.SetForegroundColour(colors.app['text'])
+            obj.SetBackgroundColour(currentTheme.app.crust)
+            obj.SetForegroundColour(currentTheme.app.text)
         # refresh
         self.Refresh()
 
@@ -906,8 +906,8 @@ class PavloviaProjectCtrl(FrameRibbonDropdownButton):
     def _applyAppTheme(self):
         # set color
         for obj in (self, self.button, self.drop):
-            obj.SetBackgroundColour(colors.app['frame_bg'])
-            obj.SetForegroundColour(colors.app['text'])
+            obj.SetBackgroundColour(currentTheme.app.crust)
+            obj.SetForegroundColour(currentTheme.app.text)
         # refresh
         self.Refresh()
 

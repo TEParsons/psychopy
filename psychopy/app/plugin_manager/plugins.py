@@ -364,8 +364,6 @@ class PluginBrowserList(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
 
         def _applyAppTheme(self):
             # Set label fonts
-            from psychopy.app.themes import fonts
-            self.nameLbl.SetFont(fonts.appTheme['h6'].obj)
             self.pipNameLbl.SetFont(fonts.coderTheme.base.obj)
             # Mark installed/active
             self.markInstalled(self.info.installed)
@@ -700,8 +698,6 @@ class PluginBrowserList(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
         # Set colors
         self.SetBackgroundColour("white")
         # Style heading(s)
-        from psychopy.app.themes import fonts
-        self.badItemLbl.SetFont(fonts.appTheme['h6'].obj)
 
     def appendItem(self, info):
         item = self.PluginListItem(self, info)
@@ -825,9 +821,7 @@ class PluginDetailsPanel(wx.Panel, handlers.ThemeMixin):
         self.keywordsCtrl.SetBackgroundColour("white")
         self.versionCtrl.SetForegroundColour("grey")
         # Set fonts
-        from psychopy.app.themes import fonts
-        self.title.SetFont(fonts.appTheme['h1'].obj)
-        self.pipName.SetFont(fonts.coderTheme.base.obj)
+        self.pipName.SetFont(currentTheme.code.base.GetFont())
 
     def markInstalled(self, installed=True):
         """
@@ -1064,8 +1058,6 @@ class AuthorDetailsPanel(wx.Panel, handlers.ThemeMixin):
 
     def _applyAppTheme(self):
         # Name font
-        from psychopy.app.themes import fonts
-        self.name.SetFont(fonts.appTheme['h4'].obj)
         # # Email button bitmap
         # self.emailBtn.SetBitmap(icons.ButtonIcon("email", 16).bitmap)
         # self.emailBtn.SetBitmapDisabled(icons.ButtonIcon("email", 16).bitmap)
