@@ -125,8 +125,11 @@ class BaseCodeColorScheme(Style):
             font = wx.richtext.RichTextAttr()
             font.SetFontPointSize(int(prefs.coder['codeFontSize']))
             font.SetFontFaceName(cls.font_family)
-            font.SetTextColour(pygStyle['color'])
-            font.SetBackgroundColour(pygStyle['bgcolor'])
+            font.SetTextColour("#" + pygStyle['color'])
+            if pygStyle['bgcolor']:
+                font.SetBackgroundColour("#" + pygStyle['bgcolor'])
+            else:
+                font.SetBackgroundColour(cls.background_color)
             font.SetFontWeight(wx.FONTWEIGHT_BOLD if pygStyle['bold'] else wx.FONTWEIGHT_NORMAL)
             font.SetFontStyle(wx.FONTSTYLE_ITALIC if pygStyle['italic'] else wx.FONTSTYLE_NORMAL)
             font.SetFontUnderlined(pygStyle['underline'])

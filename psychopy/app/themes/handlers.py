@@ -57,7 +57,7 @@ def styleNotebook(target):
 
 
 def styleCodeEditor(target):
-    target.SetBackgroundColour(currentTheme.app.mantle)
+    target.SetBackgroundColour(currentTheme.app.base)
     # Set margin
     target.SetFoldMarginColour(True, currentTheme.code.line_number_background_color)
     target.SetFoldMarginHiColour(True, currentTheme.code.line_number_special_background_color)
