@@ -7,7 +7,7 @@ import webbrowser
 from PIL import Image as pil
 
 from psychopy.tools import pkgtools
-from psychopy.app.themes import theme, handlers, colors, icons
+from psychopy.app.themes import currentTheme, handlers, colors, icons
 from psychopy.tools import stringtools as st
 from psychopy.tools.versionchooser import VersionRange
 from psychopy.app import utils
@@ -277,7 +277,7 @@ class PluginManagerPanel(wx.Panel, handlers.ThemeMixin):
 
         self.Layout()
         self.splitter.SetSashPosition(1, True)
-        self.theme = theme.app
+        self.theme = currentTheme.app
     
     def updateInfo(self):
         # refresh all list items
