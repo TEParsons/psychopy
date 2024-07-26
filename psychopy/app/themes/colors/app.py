@@ -14,6 +14,7 @@ class BaseAppColorScheme:
     Class to subclass in order to create a new app color scheme.
     """
     # three shades of background color
+    overlay = "#d4d4d4"
     crust = "#e3e3e3"
     mantle = "#f2f2f2"
     base = "#ffffff"
@@ -52,6 +53,7 @@ class PsychoPyDark(BaseAppColorScheme):
     A dark variant of the default color scheme to be easier on the eyes.
     """
     # backgrounds
+    overlay = "#66666e"
     crust = "#57575f"
     mantle = "#66666e"
     base = "#7f7f7d"
@@ -67,8 +69,9 @@ class HiVisLight(BaseAppColorScheme):
     A high contrast color scheme for maximum visibility.
     """
     # backgrounds
-    crust = "#e3e3e3"
-    mantle = "#f2f2f2"
+    overlay = "#999999"
+    crust = "#bbbbbb"
+    mantle = "#dddddd"
     base = "#ffffff"
     # text
     text = "#000000"
@@ -81,11 +84,12 @@ class HiVisLight(BaseAppColorScheme):
     red = "#ff0000"
 
 
-class HiVisLight(BaseAppColorScheme):
+class HiVisDark(BaseAppColorScheme):
     """
     A high contrast color scheme for maximum visibility.
     """
     # backgrounds
+    overlay = "#666666"
     crust = "#444444"
     mantle = "#222222"
     base = "#000000"
