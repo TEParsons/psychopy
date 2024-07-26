@@ -260,7 +260,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.app.trackFrame(self)
         self.SetDropTarget(FileDropTarget(targetFrame=self))
 
-        self.theme = colors.theme
+        self.theme = currentTheme.__name__
 
     @property
     def session(self):
