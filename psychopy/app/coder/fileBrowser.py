@@ -107,7 +107,7 @@ class FileBrowserListCtrl(ListCtrlAutoWidthMixin, wx.ListCtrl, handlers.ThemeMix
         self.PopupMenu(menu, pos=evt.GetPoint())
 
     def _applyAppTheme(self, target=None):
-        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.SetBackgroundColour(currentTheme.app.base)
         self.SetForegroundColour(currentTheme.app.text)
 
 
