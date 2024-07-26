@@ -4,8 +4,8 @@ from abc import ABC
 import numpy
 import wx
 from pathlib import Path
-from psychopy import prefs, logging
-from . import theme as appTheme
+from psychopy import prefs
+from .themes import currentTheme
 
 retStr = ""
 resources = Path(prefs.paths['resources'])
@@ -18,8 +18,8 @@ class BaseIcon:
         self.bitmaps = {}
         self._bitmap = None
         self.size = size
-        self.stem = stem
-        if theme in (appTheme.icons, None) and stem in iconCache:
+
+        if theme in (currentTheme.icons, None) and stem in iconCache:
             # Duplicate relevant attributes if relevant (depends on subclass)
             self.bitmaps = iconCache[stem].bitmaps
         else:
@@ -28,21 +28,8 @@ class BaseIcon:
             # Set size
             self.size = size
             # Store ref to self in iconCache if using app theme
-            if theme in (appTheme.icons, None):
+            if theme in (currentTheme.icons, None):
                 iconCache[stem] = self
-    
-    def reload(self, theme=None):
-        """
-        Get all images associated with this icon again. This is useful when changeing theme to one 
-        with different icons.
-
-        Parameters
-        ----------
-        theme : str, optional
-            Theme to get icons from, by default will use the current theme
-        """
-        self._populate(stem=self.stem, theme=theme)
-
 
     def _populate(self, stem, theme=None):
         raise NotImplementedError(
@@ -142,11 +129,9 @@ class ButtonIcon(BaseIcon):
     def _populate(self, stem, theme=None):
         # Use current theme if none requested
         if theme is None:
-            theme = appTheme.icons
+            theme = currentTheme.icons
         # Get all files in the resource folder containing the given stem
         matches = [f for f in resources.glob(f"**/{stem}*.png")]
-        # get all icons from plugins
-        matches += findPluginIcons(stem)
         # Create blank arrays to store retina and non-retina files
         ret = {}
         nret = {}
@@ -210,7 +195,7 @@ class ComponentIcon(BaseIcon):
             )
         # Use current theme if none requested
         if theme is None:
-            theme = appTheme.icons
+            theme = currentTheme.icons
         # Get file from class
         filePath = Path(cls.iconFile)
         # Get icon file stem and root folder from iconFile value
@@ -263,38 +248,3 @@ class ComponentIcon(BaseIcon):
             self._beta = wx.Bitmap(combined)
 
         return self._beta
-
-
-def findPluginIcons(stem):
-    """
-    Search icons added by plugins for any matching the given file stem.
-
-    Parameters
-    ----------
-    stem : str
-        The file stem (aka the filename without `.png` on the end) to search for - will also find
-        files beginning with the given stem (e.g. "globe" will also find "globe@2x.png")
-
-    Returns
-    -------
-    list[Path]
-        List of file paths for found icons
-    """
-    from psychopy.plugins import getEntryPointGroup
-    # start off with no files
-    files = []
-    # iterate through found entry points
-    for ep in getEntryPointGroup("psychopy.app.themes.icons"):
-        try:
-            # try to load module
-            mod = ep.load()
-            # get module folder
-            folder = Path(mod.__file__).parent
-            # add all matching .png files from that folder
-            for file in folder.glob(f"**/{stem}*.png"):
-                files.append(file)
-        except:
-            # if it fails for any reason, skip it
-            logging.warn(f"Failed to load {ep.value}")
-
-    return files

@@ -37,7 +37,7 @@ import wx.lib.mixins.listctrl as listmixin
 import psychopy
 from psychopy import logging
 from . import pavlovia_ui
-from .themes import colors, handlers, icons
+from .themes import colors, handlers, icons, currentTheme
 from psychopy.localization import _translate
 from psychopy.tools import stringtools as st
 from psychopy.tools.apptools import SortTerm
@@ -91,7 +91,7 @@ class HoverMixin:
     def ForegroundColourNoHover(self):
         if hasattr(self, "_ForegroundColourNoHover"):
             return self._ForegroundColourNoHover
-        return colors.app['text']
+        return currentTheme.app.text
 
     @ForegroundColourNoHover.setter
     def ForegroundColourNoHover(self, value):
@@ -101,7 +101,7 @@ class HoverMixin:
     def BackgroundColourNoHover(self):
         if hasattr(self, "_BackgroundColourNoHover"):
             return self._BackgroundColourNoHover
-        return colors.app['frame_bg']
+        return currentTheme.app.crust
 
     @BackgroundColourNoHover.setter
     def BackgroundColourNoHover(self, value):
@@ -111,7 +111,7 @@ class HoverMixin:
     def ForegroundColourHover(self):
         if hasattr(self, "_ForegroundColourHover"):
             return self._ForegroundColourHover
-        return colors.app['txtbutton_fg_hover']
+        return currentTheme.app.hltext
 
     @ForegroundColourHover.setter
     def ForegroundColourHover(self, value):
@@ -121,7 +121,7 @@ class HoverMixin:
     def BackgroundColourHover(self):
         if hasattr(self, "_BackgroundColourHover"):
             return self._BackgroundColourHover
-        return colors.app['txtbutton_bg_hover']
+        return currentTheme.app.red
 
     @BackgroundColourHover.setter
     def BackgroundColourHover(self, value):
@@ -383,10 +383,10 @@ class HoverButton(wx.Button, HoverMixin, handlers.ThemeMixin):
         self.SetupHover()
 
     def _applyAppTheme(self):
-        self.ForegroundColourNoHover = colors.app['text']
-        self.ForegroundColourHover = colors.app['txtbutton_fg_hover']
-        self.BackgroundColourNoHover = colors.app['frame_bg']
-        self.BackgroundColourHover = colors.app['txtbutton_bg_hover']
+        self.ForegroundColourNoHover = currentTheme.app.text
+        self.ForegroundColourHover = currentTheme.app.hltext
+        self.BackgroundColourNoHover = currentTheme.app.crust
+        self.BackgroundColourHover = currentTheme.app.red
         # Refresh
         self.OnHover(evt=None)
 
@@ -1572,7 +1572,7 @@ class ToggleButton(wx.ToggleButton, HoverMixin):
     def BackgroundColourNoHover(self):
         if self.GetValue():
             # Return a darker color if selected
-            return colors.app['docker_bg']
+            return currentTheme.app.grey
         else:
             # Return the default color otherwise
             return HoverMixin.BackgroundColourNoHover.fget(self)
@@ -1642,7 +1642,7 @@ class ToggleButtonArray(wx.Window, handlers.ThemeMixin):
 
     def _applyAppTheme(self, target=None):
         # Set panel background
-        self.SetBackgroundColour(colors.app['panel_bg'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
         # Use OnHover event to set buttons to their default colors
         for btn in self.buttons.values():
             btn.OnHover()

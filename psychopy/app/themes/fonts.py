@@ -8,112 +8,112 @@ import wx.stc as stc
 import re
 
 from ... import prefs
-from . import colors, theme, loadSpec
+from . import colors, currentTheme
 
 
-# STC tags corresponding to words in theme spec
-tags = {
-    "base": stc.STC_STYLE_DEFAULT,
-    "margin": stc.STC_STYLE_LINENUMBER,
-    "caret": None,
-    "select": None,
-    "indent": stc.STC_STYLE_INDENTGUIDE,
-    "brace": stc.STC_STYLE_BRACELIGHT,
-    "controlchar": stc.STC_STYLE_CONTROLCHAR,
-    # Python
-    "python": {
-        "operator": stc.STC_P_OPERATOR,
-        "keyword": stc.STC_P_WORD,
-        "keyword2": stc.STC_P_WORD2,
-        "id": stc.STC_P_IDENTIFIER,
-        "num": stc.STC_P_NUMBER,
-        "char": stc.STC_P_CHARACTER,
-        "str": stc.STC_P_STRING,
-        "openstr": stc.STC_P_STRINGEOL,
-        "decorator": stc.STC_P_DECORATOR,
-        "def": stc.STC_P_DEFNAME,
-        "class": stc.STC_P_CLASSNAME,
-        "comment": stc.STC_P_COMMENTLINE,
-        "commentblock": stc.STC_P_COMMENTBLOCK,
-        "documentation": stc.STC_P_TRIPLE,
-        "documentation2": stc.STC_P_TRIPLEDOUBLE,
-        "whitespace": stc.STC_P_DEFAULT
-    },
-    # R
-    "r": {
-        "operator": stc.STC_R_OPERATOR,
-        "keyword": stc.STC_R_BASEKWORD,
-        "keyword2": stc.STC_R_KWORD,
-        "id": stc.STC_R_IDENTIFIER,
-        "num": stc.STC_R_NUMBER,
-        "char": stc.STC_R_STRING2,
-        "str": stc.STC_R_STRING,
-        "infix": stc.STC_R_INFIX,
-        "openinfix": stc.STC_R_INFIXEOL,
-        "comment": stc.STC_R_COMMENT,
-        "whitespace": stc.STC_R_DEFAULT
-    },
-    # C++
-    "c++": {
-        "operator": stc.STC_C_OPERATOR,
-        "keyword": stc.STC_C_WORD,
-        "keyword2": stc.STC_C_WORD2,
-        "id": stc.STC_C_IDENTIFIER,
-        "num": stc.STC_C_NUMBER,
-        "char": stc.STC_C_CHARACTER,
-        "str": stc.STC_C_STRING,
-        "openstr": stc.STC_C_STRINGEOL,
-        "class": stc.STC_C_GLOBALCLASS,
-        "comment": stc.STC_C_COMMENT,
-        "commentblock": stc.STC_C_COMMENTLINE,
-        "commentkw": stc.STC_C_COMMENTDOCKEYWORD,
-        "commenterror": stc.STC_C_COMMENTDOCKEYWORDERROR,
-        "documentation": stc.STC_C_COMMENTLINEDOC,
-        "documentation2": stc.STC_C_COMMENTDOC,
-        "whitespace": stc.STC_C_DEFAULT,
-        "preprocessor": stc.STC_C_PREPROCESSOR,
-        "preprocessorcomment": stc.STC_C_PREPROCESSORCOMMENT
-    },
-    # JSON
-    "json": {
-        "operator": stc.STC_JSON_OPERATOR,
-        "keyword": stc.STC_JSON_KEYWORD,
-        "uri": stc.STC_JSON_URI,
-        "compactiri": stc.STC_JSON_COMPACTIRI,
-        "error": stc.STC_JSON_ERROR,
-        "espacesequence": stc.STC_JSON_ESCAPESEQUENCE,
-        "propertyname": stc.STC_JSON_PROPERTYNAME,
-        "ldkeyword": stc.STC_JSON_LDKEYWORD,
-        "num": stc.STC_JSON_NUMBER,
-        "str": stc.STC_JSON_STRING,
-        "openstr": stc.STC_JSON_STRINGEOL,
-        "comment": stc.STC_JSON_LINECOMMENT,
-        "commentblock": stc.STC_JSON_BLOCKCOMMENT,
-        "whitespace": stc.STC_JSON_DEFAULT
-    },
-    # Markdown
-    "markdown": {
-        "base": stc.STC_MARKDOWN_DEFAULT,
-        "whitespace": stc.STC_MARKDOWN_LINE_BEGIN,
-        "str": stc.STC_MARKDOWN_BLOCKQUOTE,
-        "code": stc.STC_MARKDOWN_CODE,
-        "codeblock": stc.STC_MARKDOWN_CODE2,
-        "italic": stc.STC_MARKDOWN_EM1,
-        "italic2": stc.STC_MARKDOWN_EM2,
-        "bold": stc.STC_MARKDOWN_STRONG1,
-        "bold2": stc.STC_MARKDOWN_STRONG2,
-        "h1": stc.STC_MARKDOWN_HEADER1,
-        "h2": stc.STC_MARKDOWN_HEADER2,
-        "h3": stc.STC_MARKDOWN_HEADER3,
-        "h4": stc.STC_MARKDOWN_HEADER4,
-        "h5": stc.STC_MARKDOWN_HEADER5,
-        "h6": stc.STC_MARKDOWN_HEADER6,
-        "hr": stc.STC_MARKDOWN_HRULE,
-        "link": stc.STC_MARKDOWN_LINK,
-        "num": stc.STC_MARKDOWN_OLIST_ITEM,
-        "prechar": stc.STC_MARKDOWN_PRECHAR,
-        "li": stc.STC_MARKDOWN_ULIST_ITEM,
-    }
+# STC tags corresponding to pygments tokens
+stc2pygments = {
+    stc.STC_STYLE_DEFAULT: Token,
+    # "margin": stc.STC_STYLE_LINENUMBER,
+    # "caret": None,
+    # "select": None,
+    # "indent": stc.STC_STYLE_INDENTGUIDE,
+    # "brace": stc.STC_STYLE_BRACELIGHT,
+    # "controlchar": stc.STC_STYLE_CONTROLCHAR,
+    # # Python
+    # "python": {
+    #     "operator": stc.STC_P_OPERATOR,
+    #     "keyword": stc.STC_P_WORD,
+    #     "keyword2": stc.STC_P_WORD2,
+    #     "id": stc.STC_P_IDENTIFIER,
+    #     "num": stc.STC_P_NUMBER,
+    #     "char": stc.STC_P_CHARACTER,
+    #     "str": stc.STC_P_STRING,
+    #     "openstr": stc.STC_P_STRINGEOL,
+    #     "decorator": stc.STC_P_DECORATOR,
+    #     "def": stc.STC_P_DEFNAME,
+    #     "class": stc.STC_P_CLASSNAME,
+    #     "comment": stc.STC_P_COMMENTLINE,
+    #     "commentblock": stc.STC_P_COMMENTBLOCK,
+    #     "documentation": stc.STC_P_TRIPLE,
+    #     "documentation2": stc.STC_P_TRIPLEDOUBLE,
+    #     "whitespace": stc.STC_P_DEFAULT
+    # },
+    # # R
+    # "r": {
+    #     "operator": stc.STC_R_OPERATOR,
+    #     "keyword": stc.STC_R_BASEKWORD,
+    #     "keyword2": stc.STC_R_KWORD,
+    #     "id": stc.STC_R_IDENTIFIER,
+    #     "num": stc.STC_R_NUMBER,
+    #     "char": stc.STC_R_STRING2,
+    #     "str": stc.STC_R_STRING,
+    #     "infix": stc.STC_R_INFIX,
+    #     "openinfix": stc.STC_R_INFIXEOL,
+    #     "comment": stc.STC_R_COMMENT,
+    #     "whitespace": stc.STC_R_DEFAULT
+    # },
+    # # C++
+    # "c++": {
+    #     "operator": stc.STC_C_OPERATOR,
+    #     "keyword": stc.STC_C_WORD,
+    #     "keyword2": stc.STC_C_WORD2,
+    #     "id": stc.STC_C_IDENTIFIER,
+    #     "num": stc.STC_C_NUMBER,
+    #     "char": stc.STC_C_CHARACTER,
+    #     "str": stc.STC_C_STRING,
+    #     "openstr": stc.STC_C_STRINGEOL,
+    #     "class": stc.STC_C_GLOBALCLASS,
+    #     "comment": stc.STC_C_COMMENT,
+    #     "commentblock": stc.STC_C_COMMENTLINE,
+    #     "commentkw": stc.STC_C_COMMENTDOCKEYWORD,
+    #     "commenterror": stc.STC_C_COMMENTDOCKEYWORDERROR,
+    #     "documentation": stc.STC_C_COMMENTLINEDOC,
+    #     "documentation2": stc.STC_C_COMMENTDOC,
+    #     "whitespace": stc.STC_C_DEFAULT,
+    #     "preprocessor": stc.STC_C_PREPROCESSOR,
+    #     "preprocessorcomment": stc.STC_C_PREPROCESSORCOMMENT
+    # },
+    # # JSON
+    # "json": {
+    #     "operator": stc.STC_JSON_OPERATOR,
+    #     "keyword": stc.STC_JSON_KEYWORD,
+    #     "uri": stc.STC_JSON_URI,
+    #     "compactiri": stc.STC_JSON_COMPACTIRI,
+    #     "error": stc.STC_JSON_ERROR,
+    #     "espacesequence": stc.STC_JSON_ESCAPESEQUENCE,
+    #     "propertyname": stc.STC_JSON_PROPERTYNAME,
+    #     "ldkeyword": stc.STC_JSON_LDKEYWORD,
+    #     "num": stc.STC_JSON_NUMBER,
+    #     "str": stc.STC_JSON_STRING,
+    #     "openstr": stc.STC_JSON_STRINGEOL,
+    #     "comment": stc.STC_JSON_LINECOMMENT,
+    #     "commentblock": stc.STC_JSON_BLOCKCOMMENT,
+    #     "whitespace": stc.STC_JSON_DEFAULT
+    # },
+    # # Markdown
+    # "markdown": {
+    #     "base": stc.STC_MARKDOWN_DEFAULT,
+    #     "whitespace": stc.STC_MARKDOWN_LINE_BEGIN,
+    #     "str": stc.STC_MARKDOWN_BLOCKQUOTE,
+    #     "code": stc.STC_MARKDOWN_CODE,
+    #     "codeblock": stc.STC_MARKDOWN_CODE2,
+    #     "italic": stc.STC_MARKDOWN_EM1,
+    #     "italic2": stc.STC_MARKDOWN_EM2,
+    #     "bold": stc.STC_MARKDOWN_STRONG1,
+    #     "bold2": stc.STC_MARKDOWN_STRONG2,
+    #     "h1": stc.STC_MARKDOWN_HEADER1,
+    #     "h2": stc.STC_MARKDOWN_HEADER2,
+    #     "h3": stc.STC_MARKDOWN_HEADER3,
+    #     "h4": stc.STC_MARKDOWN_HEADER4,
+    #     "h5": stc.STC_MARKDOWN_HEADER5,
+    #     "h6": stc.STC_MARKDOWN_HEADER6,
+    #     "hr": stc.STC_MARKDOWN_HRULE,
+    #     "link": stc.STC_MARKDOWN_LINK,
+    #     "num": stc.STC_MARKDOWN_OLIST_ITEM,
+    #     "prechar": stc.STC_MARKDOWN_PRECHAR,
+    #     "li": stc.STC_MARKDOWN_ULIST_ITEM,
+    # }
 }
 
 
@@ -468,7 +468,7 @@ class AppTheme(dict):
 
     def load(self, name):
         # Make sure default color is up to date
-        AppFont.foreColor = colors.app['text']
+        AppFont.foreColor = currentTheme.app.text
         # If theme is unchanged, do nothing
         if name in self:
             return

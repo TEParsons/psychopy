@@ -46,7 +46,7 @@ from psychopy.app.errorDlg import exceptionCallback
 from psychopy.app.coder.codeEditorBase import BaseCodeEditor
 from psychopy.app.coder.fileBrowser import FileBrowserPanel
 from psychopy.app.coder.sourceTree import SourceTreePanel
-from psychopy.app.themes import handlers, colors
+from psychopy.app.themes import handlers, colors, currentTheme
 from psychopy.app.coder.folding import CodeEditorFoldingMixin
 from psychopy.app.stdout.stdOutRich import ScriptOutputPanel
 from psychopy.app.coder.repl import PythonREPLCtrl
@@ -585,9 +585,9 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
                 self.caretLine + 1, self.caretColumn + 1), 1)
 
         # calltips
-        self.CallTipSetBackground(colors.app['tab_bg'])
-        self.CallTipSetForeground(colors.app['text'])
-        self.CallTipSetForegroundHighlight(colors.app['text'])
+        self.CallTipSetBackground(currentTheme.app.mantle)
+        self.CallTipSetForeground(currentTheme.app.text)
+        self.CallTipSetForegroundHighlight(currentTheme.app.text)
         self.AutoCompSetIgnoreCase(True)
         self.AutoCompSetAutoHide(True)
         self.AutoCompStops('. ')

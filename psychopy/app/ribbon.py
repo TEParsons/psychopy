@@ -9,7 +9,7 @@ import wx
 from psychopy.app import utils
 from psychopy.app import pavlovia_ui as pavui
 from psychopy.app.pavlovia_ui import sync
-from psychopy.app.themes import icons, handlers, colors
+from psychopy.app.themes import icons, handlers, colors, currentTheme
 from psychopy.localization import _translate
 from psychopy.projects import pavlovia
 
@@ -240,7 +240,7 @@ class FrameRibbon(wx.Panel, handlers.ThemeMixin):
         sizer.AddStretchSpacer(prop=prop)
 
     def _applyAppTheme(self):
-        self.SetBackgroundColour(colors.app['frame_bg'])
+        self.SetBackgroundColour(currentTheme.app.crust)
         self.Refresh()
 
 
@@ -409,9 +409,8 @@ class FrameRibbonSection(wx.Panel, handlers.ThemeMixin):
         return btn
 
     def _applyAppTheme(self):
-        # set color
-        self.SetBackgroundColour(colors.app['frame_bg'])
-        self.SetForegroundColour(colors.app['text'])
+        self.SetBackgroundColour(currentTheme.app.crust)
+        self.SetForegroundColour(currentTheme.app.text)
         # set bitmaps again
         self._icon.reload()
         self.icon.SetBitmap(self._icon.bitmap)
@@ -486,9 +485,8 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
         self._applyAppTheme()
 
     def _applyAppTheme(self):
-        # set color
-        self.SetBackgroundColour(colors.app['frame_bg'])
-        self.SetForegroundColour(colors.app['text'])
+        self.SetBackgroundColour(currentTheme.app.crust)
+        self.SetForegroundColour(currentTheme.app.text)
         # set bitmaps again
         self._icon.reload()
         self.SetBitmap(self._icon.bitmap)
@@ -501,10 +499,10 @@ class FrameRibbonButton(wx.Button, handlers.ThemeMixin):
     def onHover(self, evt):
         if evt.EventType == wx.EVT_ENTER_WINDOW.typeId:
             # on hover, lighten background
-            self.SetBackgroundColour(colors.app['panel_bg'])
+            self.SetBackgroundColour(currentTheme.app.mantle)
         else:
             # otherwise, keep same colour as parent
-            self.SetBackgroundColour(colors.app['frame_bg'])
+            self.SetBackgroundColour(currentTheme.app.crust)
 
 
 class FrameRibbonDropdownButton(wx.Panel, handlers.ThemeMixin):
@@ -552,8 +550,8 @@ class FrameRibbonDropdownButton(wx.Panel, handlers.ThemeMixin):
     def _applyAppTheme(self):
         # set color
         for obj in (self, self.button, self.drop):
-            obj.SetBackgroundColour(colors.app['frame_bg'])
-            obj.SetForegroundColour(colors.app['text'])
+            obj.SetBackgroundColour(currentTheme.app.crust)
+            obj.SetForegroundColour(currentTheme.app.text)
         # set bitmaps again
         self._icon.reload()
         self.button.SetBitmap(self._icon.bitmap)
@@ -566,10 +564,10 @@ class FrameRibbonDropdownButton(wx.Panel, handlers.ThemeMixin):
     def onHover(self, evt):
         if evt.EventType == wx.EVT_ENTER_WINDOW.typeId:
             # on hover, lighten background
-            evt.EventObject.SetBackgroundColour(colors.app['panel_bg'])
+            evt.EventObject.SetBackgroundColour(currentTheme.app.mantle)
         else:
             # otherwise, keep same colour as parent
-            evt.EventObject.SetBackgroundColour(colors.app['frame_bg'])
+            evt.EventObject.SetBackgroundColour(currentTheme.app.crust)
 
 
 EVT_RIBBON_SWITCH = wx.PyEventBinder(wx.IdManager.ReserveId())
@@ -651,14 +649,14 @@ class FrameRibbonSwitchCtrl(wx.Panel, handlers.ThemeMixin):
         self.Layout()
 
     def _applyAppTheme(self):
-        self.SetBackgroundColour(colors.app['frame_bg'])
-        self.icon.SetBackgroundColour(colors.app['frame_bg'])
+        self.SetBackgroundColour(currentTheme.app.crust)
+        self.icon.SetBackgroundColour(currentTheme.app.crust)
         for mode, btn in enumerate(self.btns):
-            btn.SetBackgroundColour(colors.app['frame_bg'])
+            btn.SetBackgroundColour(currentTheme.app.crust)
             if mode == self.mode:
-                btn.SetForegroundColour(colors.app['text'])
+                btn.SetForegroundColour(currentTheme.app.text)
             else:
-                btn.SetForegroundColour(colors.app['rt_timegrid'])
+                btn.SetForegroundColour(currentTheme.app.crust)
 
     def onModeSwitch(self, evt):
         evtBtn = evt.GetEventObject()
@@ -683,9 +681,9 @@ class FrameRibbonSwitchCtrl(wx.Panel, handlers.ThemeMixin):
             # if it's the correct button...
             if btnMode == mode:
                 # style accordingly
-                btn.SetForegroundColour(colors.app['text'])
+                btn.SetForegroundColour(currentTheme.app.text)
             else:
-                btn.SetForegroundColour(colors.app['rt_timegrid'])
+                btn.SetForegroundColour(currentTheme.app.crust)
         # set icon
         self.icon.SetBitmap(self.icons[mode].bitmap)
 
@@ -712,13 +710,13 @@ class FrameRibbonSwitchCtrl(wx.Panel, handlers.ThemeMixin):
     def onHover(self, evt):
         if evt.EventType == wx.EVT_ENTER_WINDOW.typeId:
             # on hover, lighten background
-            evt.EventObject.SetForegroundColour(colors.app['text'])
+            evt.EventObject.SetForegroundColour(currentTheme.app.text)
         else:
             # otherwise, keep same colour as parent
             if evt.EventObject is self.btns[self.mode]:
-                evt.EventObject.SetForegroundColour(colors.app['text'])
+                evt.EventObject.SetForegroundColour(currentTheme.app.text)
             else:
-                evt.EventObject.SetForegroundColour(colors.app['rt_timegrid'])
+                evt.EventObject.SetForegroundColour(currentTheme.app.crust)
 
     def addDependant(self, ctrl, mode, action="show"):
         """

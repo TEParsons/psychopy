@@ -10,7 +10,7 @@ import errno
 
 from .. import ribbon
 from ..stdout.stdOutRich import ScriptOutputPanel
-from ..themes import handlers, colors, icons
+from psychopy.app.themes import handlers, colors, icons, currentTheme
 from ..themes.ui import ThemeSwitcher
 
 import wx
@@ -557,9 +557,9 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
 
     def _applyAppTheme(self):
         # Srt own background
-        self.SetBackgroundColour(colors.app['panel_bg'])
-        self.topPanel.SetBackgroundColour(colors.app['panel_bg'])
-        self.bottomPanel.SetBackgroundColour(colors.app['panel_bg'])
+        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.topPanel.SetBackgroundColour(currentTheme.app.mantle)
+        self.bottomPanel.SetBackgroundColour(currentTheme.app.mantle)
         # Theme buttons
         self.ribbon.theme = self.theme
         # Theme notebook
@@ -970,13 +970,13 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
 
     def onHover(self, evt):
         btn = evt.GetEventObject()
-        btn.SetBackgroundColour(colors.app['bmpbutton_bg_hover'])
-        btn.SetForegroundColour(colors.app['bmpbutton_fg_hover'])
+        btn.SetBackgroundColour(currentTheme.app.red)
+        btn.SetForegroundColour(currentTheme.app.hltext)
 
     def offHover(self, evt):
         btn = evt.GetEventObject()
-        btn.SetBackgroundColour(colors.app['panel_bg'])
-        btn.SetForegroundColour(colors.app['text'])
+        btn.SetBackgroundColour(currentTheme.app.mantle)
+        btn.SetForegroundColour(currentTheme.app.text)
 
     @property
     def outputPath(self):

@@ -8,7 +8,7 @@
 # Distributed under the terms of the GNU General Public License (GPL).
 
 from collections import deque
-from ..themes import icons, colors, handlers
+from ..themes import icons, colors, handlers, currentTheme
 
 import wx
 import wx.stc
@@ -61,8 +61,8 @@ class SourceTreePanel(wx.Panel, handlers.ThemeMixin):
         self._applyAppTheme()
 
     def _applyAppTheme(self):
-        self.srcTree.SetOwnBackgroundColour(colors.app['tab_bg'])
-        self.srcTree.SetOwnForegroundColour(colors.app['text'])
+        self.srcTree.SetOwnBackgroundColour(currentTheme.app.mantle)
+        self.srcTree.SetOwnForegroundColour(currentTheme.app.text)
 
         # get graphics for toolbars and tree items
         self._treeImgList = wx.ImageList(16, 16)
