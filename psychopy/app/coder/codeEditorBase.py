@@ -17,6 +17,15 @@ from ..themes import handlers
 from psychopy.localization import _translate
 
 
+lexerNames = {
+    "python": wx.stc.STC_LEX_PYTHON,
+    "c++": wx.stc.STC_LEX_CPP,
+    "r": wx.stc.STC_LEX_R,
+    "json": wx.stc.STC_LEX_JSON,
+    "markdown": wx.stc.STC_LEX_MARKDOWN,
+}
+
+
 class BaseCodeEditor(wx.stc.StyledTextCtrl, handlers.ThemeMixin):
     """Provides base class for code editors
        See the wxPython demo styledTextCtrl 2.
@@ -343,6 +352,83 @@ class BaseCodeEditor(wx.stc.StyledTextCtrl, handlers.ThemeMixin):
             self.ReplaceSelection(txt.replace("\r\n", "\n").replace("\r", "\n"))
 
         self.analyseScript()
+    
+    def updateLexerKeywords(self):
+        """
+        Get the keywords to look for with a given lexer.
+        """
+        import builtins
+        import keyword
+        # get filename and lexer
+        filename = self.filename
+        lexer = self.GetLexer()
+
+        # Keywords common to all C-based languages
+        baseC = {
+            0: ['typedef', 'if', 'else', 'return', 'struct', 'for', 'while', 'do',
+                'using', 'namespace', 'union', 'break', 'enum', 'new', 'case',
+                'switch', 'continue', 'volatile', 'finally', 'throw', 'try',
+                'delete', 'typeof', 'sizeof', 'class', 'volatile', 'int',
+                'float', 'double', 'char', 'short', 'byte', 'void', 'const',
+                'unsigned', 'signed', 'NULL', 'true', 'false', 'bool', 'size_t',
+                'long', 'long long'],
+            1: []
+        }
+        if lexer == wx.stc.STC_LEX_PYTHON:
+            # Python
+            keywords = {
+                0: keyword.kwlist + ['cdef', 'ctypedef', 'extern', 'cimport', 'cpdef', 'include'],
+                1: dir(builtins) + ['self']
+            }
+        elif lexer == wx.stc.STC_LEX_R:
+            # R
+            keywords = {
+                1: ['function', 'for', 'repeat', 'while', 'if', 'else',
+                    'break', 'local', 'global'],
+                0: ['NA']
+            }
+        elif lexer == wx.stc.STC_LEX_CPP:
+            # C/C++
+            keywords = baseC.copy()
+            if filename.endswith('.js'):
+                # JavaScript
+                keywords = {
+                    0: ['var', 'const', 'let', 'import', 'function', 'if',
+                        'else', 'return', 'struct', 'for', 'while', 'do',
+                        'finally', 'throw', 'try', 'switch', 'case',
+                        'break', 'await'],
+                    1: ['null', 'false', 'true']
+                }
+            elif any([filename.lower().endswith(ext) for ext in (
+                    '.glsl', '.vert', '.frag')]):
+                # keywords
+                keywords[0] += [
+                    'invariant', 'precision', 'highp', 'mediump', 'lowp',
+                    'coherent', 'sampler', 'sampler2D', 'layout', 'out',
+                    'in', 'varying', 'uniform', 'attribute']
+                # types
+                keywords[0] += [
+                    'vec2', 'vec3', 'vec4', 'mat2', 'mat3', 'mat4',
+                    'ivec2', 'ivec3', 'ivec4', 'imat2', 'imat3', 'imat4',
+                    'bvec2', 'bvec3', 'bvec4', 'bmat2', 'bmat3', 'bmat4',
+                    'dvec2', 'dvec3', 'dvec4', 'dmat2', 'dmat3', 'dmat4']
+                # reserved
+                keywords[1] += [
+                    'gl_Position', 'gl_LightSourceParameters',
+                    'gl_MaterialParameters', 'gl_LightModelProducts',
+                    'gl_FrontLightProduct', 'gl_BackLightProduct',
+                    'gl_FrontMaterial', 'gl_BackMaterial', 'gl_FragColor',
+                    'gl_ModelViewMatrix', 'gl_ModelViewProjectionMatrix',
+                    'gl_Vertex', 'gl_NormalMatrix', 'gl_Normal',
+                    'gl_ProjectionMatrix', 'gl_LightSource']
+        else:
+            keywords = {
+                0: [],
+                1: []
+            }
+        # update keywords
+        for level, val in keywords.items():
+            self.SetKeyWords(level, " ".join(val))
 
     def analyseScript(self):
         """Analyse the script."""

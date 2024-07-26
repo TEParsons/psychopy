@@ -13,7 +13,7 @@ class BaseAppColorScheme:
     """
     Class to subclass in order to create a new app color scheme.
     """
-    # three shades of background color
+    # four shades of background color
     overlay = "#d4d4d4"
     crust = "#e3e3e3"
     mantle = "#f2f2f2"

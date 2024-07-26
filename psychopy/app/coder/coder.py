@@ -1026,6 +1026,8 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
         self.SetExtraDescent(int(spacing))
         self.Colourise(0, -1)
 
+        self.updateLexerKeywords()
+
         self._applyAppTheme()
 
     def onModified(self, event):
