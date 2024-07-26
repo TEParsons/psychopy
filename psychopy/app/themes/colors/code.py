@@ -168,7 +168,7 @@ class BaseCodeColorScheme(Style):
         Token.Name.Decorator: scheme['orange'],
         # strings
         Token.Literal.String: scheme['grey'],
-        Token.Literal.String.Doc: scheme['overlay'],
+        Token.Literal.String.Doc: scheme['grey'],
         Token.Literal.String.Escape: scheme['text'],
         # Token.Literal.String.Regex: "inherit",
         # numbers
@@ -293,8 +293,8 @@ class PsychoPyDark(BaseCodeColorScheme):
         # Token.Name.Attribute: "inherit",
         Token.Name.Decorator: scheme['orange'],
         # strings
-        Token.Literal.String: scheme['overlay'],
-        Token.Literal.String.Doc: scheme['overlay'],
+        Token.Literal.String: scheme['grey'],
+        Token.Literal.String.Doc: scheme['grey'],
         Token.Literal.String.Escape: scheme['text'],
         # Token.Literal.String.Regex: "inherit",
         # numbers
