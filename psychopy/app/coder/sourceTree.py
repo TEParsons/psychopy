@@ -61,7 +61,7 @@ class SourceTreePanel(wx.Panel, handlers.ThemeMixin):
         self._applyAppTheme()
 
     def _applyAppTheme(self):
-        self.srcTree.SetOwnBackgroundColour(currentTheme.app.mantle)
+        self.srcTree.SetOwnBackgroundColour(currentTheme.app.base)
         self.srcTree.SetOwnForegroundColour(currentTheme.app.text)
 
         # get graphics for toolbars and tree items

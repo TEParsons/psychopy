@@ -212,7 +212,7 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
 
     def _applyAppTheme(self, target=None):
         # Set background
-        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.SetBackgroundColour(currentTheme.app.base)
         self.SetForegroundColour(currentTheme.app.text)
         # Style nav bar
         btns = {
@@ -221,7 +221,7 @@ class FileBrowserPanel(wx.Panel, handlers.ThemeMixin):
             self.browseBtn: icons.ButtonIcon(stem="fileopen", size=16).bitmap
         }
         for btn, bmp in btns.items():
-            btn.SetBackgroundColour(currentTheme.app.mantle)
+            btn.SetBackgroundColour(currentTheme.app.base)
             btn.SetBitmap(bmp)
             btn.SetBitmapFocus(bmp)
             btn.SetBitmapDisabled(bmp)
