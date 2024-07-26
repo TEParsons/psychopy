@@ -2085,7 +2085,7 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         # for rect in self.rects.values():
         #     self.pdc.DrawRectangle(rect)
 
-        self.SetBackgroundColour(currentTheme.app.mantle)
+        self.SetBackgroundColour(currentTheme.app.base)
 
         # separate components according to whether they are drawn in separate
         # row
@@ -2258,8 +2258,8 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         xEnd = self.timeXposEnd
 
         # dc.SetId(wx.NewIdRef())
-        dc.SetPen(wx.Pen(currentTheme.app.crust))
-        dc.SetTextForeground(wx.Colour(currentTheme.app.crust))
+        dc.SetPen(wx.Pen(currentTheme.app.grey))
+        dc.SetTextForeground(wx.Colour(currentTheme.app.grey))
         self.setFontSize(self.fontBaseSize // self.dpi, dc)
 
         id = wx.NewIdRef()
@@ -2568,8 +2568,8 @@ class RoutineCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
         rect = wx.Rect(extent.TopLeft, extent.BottomRight)
         rect.Deflate(padding)
         # Draw rect
-        dc.SetPen(wx.Pen(currentTheme.app.mantle))
-        dc.SetBrush(wx.Brush(currentTheme.app.mantle))
+        dc.SetPen(wx.Pen(currentTheme.app.crust))
+        dc.SetBrush(wx.Brush(currentTheme.app.base))
         dc.DrawRoundedRectangle(extent, 6)
         # Draw button
         dc.SetTextForeground(
