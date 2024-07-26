@@ -206,34 +206,38 @@ class ThemeMixin:
 class PsychopyDockArt(aui.AuiDefaultDockArt):
     def __init__(self):
         aui.AuiDefaultDockArt.__init__(self)
-        # Gradient
+        # general colors
+        self._text_colour = wx.Colour(currentTheme.app.text)
+        self._background_colour = wx.Colour(currentTheme.app.crust)
+        self._caption_colour = wx.Colour(currentTheme.app.overlay)
+
+        # remove any gradient
         self._gradient_type = aui.AUI_GRADIENT_NONE
-        # Background
-        self._background_colour = currentTheme.app.crust
-        self._background_gradient_colour = currentTheme.app.crust
+        # set background
+        self._background_gradient_colour = self._background_colour
         self._background_brush = wx.Brush(self._background_colour)
-        # Border
+        # set borders
         self._border_size = 0
-        self._border_pen = wx.Pen(currentTheme.app.crust)
-        # Sash
+        self._border_pen = wx.Pen(self._background_colour)
+        # setup sash
         self._draw_sash = True
         self._sash_size = 5
-        self._sash_brush = wx.Brush(currentTheme.app.crust)
-        # Gripper
-        self._gripper_brush = wx.Brush(currentTheme.app.crust)
-        self._gripper_pen1 = wx.Pen(currentTheme.app.crust)
-        self._gripper_pen2 = wx.Pen(currentTheme.app.crust)
-        self._gripper_pen3 = wx.Pen(currentTheme.app.crust)
+        self._sash_brush = wx.Brush(self._background_colour)
+        # setup gripper
+        self._gripper_brush = wx.Brush(self._background_colour)
+        self._gripper_pen1 = wx.Pen(self._background_colour)
+        self._gripper_pen2 = wx.Pen(self._background_colour)
+        self._gripper_pen3 = wx.Pen(self._background_colour)
         self._gripper_size = 0
-        # Hint
-        self._hint_background_colour = currentTheme.app.crust
+        # setup hint
+        self._hint_background_colour = self._background_colour
         # Caption bar
-        self._inactive_caption_colour = currentTheme.app.overlay
-        self._inactive_caption_gradient_colour = currentTheme.app.overlay
-        self._inactive_caption_text_colour = currentTheme.app.text
-        self._active_caption_colour = currentTheme.app.overlay
-        self._active_caption_gradient_colour = currentTheme.app.overlay
-        self._active_caption_text_colour = currentTheme.app.text
+        self._inactive_caption_colour = self._caption_colour
+        self._inactive_caption_gradient_colour = self._caption_colour
+        self._inactive_caption_text_colour = self._text_colour
+        self._active_caption_colour = self._caption_colour
+        self._active_caption_gradient_colour = self._caption_colour
+        self._active_caption_text_colour = self._text_colour
         # self._caption_font
         self._caption_size = 25
         self._button_size = 20
@@ -249,19 +253,19 @@ class PsychopyTabArt(aui.AuiDefaultTabArt):
         self.SetDefaultColours()
         self.SetAGWFlags(aui.AUI_NB_NO_TAB_FOCUS)
         # behind tabs
-        self._background_top_colour = currentTheme.app.crust
+        self._background_top_colour = wx.Colour(currentTheme.app.mantle)
         self._background_bottom_colour = self._background_top_colour
         # active tab
         self.SetBaseColour(currentTheme.app.base)
-        self._tab_text_colour = lambda page: currentTheme.app.text
-        self._tab_top_colour = currentTheme.app.base
+        self._tab_text_colour = lambda page: wx.Colour(currentTheme.app.text)
+        self._tab_top_colour = wx.Colour(currentTheme.app.base)
         self._tab_bottom_colour = self._tab_top_colour
         self._tab_gradient_highlight_colour = self._tab_top_colour
-        self._border_colour = currentTheme.app.base
+        self._border_colour = self._tab_top_colour
         self._border_pen = wx.Pen(self._border_colour)
         # inactive tabs
-        self._tab_disabled_text_colour = currentTheme.app.text
-        self._tab_inactive_top_colour = currentTheme.app.mantle
+        self._tab_disabled_text_colour = wx.Colour(currentTheme.app.text)
+        self._tab_inactive_top_colour = wx.Colour(currentTheme.app.mantle)
         self._tab_inactive_bottom_colour = self._tab_inactive_top_colour
 
     def DrawTab(self, dc, wnd, page, in_rect, close_button_state, paint_control=False):
