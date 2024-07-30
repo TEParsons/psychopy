@@ -370,6 +370,12 @@ class ThemedPanel(wx.Panel, handlers.ThemeMixin):
     """
     pass
 
+class ThemedSplitter(wx.SplitterWindow, handlers.ThemeMixin):
+    """
+    A wx.SplitterWindow object with themeing methods from ThemeMixin.
+    """
+    pass
+
 
 class HoverButton(wx.Button, HoverMixin, handlers.ThemeMixin):
     def __init__(self, parent, id=wx.ID_ANY, label='', bmp=None,

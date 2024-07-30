@@ -260,7 +260,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.app.trackFrame(self)
         self.SetDropTarget(FileDropTarget(targetFrame=self))
 
-        self.theme = currentTheme.__name__
+        self.updateTheme()
 
     @property
     def session(self):
@@ -3593,6 +3593,7 @@ class FlowCanvas(wx.ScrolledWindow, handlers.ThemeMixin):
 
     def _applyAppTheme(self, target=None):
         """Apply any changes which have been made to the theme since panel was last loaded"""
+        print("STYLING FLOW CANVAS")
         # Set background
         self.SetBackgroundColour(currentTheme.app.mantle)
 

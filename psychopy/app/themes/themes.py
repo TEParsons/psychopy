@@ -3,6 +3,17 @@
 allThemes = {}
 
 
+def getTheme(name):
+    """
+    Get a particular theme by name.
+
+    Parameters
+    ----------
+    name : BaseTheme
+        Theme object corresponding to the given name. If not found, will return PsychoPyLight.
+    """
+    return allThemes.get(name, allThemes['PsychoPyLight'])
+
 class BaseTheme:
     """
     Base class for a PsychoPy theme.

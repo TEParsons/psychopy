@@ -601,8 +601,6 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
         # double buffered better rendering except if retina
         self.SetDoubleBuffered(not self.coder.isRetina)
 
-        self.theme = self.app.prefs.app['theme']
-
     def setFonts(self):
         """Make some styles,  The lexer defines what each style is used for,
         we just have to define what each style looks like.  This set is
@@ -622,9 +620,6 @@ class CodeEditor(BaseCodeEditor, CodeEditorFoldingMixin, handlers.ThemeMixin):
         faces['code'] = self.coder.prefs['codeFont']
         # ,'Arial']  # use arial as backup
         faces['comment'] = self.coder.prefs['codeFont']
-
-        # apply the theme to the lexer
-        self.theme = self.coder.app.prefs.app['theme']
 
     def setLexerFromFileName(self):
         """Set the lexer to one that best matches the file name."""
@@ -1315,12 +1310,12 @@ class CoderFrame(BaseAuiFrame, handlers.ThemeMixin):
         self.SendSizeEvent()
         self.app.trackFrame(self)
 
-        self.theme = currentTheme
-
         # disable save buttons if currentDoc is None
         if self.currentDoc is None:
             self.ribbon.buttons['save'].Disable()
             self.ribbon.buttons['saveas'].Disable()
+        
+        self.updateTheme()
 
     @property
     def useAutoComp(self):

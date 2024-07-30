@@ -25,7 +25,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from psychopy import experiment, logging
-from psychopy.app.utils import FrameSwitcher, FileDropTarget
+from psychopy.app.utils import FrameSwitcher, FileDropTarget, ThemedPanel, ThemedSplitter
 from psychopy.localization import _translate
 from psychopy.projects.pavlovia import getProject
 from psychopy.scripts.psyexpCompile import generateScript
@@ -97,7 +97,7 @@ class RunnerFrame(wx.Frame, handlers.ThemeMixin):
         else:
             self.SetSize(wx.Size(1080, 920))
 
-        self.theme = app.theme
+        self.updateTheme()
 
     @property
     def filename(self):
@@ -494,11 +494,11 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.mainSizer.Add(self.ribbon, border=0, flag=wx.EXPAND | wx.ALL)
 
         # Setup splitter
-        self.splitter = wx.SplitterWindow(self, style=wx.SP_NOBORDER)
+        self.splitter = ThemedSplitter(self, style=wx.SP_NOBORDER)
         self.mainSizer.Add(self.splitter, proportion=1, border=0, flag=wx.EXPAND | wx.ALL)
 
         # Setup panel for top half (experiment control and toolbar)
-        self.topPanel = wx.Panel(self.splitter)
+        self.topPanel = ThemedPanel(self.splitter)
         self.topPanel.border = wx.BoxSizer()
         self.topPanel.SetSizer(self.topPanel.border)
         self.topPanel.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -519,7 +519,7 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.topPanel.sizer.Add(self.expCtrl, proportion=1, border=6, flag=wx.ALL | wx.EXPAND)
 
         # Setup panel for bottom half (alerts and stdout)
-        self.bottomPanel = wx.Panel(self.splitter, style=wx.BORDER_NONE)
+        self.bottomPanel = ThemedPanel(self.splitter, style=wx.BORDER_NONE)
         self.bottomPanel.border = wx.BoxSizer()
         self.bottomPanel.SetSizer(self.bottomPanel.border)
         self.bottomPanel.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -549,8 +549,6 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.ribbon.buttons['pystop'].Disable()
         self.ribbon.buttons['remove'].Disable()
 
-        self.theme = parent.theme
-
     def __del__(self):
         if self.serverProcess is not None:
             self.killServer()
@@ -560,10 +558,7 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
         self.SetBackgroundColour(currentTheme.app.mantle)
         self.topPanel.SetBackgroundColour(currentTheme.app.mantle)
         self.bottomPanel.SetBackgroundColour(currentTheme.app.mantle)
-        # Theme buttons
-        self.ribbon.theme = self.theme
         # Theme notebook
-        self.outputNotebook.theme = self.theme
         bmps = {
             self.alertsPnl: icons.ButtonIcon("alerts", size=16).bitmap,
             self.stdoutPnl: icons.ButtonIcon("stdout", size=16).bitmap,
@@ -573,15 +568,6 @@ class RunnerPanel(wx.Panel, ScriptProcess, handlers.ThemeMixin):
             pg = self.outputNotebook.GetPage(i)
             if pg in bmps:
                 self.outputNotebook.SetPageBitmap(i, bmps[pg])
-        # Apply app theme on objects in non-theme-mixin panels
-        for obj in (
-                self.expCtrl, self.ribbon
-        ):
-            obj.theme = self.theme
-            if hasattr(obj, "_applyAppTheme"):
-                obj._applyAppTheme()
-            else:
-                handlers.ThemeMixin._applyAppTheme(obj)
 
         self.Refresh()
 

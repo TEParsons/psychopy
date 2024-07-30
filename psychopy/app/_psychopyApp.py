@@ -17,7 +17,7 @@ import time
 import io
 import argparse
 
-from psychopy.app.themes import icons, colors, handlers, allThemes, currentTheme
+from psychopy.app.themes import icons, colors, handlers, allThemes, currentTheme, getTheme, setCurrentTheme
 
 profiling = False  # turning on will save profile files in currDir
 
@@ -503,10 +503,6 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             self._codeFont.SetPointSize(int(self._codeFont.GetPointSize()*fontScale))
             self._mainFont.SetPointSize(int(self._mainFont.GetPointSize()*fontScale))
 
-        # that gets most of the properties of _codeFont but the FaceName
-        # FaceName is set in the setting of the theme:
-        self.theme = prefs.app['theme']
-
         # removed Aug 2017: on newer versions of wx (at least on mac)
         # this looks too big
         # if hasattr(self._mainFont, 'Larger'):
@@ -521,6 +517,11 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             splash.SetText(_translate("  Loading plugins..."))
         from psychopy.plugins import activatePlugins
         activatePlugins()
+
+        # apply theme from prefs
+        theme = getTheme(prefs.app['theme'])
+        setCurrentTheme(theme)
+        self.updateTheme()
         
         # create both frame for coder/builder as necess
         if splash:
@@ -1206,40 +1207,6 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             self._lastInstanceCheckTime = time.time()
 
         evt.Skip()
-
-    @property
-    def theme(self):
-        """The theme to be used through the application"""
-        global currentTheme
-        return currentTheme.__name__
-
-    @theme.setter
-    def theme(self, value):
-        """The theme to be used through the application"""
-        # set at global level
-        global currentTheme
-        currentTheme = allThemes.get(value, allThemes["PsychoPyLight"])
-        # store new theme
-        prefs.app['theme'] = currentTheme.__name__
-        prefs.saveUserPrefs()
-        # clear icon cache
-        icons.iconCache.clear()
-        # apply to frames
-        for frameRef in self._allFrames:
-            frame = frameRef()
-            if isinstance(frame, handlers.ThemeMixin):
-                frame.theme = currentTheme.__name__
-
-        # On OSX 10.15 Catalina at least calling SetFaceName with 'AppleSystemUIFont' fails.
-        # So this fix checks to see if changing the font name invalidates the font.
-        # if so rollback to the font before attempted change.
-        # Note that wx.Font uses referencing and copy-on-write so we need to force creation of a copy
-        # with the wx.Font() call. Otherwise you just get reference to the font that gets borked by SetFaceName()
-        # -Justin Ales
-        beforesetface = wx.Font(self._codeFont)
-        success = self._codeFont.SetFaceName("JetBrains Mono")
-        if not (success):
-            self._codeFont = beforesetface
 
 
 if __name__ == '__main__':

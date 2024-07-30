@@ -137,18 +137,19 @@ class ThemeMixin:
     according to theme.
     """
 
-    @property
-    def theme(self):
-        if hasattr(self, "_theme"):
-            return self._theme
+    theme = None
 
-    @theme.setter
-    def theme(self, value):
-        # Skip method if theme value is unchanged
-        if value is self.theme:
+    def updateTheme(self):
+        """
+        Checks the global currentTheme and, if it's changed since this was last styled, will 
+        re-style this object.
+        """
+        # if theme is unchanged, skip
+        if self.theme == currentTheme.__name__:
             return
-        # Store value
-        self._theme = value
+        
+        # apply theme
+
 
         # Do own styling
         self._applyAppTheme()
@@ -176,12 +177,15 @@ class ThemeMixin:
             tb = self.GetToolBar()
             if tb not in children:
                 children.append(tb)
+        if isinstance(self, wx.SplitterWindow):
+            children.append(self.Window1)
+            children.append(self.Window2)
 
         # For each child, do styling
         for child in children:
             if isinstance(child, ThemeMixin):
-                # If child is a ThemeMixin subclass, we can just set theme
-                child.theme = self.theme
+                # if child is a ThemeMixin subclass, we can just update theme
+                child.updateTheme()
             elif hasattr(child, "_applyAppTheme"):
                 # If it's manually been given an _applyAppTheme function, use it
                 child._applyAppTheme()
@@ -191,6 +195,10 @@ class ThemeMixin:
                     if isinstance(child, cls):
                         # If child extends this class, call the appropriate method on it
                         fcn(child)
+        
+
+        # store new theme name
+        self.theme = currentTheme.__name__
 
     def _applyAppTheme(self):
         """
