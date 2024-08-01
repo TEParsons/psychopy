@@ -1,49 +1,31 @@
 from psychopy.hardware import BaseDevice, DeviceManager
-from psychopy.sound import setDevice, getDevices, backend
 from psychopy.tools import systemtools as st
 from psychopy import logging
 
 
 class SpeakerDevice(BaseDevice):
-    def __init__(self, index):
+    currentBackend = None
+    backends = {}
+
+    def __init__(
+            self, 
+            index, 
+            sampleRate=48000, 
+            channels=2, 
+            audioLatencyMode=3,
+            bufferSize=128,
+        ):
+
         # placeholder values, in case none set later
         self.deviceName = None
         self.index = None
-
-        # try simple integerisation of index
-        if isinstance(index, str):
-            try:
-                index = int(index)
-            except ValueError:
-                pass
-        
-        # get all playback devices
-        profiles = st.getAudioPlaybackDevices()
-
-        # if index is default, get default
-        if index in (-1, None):
-            if hasattr(backend, 'defaultOutput'):
-                # check if a default device is already set and update index
-                defaultDevice = backend.defaultOutput
-                if isinstance(defaultDevice, (int, float)):
-                    # if a default device index is set, use it
-                    index = defaultDevice
-                elif isinstance(defaultDevice, str):
-                    # if a default device is set by name, find it
-                    for profile in profiles.values():
-                        if profile['name'] == defaultDevice:
-                            index = profile['index']
-            else:
-                index = profiles[0]['index']
-        
-        # find profile which matches index
-        for profile in profiles.values():
-            if index in (profile['index'], profile['name']):
-                self.index = int(profile['index'])
-                self.deviceName = profile['name']
-
-        if self.index is None:
-            logging.error("No speaker device found with index %d" % index)
+        # store requested params
+        self.sampleRate = sampleRate
+        self.channels = channels
+        self.audioLatencyMode = audioLatencyMode
+        self.bufferSize = bufferSize
+        # call setup method from backend
+        self.currentBackend.setupSpeaker(self)
 
     def isSameDevice(self, other):
         """
@@ -90,16 +72,56 @@ class SpeakerDevice(BaseDevice):
 
     @staticmethod
     def getAvailableDevices():
-        devices = []
-        for profile in getDevices(kind="output").values():
-            # get index as a name if possible
-            index = profile.get('DeviceName', None)
-            if index is None:
-                index = profile.get('DeviceIndex', None)
-            device = {
-                'deviceName': profile.get('DeviceName', "Unknown Microphone"),
-                'index': index,
-            }
-            devices.append(device)
+        return SpeakerDevice.backend.getAvailableDevices()
+    
+    @classmethod
+    def setBackend(cls, backend):
+        """
+        Set the SpeakerDevice backend.
 
-        return devices
+        Parameters
+        ----------
+        backend : str or SpeakerBackend
+            Either the name of a known SpeakerDevice backend, or a SpeakerBackend subclass.
+
+        Raises
+        ------
+        ValueError
+            If given an invalid value for backend
+        """
+        # if given a backend class directly, use it
+        if isinstance(backend, SpeakerBackend):
+            cls.currentBackend = backend
+            return
+        # if given a string, set current backend from stored dict
+        if isinstance(backend, str) and backend in cls.backends:
+            cls.currentBackend = cls.backends[backend]
+            return
+        
+        # error if we got this far
+        raise KeyError(
+            "Cannot set SpeakerDevice backend to '{}', value must be either a SpeakerBackend "
+            "subclass or the name of a known SpeakerDevice backend. Known backends are: {}".format(
+                backend, list(cls.backends)
+            )
+        )
+
+
+class SpeakerBackend:
+    name = None
+
+    def __init_subclass__(cls):
+        # use supplied name, or class name if there is none
+        key = cls.name
+        if key is None:
+            key = cls.__name__
+        # store backend
+        SpeakerDevice.backends[cls.name] = cls
+    
+    @staticmethod
+    def setupSpeaker(speaker):
+        raise NotImplementedError()
+    
+    @staticmethod
+    def getAvailableDevices():
+        raise NotImplementedError()

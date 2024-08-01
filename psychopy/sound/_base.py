@@ -15,6 +15,7 @@ from psychopy.tools.filetools import pathToString, defaultStim, defaultStimRoot
 from psychopy.tools.audiotools import knownNoteNames, stepsFromA
 from psychopy.tools.attributetools import AttributeGetSetMixin
 from sys import platform
+from psychopy.hardware.speaker import SpeakerDevice
 from .audioclip import AudioClip
 from ..hardware import DeviceManager
 from ..preferences.preferences import prefs
@@ -116,6 +117,9 @@ class _SoundBase(AttributeGetSetMixin):
     # def _setSndFromArray(self, thisArray):
 
     def _parseSpeaker(self, speaker):
+        # if given a Speaker object, use it
+        if isinstance(speaker, SpeakerDevice):
+            return speaker
         if speaker is None:
             # if no device, populate from prefs
             pref = prefs.hardware['audioDevice']
