@@ -66,6 +66,8 @@ class BaseComponent:
             valType='code', inputType="single", categ='Basic',
             hint=msg,
             label=_translate("Name"))
+        # update namespace
+        self.exp.namespace.add(name)
 
         msg = _translate("How do you want to define your start point?")
         self.params['startType'] = Param(startType,
@@ -1318,6 +1320,10 @@ class BaseComponent:
 
     @name.setter
     def name(self, value):
+        # update namespace
+        self.exp.namespace.remove(self.params['name'].val)
+        self.exp.namespace.add(value)
+        # set value
         self.params['name'].val = value
 
     @property

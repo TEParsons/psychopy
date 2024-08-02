@@ -893,7 +893,7 @@ class Experiment:
                         if compGoodName != compName:
                             modifiedNames.append(compName)
                         self.namespace.add(compGoodName)
-                        component.params['name'].val = compGoodName
+                        component.name = compGoodName
                     # Add to routine
                     if component not in routine:
                         routine.append(component)

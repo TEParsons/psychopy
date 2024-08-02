@@ -872,7 +872,7 @@ class _BaseParamsDlg(wx.Dialog):
                 'name' in self.params):
             # then we're adding a new component, so provide known-valid name:
             makeValid = self.frame.exp.namespace.makeValid
-            self.params['name'].val = makeValid(params['name'].val)
+            self.name = makeValid(params['name'].val)
         self.paramCtrls = {}
         CodeSnippetValidator.clsWarnings = {}
         self.suppressTitles = suppressTitles
@@ -1242,7 +1242,7 @@ class DlgLoopProperties(_BaseParamsDlg):
             pass  # what to do for quest?
         # Store conditions file
         self.conditionsOrig = self.conditions
-        self.params['name'] = self.currentHandler.params['name']
+        self.name = self.currentHandler.params['name']
         self.globalPanel = self.makeGlobalCtrls()
         self.stairPanel = self.makeStaircaseCtrls()
         # the controls for Method of Constants
@@ -1298,7 +1298,7 @@ class DlgLoopProperties(_BaseParamsDlg):
         else:
             if loop is not None:
                 # if we had a loop during init then revert to its old name
-                loop.params['name'].val = oldLoopName
+                loop.name = oldLoopName
 
         # make sure we set this back regardless of whether OK
         # otherwise it will be left as a summary string, not a conditions

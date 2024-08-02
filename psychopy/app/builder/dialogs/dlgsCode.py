@@ -67,7 +67,7 @@ class DlgCodeComponentProperties(wx.Dialog):
         if not editing and 'name' in self.params:
             # then we're adding a new component so ensure a valid name:
             makeValid = self.frame.exp.namespace.makeValid
-            self.params['name'].val = makeValid(self.params['name'].val)
+            self.name = makeValid(self.params['name'].val)
 
         self.codeNotebook = wx.Notebook(self)
         # in AUI notebook the labels are blurry on retina mac

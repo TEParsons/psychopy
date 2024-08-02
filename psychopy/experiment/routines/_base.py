@@ -48,6 +48,7 @@ class BaseStandaloneRoutine:
                                     valType='code', inputType="single", categ='Basic',
                                     hint=msg,
                                     label=_translate('Name'))
+        self.exp.namespace.add(name)
 
         self.params['stopVal'] = Param(stopVal,
             valType='num', inputType="single", categ='Basic',
@@ -359,6 +360,9 @@ class BaseStandaloneRoutine:
 
     @name.setter
     def name(self, value):
+        # update namespace
+        self.exp.namespace.remove(self.params['name'].val)
+        self.exp.namespace.add(value)
         if hasattr(self, 'params'):
             if 'name' in self.params:
                 self.params['name'].val = value
@@ -488,7 +492,7 @@ class Routine(list):
         self.exp.namespace.remove(self.params['name'].val)
         self.exp.namespace.add(name)
         # set value
-        self.params['name'].val = name
+        self.name = name
         # update references in components
         for comp in self:
             comp.parentName = name

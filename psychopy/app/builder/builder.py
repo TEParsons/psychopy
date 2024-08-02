@@ -1435,7 +1435,7 @@ class BuilderFrame(BaseAuiFrame, handlers.ThemeMixin):
         for newComp in newRoutine:  # routine == list of components
             newName = self.exp.namespace.makeValid(newComp.params['name'])
             self.exp.namespace.add(newName)
-            newComp.params['name'].val = newName
+            newComp.name = newName
             newComp.exp = self.exp
         # could do redrawRoutines but would be slower?
         self.routinePanel.addRoutinePage(newRoutine.name, newRoutine)
@@ -2889,7 +2889,7 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
                 routine.addComponent(comp)
                 namespace = self.parent.frame.exp.namespace
                 desiredName = comp.params['name'].val
-                name = comp.params['name'].val = namespace.makeValid(desiredName)
+                name = comp.name = namespace.makeValid(desiredName)
                 namespace.add(name)
                 # update the routine's view with the new component too
                 page.redrawRoutine()
@@ -2982,7 +2982,7 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
             # Add to the actual routine
             exp = self.parent.frame.exp
             namespace = exp.namespace
-            name = comp.params['name'].val = namespace.makeValid(
+            name = comp.name = namespace.makeValid(
                 comp.params['name'].val)
             namespace.add(name)
             exp.addStandaloneRoutine(name, comp)
