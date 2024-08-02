@@ -484,8 +484,12 @@ class Routine(list):
 
     @name.setter
     def name(self, name):
+        # update namespace
+        self.exp.namespace.remove(self.params['name'].val)
+        self.exp.namespace.add(name)
+        # set value
         self.params['name'].val = name
-        # Update references in components
+        # update references in components
         for comp in self:
             comp.parentName = name
 
