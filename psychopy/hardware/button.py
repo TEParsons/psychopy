@@ -179,7 +179,7 @@ class ButtonBox:
             else:
                 # don't use formatted string literals in _translate()
                 raise ValueError(_translate(
-                    "Could not find device named '{device}', make sure it has been set up "
+                    "Could not find device named '{}', make sure it has been set up "
                     "in DeviceManager."
                 ).format(device))
 
