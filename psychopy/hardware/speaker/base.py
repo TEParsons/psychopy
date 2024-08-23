@@ -4,7 +4,7 @@ from psychopy.tools import systemtools as st
 from psychopy import logging
 
 
-class SpeakerDevice(BaseDevice):
+class BaseSpeakerDevice(BaseDevice):
     def __init__(self, index):
         # placeholder values, in case none set later
         self.deviceName = None
@@ -103,3 +103,12 @@ class SpeakerDevice(BaseDevice):
             devices.append(device)
 
         return devices
+    
+    def playSound(self, sound):
+        raise NotImplementedError()
+    
+    def setupStream(self):
+        raise NotImplementedError()
+    
+    def close(self):
+        raise NotImplementedError()

@@ -113,7 +113,7 @@ class SoundComponent(BaseDeviceComponent):
             "speakerIndex"
         ]
         def getSpeakerLabels():
-            from psychopy.hardware.speaker import SpeakerDevice
+            from psychopy.hardware.speaker.base import SpeakerDevice
             labels = [_translate("Default")]
             for profile in SpeakerDevice.getAvailableDevices():
                 labels.append(profile['deviceName'])
@@ -121,7 +121,7 @@ class SoundComponent(BaseDeviceComponent):
             return labels
 
         def getSpeakerValues():
-            from psychopy.hardware.speaker import SpeakerDevice
+            from psychopy.hardware.speaker.base import SpeakerDevice
             vals = [-1]
             for profile in SpeakerDevice.getAvailableDevices():
                 vals.append(profile['index'])
