@@ -251,6 +251,72 @@ def getSystemFonts(encoding='system', fixedWidthOnly=False):
     return fontEnum.GetFacenames(encoding, fixedWidthOnly=fixedWidthOnly)
 
 
+def makeLaunchShortcut(path, name=None, args=None):
+    """_summary_
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        Path to the folder to create the shortcut in
+    name : str
+        Name for the shortcut file (without file extension)
+    args : list[str], tuple[str] or None
+        List of arguments to pass to the app when starting, e.g. `-b` to open Builder. 
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    def _makeWindowsShortcut(path, name, icon, cmd):
+        from win32com.client import Dispatch
+        import pywintypes
+
+        # construct full path (including ext)
+        fullpath = Path(path) / (name + ".lnk")
+        # create shortcut object
+        shortcut = Dispatch('wscript.shell').CreateShortCut(
+            str(fullpath)
+        )
+        # setup parameters
+        shortcut.Targetpath = sys.executable
+        shortcut.Arguments = " ".join(cmd)
+        shortcut.IconLocation = str(icon)
+        try:
+            shortcut.save()
+        except pywintypes.com_error as err:
+            import win32api
+            raise Exception(win32api.FormatMessage(err.args[0]))
+
+        return fullpath
+
+    from psychopy.app import psychopyApp
+    # construct default name
+    if name is None:
+        name = f"PsychoPy {psychopy.getVersion()}"
+    # substitute default args
+    if args is None:
+        args = []
+    # construct command
+    cmd = [f"\"{psychopyApp.__file__}\""] + args
+    # choose icon
+    iconDir = Path(psychopyApp.__file__).parent / "Resources"
+    if "-b" in args or "--builder" in args or "builder" in args:
+        icon = iconDir / "builder.ico"
+    elif "-c" in args or "--coder" in args or "coder" in args:
+        icon = iconDir / "coder.ico"
+    elif "-r" in args or "--runner" in args or "runner" in args:
+        icon = iconDir / "runner.ico"
+    # create shortcut
+    if sys.platform == "win32":
+        fullpath = _makeWindowsShortcut(path, name, icon, cmd)
+    
+    return fullpath
+
+    
+    
+
+
 class ImageData(pil.Image):
     def __new__(cls, source):
         # If given a PIL image, use it directly
