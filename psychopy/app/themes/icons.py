@@ -230,39 +230,65 @@ class ComponentIcon(BaseIcon):
         # Use appropriate sized bitmap
         bmp = wx.Bitmap(img)
         self.bitmaps[(bmp.GetWidth(), bmp.GetHeight())] = bmp
+    
+    def withSticker(self, stem):
+        """
+        Add a sticker to this Component icon.
+
+        Parameters
+        ----------
+        sticker : stem
+            Stem of the file containing the sticker to add - this will be overlaid on top of the 
+            icon.
+
+        Returns
+        -------
+        wx.Bitmap
+            Combined bitmap object with the sticker added
+        """
+        # get appropriately sized sticker
+        stickerImg = ButtonIcon(stem, size=self.size).bitmap.ConvertToImage()
+        # get bitmap as image
+        baseImg = self.bitmap.ConvertToImage()
+        # get color data and alphas
+        stickerData = numpy.array(stickerImg.GetData())
+        stickerAlpha = numpy.array(stickerImg.GetAlpha(), dtype=int)
+        baseData = numpy.array(baseImg.GetData())
+        baseAlpha = numpy.array(baseImg.GetAlpha(), dtype=int)
+        # overlay colors
+        combinedData = baseData
+        r = numpy.where(stickerAlpha > 0)[0] * 3
+        g = numpy.where(stickerAlpha > 0)[0] * 3 + 1
+        b = numpy.where(stickerAlpha > 0)[0] * 3 + 2
+        combinedData[r] = stickerData[r]
+        combinedData[g] = stickerData[g]
+        combinedData[b] = stickerData[b]
+        # combine alphas
+        combinedAlpha = numpy.add(baseAlpha, stickerAlpha)
+        combinedAlpha[combinedAlpha > 255] = 255
+        combinedAlpha = numpy.uint8(combinedAlpha)
+        # set these back to the base image
+        combined = stickerImg
+        combined.SetData(combinedData)
+        combined.SetAlpha(combinedAlpha)
+
+        return wx.Bitmap(combined)
 
     @property
     def beta(self):
         if not hasattr(self, "_beta"):
-            # Get appropriately sized beta sticker
-            betaImg = ButtonIcon("beta", size=self.size).bitmap.ConvertToImage()
-            # Get bitmap as image
-            baseImg = self.bitmap.ConvertToImage()
-            # Get color data and alphas
-            betaData = numpy.array(betaImg.GetData())
-            betaAlpha = numpy.array(betaImg.GetAlpha(), dtype=int)
-            baseData = numpy.array(baseImg.GetData())
-            baseAlpha = numpy.array(baseImg.GetAlpha(), dtype=int)
-            # Overlay colors
-            combinedData = baseData
-            r = numpy.where(betaAlpha > 0)[0] * 3
-            g = numpy.where(betaAlpha > 0)[0] * 3 + 1
-            b = numpy.where(betaAlpha > 0)[0] * 3 + 2
-            combinedData[r] = betaData[r]
-            combinedData[g] = betaData[g]
-            combinedData[b] = betaData[b]
-            # Combine alphas
-            combinedAlpha = numpy.add(baseAlpha, betaAlpha)
-            combinedAlpha[combinedAlpha > 255] = 255
-            combinedAlpha = numpy.uint8(combinedAlpha)
-            # Set these back to the base image
-            combined = betaImg
-            combined.SetData(combinedData)
-            combined.SetAlpha(combinedAlpha)
-
-            self._beta = wx.Bitmap(combined)
+            # if we've not got a variation with the beta sticker before, get it now
+            self._beta = self.withSticker("beta")
 
         return self._beta
+    
+    @property
+    def legacy(self):
+        if not hasattr(self, "_legacy"):
+            # if we've not got a variation with the legacy sticker before, get it now
+            self._legacy = self.withSticker("legacy")
+
+        return self._legacy
 
 
 def findPluginIcons(stem):

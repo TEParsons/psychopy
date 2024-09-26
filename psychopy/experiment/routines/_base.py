@@ -30,6 +30,8 @@ class BaseStandaloneRoutine:
     version = "0.0.0"
     # is it still in beta?
     beta = False
+    # is it included only for legacy purposes?
+    legacy = False
 
     def __init__(self, exp, name='',
                  stopType='duration (s)', stopVal='',

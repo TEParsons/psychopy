@@ -38,6 +38,8 @@ class BaseComponent:
     version = "0.0.0"
     # is it still in beta?
     beta = False
+    # is it included only for legacy purposes?
+    legacy = False
 
     def __init__(self, exp, parentName, name='',
                  startType='time (s)', startVal='',

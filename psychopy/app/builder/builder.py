@@ -2935,6 +2935,8 @@ class ComponentsPanel(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
             icon = icons.ComponentIcon(self.component, size=48)
             if hasattr(self.component, "beta") and self.component.beta:
                 icon = icon.beta
+            elif hasattr(self.component, "legacy") and self.component.legacy:
+                icon = icon.legacy
             else:
                 icon = icon.bitmap
             self.SetBitmap(icon)
