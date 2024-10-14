@@ -317,6 +317,64 @@ root = _Logger()
 console = LogFile(level=WARNING)
 
 
+class LoggingParasite:
+    """
+    Class which attaches to any text stream (i.e. sys.stdout and sys.stderr) and will copy any 
+    messages written to that stream to its own log file.
+
+    Parameters
+    ----------
+    host : io.TextIOWrapper
+        Host text stream to latch onto. Once initialised, you can set this parasite in place of 
+        that stream and the stream will still be written to.
+    logger : psychopy.logging._Logger, optional
+        Logger to mirror all text to, by default `logging.root`.
+    level : int
+        Logging level (from `psychopy.logging`) for log messages.
+    clock : psychopy.clock.Clock, optional
+        Clock to get times from in log messages, by default `logging.defaultClock`.
+    
+    Example
+    -------
+    ```python
+    parasite = LoggingParasite(host=sys.stdout)
+    print("Test printing")
+    parasite.flush()
+    ```
+    You should see "Test printing" in the log file, at the level INFO.
+    """
+    def __init__(
+            self, 
+            host,
+            logger=root, 
+            level=INFO,
+            clock=defaultClock
+        ):
+        # store own params
+        self.logger = logger
+        self.level = level
+        self.clock = clock
+        # attach to host
+        self.host = host
+        self.host.write = self.write
+        self.host.flush = self.flush
+
+    def write(self, s, /):
+        # log (iunless it's just the line break)
+        if s not in ("\n", ""):
+            self.logger.log(
+                s, 
+                level=self.level, 
+                t=self.clock.getTime()
+            )
+        # call host's write methods
+        type(self.host).write(self.host, s)
+    
+    def flush(self):
+        self.logger.flush()
+        type(self.host).flush(self.host)
+
+
 def flush(logger=root):
     """Send current messages in the log to all targets
     """
