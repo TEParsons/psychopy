@@ -367,11 +367,13 @@ class LoggingParasite:
                 level=self.level, 
                 t=self.clock.getTime()
             )
-        # call host's write methods
+        # call host's write method
         type(self.host).write(self.host, s)
     
     def flush(self):
+        # flush self
         self.logger.flush()
+        # flush host
         type(self.host).flush(self.host)
 
 
