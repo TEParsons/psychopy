@@ -534,7 +534,8 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             elif self.prefs.app['defaultView'] == "last":
                 if self.prefs.appData['lastFrame'] == "both":
                     self.prefs.appData['lastFrame'] = "builder-coder-runner"
-                startView = self.prefs.appData['lastFrame'].split("-")
+                if self.prefs.appData['lastFrame'] is None:
+                    startView = []
             elif self.prefs.app['defaultView'] in ["builder", "coder", "runner"]:
                 startView = self.prefs.app['defaultView']
             else:
