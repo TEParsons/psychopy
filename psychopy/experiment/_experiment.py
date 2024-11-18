@@ -49,7 +49,8 @@ from ..alerts import alert
 RequiredImport = namedtuple('RequiredImport',
                             field_names=('importName',
                                          'importFrom',
-                                         'importAs'))
+                                         'importAs',
+                                         'importIf'))
 
 
 # some params have previously had types which cause errors compiling in new versions, so we need to keep track of
@@ -213,7 +214,7 @@ class Experiment:
     def runMode(self, value):
         self.settings.params['runMode'].val = value
 
-    def requireImport(self, importName, importFrom='', importAs=''):
+    def requireImport(self, importName, importFrom='', importAs='', importIf=None):
         """Add a top-level import to the experiment.
 
         Parameters
@@ -224,10 +225,14 @@ class Experiment:
             Where to import ``from``.
         importAs : str
             Import ``as`` this name.
+        importIf : tuple[Param, str] or None
+            Optionally supply a tuple of a Param and value, indicating that the import statement 
+            should only be written if the given Param equals the given value.
         """
         import_ = RequiredImport(importName=importName,
                                  importFrom=importFrom,
-                                 importAs=importAs)
+                                 importAs=importAs,
+                                 importIf=importIf)
 
         if import_ not in self.requiredImports:
             self.requiredImports.append(import_)

@@ -887,6 +887,10 @@ class SettingsComponent:
         psychopyImports = []
         customImports = []
         for import_ in self.exp.requiredImports:
+            # skip import if param condition isn't met
+            if import_.importIf and import_.importIf[0] != import_.importIf[1]:
+                continue
+            # add import
             if import_.importFrom == 'psychopy':
                 psychopyImports.append(import_.importName)
             else:
