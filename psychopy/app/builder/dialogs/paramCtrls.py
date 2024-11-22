@@ -10,8 +10,7 @@ import subprocess
 import sys
 import webbrowser
 
-import wx
-import wx.stc
+import wx, wx.stc, wx.html2
 
 from psychopy.app.colorpicker import PsychoColorPicker
 from psychopy.app.dialogs import ListWidget
@@ -1180,3 +1179,32 @@ class DictCtrl(ListWidget, _ValidatorMixin, _HideMixin):
         Hide all items in the dict ctrl
         """
         self.Show(False)
+
+
+class WebViewCtrl(wx.Panel):
+    def __init__(self, parent, param, fieldName=None):
+        from psychopy.projects import pavlovia
+        import urllib.parse
+
+        # create panel
+        wx.Panel.__init__(self, parent, size=(-1, 256))
+        # setup sizer
+        self.sizer = wx.BoxSizer()
+        self.SetSizer(self.sizer)
+        # create webview
+        self.browser = wx.html2.WebView.New(
+            self
+        )
+        # add to sizer
+        self.sizer.Add(self.browser, proportion=1, flag=wx.EXPAND | wx.ALL)
+        # get url with auth token
+        url = param.ctrlParams.get("url", "")
+        if "pavlovia.org" in url:
+            if not url.endswith("?"):
+                url += "?"
+            url += urllib.parse.urlencode({'OauthToken': pavlovia.getCurrentSession().getToken()})
+        # queue up page to load once logged in
+        self.status = self.browser.LoadURL(url)
+    
+    def getValue(self):
+        return self.status

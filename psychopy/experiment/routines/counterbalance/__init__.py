@@ -30,7 +30,7 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
 
         self.type = "CounterBalance"
 
-        # --- Basic ---
+        # --- Local ---
         self.order += [
             'specMode',
             'conditionsFile',
@@ -41,9 +41,9 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
         ]
 
         self.params['specMode'] = Param(
-            specMode, valType="str", inputType="choice", categ="Basic",
+            specMode, valType="str", inputType="choice", categ="Local",
             allowedVals=["uniform", "file"],
-            allowedLabels=[_translate("Num. groups"), _translate("Conditions file (local only)")],
+            allowedLabels=[_translate("Num. groups"), _translate("Conditions file")],
             label=_translate("Groups from..."),
             hint=_translate(
                 "Specify groups using an Excel file (for fine tuned control), specify as a variable name, or specify a "
@@ -52,7 +52,7 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
         )
 
         self.params['nReps'] = Param(
-            nReps, valType="code", inputType="single", categ="Basic",
+            nReps, valType="code", inputType="single", categ="Local",
             label=_translate("Num. repeats"),
             hint=_translate(
                 "How many times to run slots down to depletion?"
@@ -86,7 +86,7 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
         }]
 
         self.params['conditionsFile'] = Param(
-            conditionsFile, valType='file', inputType="table", categ="Basic",
+            conditionsFile, valType='file', inputType="table", categ="Local",
             label=_translate('Conditions'),
             hint=_translate(
                 "Name of a file specifying the parameters for each group (.csv, .xlsx, or .pkl). Browse to select "
@@ -98,7 +98,7 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
         )
 
         self.params['conditionsVariable'] = Param(
-            conditionsVariable, valType='code', inputType="single", categ="Basic",
+            conditionsVariable, valType='code', inputType="single", categ="Local",
             label=_translate('Conditions'),
             hint=_translate(
                 "Name of a variable specifying the parameters for each group. Should be a list of dicts, like the "
@@ -114,7 +114,7 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
         )
 
         self.params['nSlots'] = Param(
-            nSlots, valType="code", inputType="single", categ="Basic",
+            nSlots, valType="code", inputType="single", categ="Local",
             label=_translate("Slots per group"),
             hint=_translate(
                 "Max number of participants in each group for each repeat."
@@ -122,12 +122,23 @@ class CounterbalanceRoutine(BaseStandaloneRoutine):
         )
 
         self.params['endExperimentOnDepletion'] = Param(
-            endExperimentOnDepletion, valType="code", inputType="bool", categ="Basic",
+            endExperimentOnDepletion, valType="code", inputType="bool", categ="Local",
             label=_translate("End experiment on depletion"),
             hint=_translate(
                 "When all slots and repetitions are depleted, should the experiment end or "
                 "continue with .finished on this Routine as True?"
             )
+        )
+
+        # --- Online ---
+        self.params['shelfEntryOnline'] = Param(
+            val=None, valType="code", inputType="webview", categ="Online",
+            ctrlParams={'url': "https://pavlovia.org/dashboard?tab=3"},
+            label=_translate("Pavlovia shelf"),
+            hint=_translate(
+                "Setup the relevant shelf entry online."
+            ),
+            direct=False
         )
 
         # --- Data ---

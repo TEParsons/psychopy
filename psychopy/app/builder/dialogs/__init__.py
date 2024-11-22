@@ -237,6 +237,12 @@ class ParamCtrls():
                 valType=param.valType,
                 fieldName=fieldName, 
                 size=wx.Size(int(self.valueWidth), 24))
+        elif param.inputType == "webview":
+            self.valueCtrl = paramCtrls.WebViewCtrl(
+                parent,
+                param=param,
+                fieldName=fieldName
+            )
         else:
             self.valueCtrl = paramCtrls.SingleLineCtrl(
                 parent,
