@@ -28,6 +28,10 @@ from ... import utils
 from ...themes import icons
 
 
+# dict mapping input types (strings) to param ctrls (classes)
+inputTypes = {}
+
+
 class _FrameMixin:
     @property
     def frame(self):
@@ -160,94 +164,206 @@ class _HideMixin:
                     self.tunnelShow(child.Sizer, visible)
 
 
-class SingleLineCtrl(wx.TextCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
-                 size=wx.Size(-1, 24), style=wx.TE_LEFT):
-        # Create self
-        wx.TextCtrl.__init__(self)
-        self.Create(parent, -1, val, name=fieldName, size=size, style=style)
-        self.valType = valType
+class BaseParamCtrl(wx.Panel):
+    def __init_subclass__(cls, inputType):
+        # store subclass in inputTypes array against its input type
+        inputTypes[inputType] = cls
 
-        # On MacOS, we need to disable smart quotes
+    def __init__(self, frame, parent, param):
+        # initialise panel
+        wx.Panel.__init__(self, parent)
+        # store references
+        self.frame = frame
+        self.parent = parent
+        self.param = param
+        # setup sizers
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+        self.labelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.labelSizer, proportion=1, flag=wx.EXPAND)
+        self.sizer.AddSpacer(4)
+        self.ctrlSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.ctrlSizer, flag=wx.EXPAND)
+        # add a label
+        self.label = wx.StaticText(self, label=param.label)
+        self.labelSizer.Add(self.label, border=6, flag=wx.ALIGN_BOTTOM)
+        # add an updates ctrl
+        self.updates = wx.Choice(self, choices=param.allowedUpdates or [])
+        self.labelSizer.Add(self.updates, border=6, flag=wx.EXPAND |  wx.LEFT)
+        # set updates from param
+        if param.updates:
+            self.updates.SetSelection(
+                self.updates.FindString(param.updates)
+            )
+        # hide updates if disallowed
+        if not self.param.allowedUpdates:
+            self.updates.Hide()
+    
+    def getValue(self):
+        raise NotImplementedError()
+    
+    def setValue(self, value):
+        raise NotImplementedError()
+
+    def validate(self):
+        raise NotImplementedError()
+
+
+class SingleLineCtrl(BaseParamCtrl, inputType="single"):
+    def __init__(self, frame, parent, param):
+        # initialise base
+        BaseParamCtrl.__init__(self, frame, parent, param)
+        # add a dollar sign label
+        self.dollarLbl = wx.StaticText(self, label="$", style=wx.ALIGN_RIGHT)
+        self.dollarLbl.SetToolTip(_translate(
+            "This parameter will be treated as code - we have already put in the $, so you don't "
+            "have to."
+        ))
+        self.ctrlSizer.Add(self.dollarLbl, border=3, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT)
+        # show/hide dollar sign according to valtype
+        self.dollarLbl.Show(param.valType != "str")
+        # add a text ctrl
+        self.ctrl = wx.TextCtrl(self)
+        self.ctrlSizer.Add(self.ctrl, proportion=1, flag=wx.EXPAND)
+        # on MacOS, we need to disable smart quotes
         if sys.platform == 'darwin':
-            self.OSXDisableAllSmartSubstitutions()
-
-        # Add sizer
-        self._szr = wx.BoxSizer(wx.HORIZONTAL)
-        if not valType == "str" and not fieldName == "name":
-            # Add $ for anything to be interpreted verbatim
-            self.dollarLbl = wx.StaticText(parent, -1, "$", size=wx.Size(-1, -1), style=wx.ALIGN_RIGHT)
-            self.dollarLbl.SetToolTip(_translate("This parameter will be treated as code - we have already put in the $, so you don't have to."))
-            self._szr.Add(self.dollarLbl, border=5, flag=wx.ALIGN_CENTER_VERTICAL | wx.RIGHT | wx.LEFT)
-        # Add self to sizer
-        self._szr.Add(self, proportion=1, border=5, flag=wx.EXPAND)
-        # Bind to validation
-        self.Bind(wx.EVT_TEXT, self.validate)
-        self.validate()
-
-    def Show(self, value=True):
-        wx.TextCtrl.Show(self, value)
-        if hasattr(self, "dollarLbl"):
-            self.dollarLbl.Show(value)
-        if hasattr(self, "deleteBtn"):
-            self.deleteBtn.Show(value)
-
-
-class MultiLineCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
-                 size=wx.Size(-1, 144)):
-        SingleLineCtrl.__init__(self, parent, valType,
-                                val=val, fieldName=fieldName,
-                                size=size, style=wx.TE_MULTILINE)
-
-
-class CodeCtrl(BaseCodeEditor, handlers.ThemeMixin, _ValidatorMixin):
-    def __init__(self, parent, valType,
-                 val="", fieldName="",
-                 size=wx.Size(-1, 144)):
-        BaseCodeEditor.__init__(self, parent,
-                                ID=wx.ID_ANY, pos=wx.DefaultPosition, size=size,
-                                style=0)
-        self.valType = valType
-        self.SetValue(val)
-        self.fieldName = fieldName
-        self.params = fieldName
-        # Setup lexer to style text
-        self.SetLexer(wx.stc.STC_LEX_PYTHON)
-        self._applyAppTheme()
-        # Hide margin
-        self.SetMarginWidth(0, 0)
-        # Setup auto indent behaviour as in Code component
-        self.Bind(wx.EVT_KEY_DOWN, self.onKey)
-
-    def getValue(self, evt=None):
-        return self.GetValue()
+            self.ctrl.OSXDisableAllSmartSubstitutions()
+    
+    def getValue(self):
+        return self.ctrl.GetValue()
 
     def setValue(self, value):
-        self.SetValue(value)
-
-    @property
-    def val(self):
-        """
-        Alias for Set/GetValue, as .val is used elsewhere
-        """
-        return self.getValue()
-
-    @val.setter
-    def val(self, value):
-        self.setValue(value)
-
-    def onKey(self, evt=None):
-        CodeBox.OnKeyPressed(self, evt)
+        self.ctrl.SetValue(value)
+    
+    def validate(self):
+        return True
 
 
-class InvalidCtrl(SingleLineCtrl, _ValidatorMixin, _HideMixin):
+class MultiLineCtrl(BaseParamCtrl, inputType="multi"):
+    def __init__(self, frame, parent, param):
+        # initialise base
+        BaseParamCtrl.__init__(self, frame, parent, param)
+        # add a code/text ctrl
+        if param.valType == "str":
+            self.ctrl = wx.TextCtrl(self, style=wx.TC_MULTILINE)
+            # on MacOS, we need to disable smart quotes
+            if sys.platform == 'darwin':
+                self.ctrl.OSXDisableAllSmartSubstitutions()
+        else:
+            self.ctrl = BaseCodeEditor(self, size=wx.Size(-1, 144))
+            # setup lexer to style text
+            self.ctrl.SetLexer(wx.stc.STC_LEX_PYTHON)
+            self.ctrl._applyAppTheme()
+            # hide margin
+            self.ctrl.SetMarginWidth(0, 0)
+        self.ctrlSizer.Add(self.ctrl, proportion=1, flag=wx.EXPAND)
+    
+    def getValue(self):
+        return self.ctrl.GetValue()
+
+    def setValue(self, value):
+        self.ctrl.SetValue(value)
+    
+    def validate(self):
+        return True
+
+
+class BoolCtrl(BaseParamCtrl, inputType="bool"):
+    def __init__(self, frame, parent, param):
+        # initialise base
+        BaseParamCtrl.__init__(self, frame, parent, param)
+        # add a checkbox (same row as label, to the left)
+        self.ctrl = wx.CheckBox(self)
+        self.labelSizer.Prepend(self.ctrl, border=6, flag=wx.EXPAND | wx.RIGHT)
+        # add some space above and below
+        self.sizer.PrependSpacer(4)
+        self.sizer.AddSpacer(3)
+    
+    def getValue(self):
+        return self.ctrl.GetValue()
+
+    def setValue(self, value):
+        self.ctrl.SetValue(value)
+    
+    def validate(self):
+        return True
+
+
+class ChoiceCtrl(BaseParamCtrl, inputType="choice"):
+    def __init__(self, frame, parent, param):
+        # initialise base
+        BaseParamCtrl.__init__(self, frame, parent, param)
+        # add a choice ctrl
+        self.ctrl = wx.Choice(self)
+        self.ctrlSizer.Add(self.ctrl, proportion=1, flag=wx.EXPAND)
+        # store choices and labels
+        self._choices = param.allowedVals
+        self._labels = param.allowedLabels
+        # populate options
+        self.populate()
+        self.setValue(param.val)
+    
+    def populate(self):
+        if callable(self._choices):
+            # if choices are given as a partial, execute it now to get values
+            choices = self._choices()
+        else:
+            # otherwise, treat it as a list
+            choices = list(self._choices)
+
+        if callable(self._labels):
+            # if labels are given as a partial, execute it now to get values
+            labels = self._labels()
+        elif self._labels:
+            # otherwise, treat it as a list
+            labels = list(self._labels)
+        else:
+            # if not given any labels, alias values
+            labels = choices
+        # Map labels to values
+        _labels = {}
+        for i, value in enumerate(choices):
+            if i < len(labels):
+                _labels[value] = _translate(labels[i]) if labels[i] != '' else ''
+            else:
+                _labels[value] = _translate(value) if value != '' else ''
+        labels = _labels
+        # store labels and choices
+        self.labels = labels
+        self.choices = choices
+
+        # apply to ctrl
+        self.ctrl.SetItems([str(self.labels[c]) for c in self.choices])
+
+    def setValue(self, string):
+        strChoices = [str(choice) for choice in self.choices]
+        if string not in self.choices:
+            if string in strChoices:
+                # If string is a stringified version of a value in choices, stringify the value in choices
+                i = strChoices.index(string)
+                self.labels[string] = self.labels.pop(self.choices[i])
+                self.choices[i] = string
+            else:
+                # Otherwise it is a genuinely new value, so add it to options
+                self.choices.append(string)
+                self.labels[string] = string
+            # Refresh items
+            self.ctrl.SetItems(
+                [str(self.labels[c]) for c in self.choices]
+            )
+        # Don't use wx.Choice.SetStringSelection here because label string is localized.
+        self.ctrl.SetSelection(self.choices.index(string))
+
+    def getValue(self):
+        # Don't use wx.Choice.GetStringSelection here because label string is localized.
+        return self.choices[self.GetSelection()]
+
+
+class InvalidCtrl(wx.TextCtrl):
     def __init__(self, parent, valType,
                  val="", fieldName="",
                  size=wx.Size(-1, 24), style=wx.DEFAULT):
-        SingleLineCtrl.__init__(self, parent, valType,
+        wx.TextCtrl.__init__(self, parent, valType,
                                 val=val, fieldName=fieldName,
                                 size=size, style=style)
         self.Disable()
@@ -323,9 +439,6 @@ class IntCtrl(wx.SpinCtrl, _ValidatorMixin, _HideMixin):
         elif evt.EventType == wx.EVT_SPIN_DOWN.evtType[0]:
             self.SetValue(str(int(self.GetValue()) - 1))
         validate(self, "int")
-
-
-BoolCtrl = wx.CheckBox
 
 
 class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):

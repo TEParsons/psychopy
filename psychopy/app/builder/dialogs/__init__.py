@@ -561,7 +561,7 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
             # Setup sizer
             self.border = wx.BoxSizer()
             self.SetSizer(self.border)
-            self.sizer = wx.GridBagSizer(0, 0)
+            self.sizer = wx.BoxSizer(wx.VERTICAL)
             self.border.Add(self.sizer, border=12, proportion=1, flag=wx.ALL | wx.EXPAND)
             # Add controls
             self.ctrls = {}
@@ -571,57 +571,25 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
             for name in reversed(self.parent.element.order):
                 if name in sortedParams:
                     sortedParams.move_to_end(name, last=False)
-            # Make name ctrl
-            if "name" in sortedParams:
-                param = sortedParams.pop("name")
-                self.addParam("name", param)
-            # Make start controls
-            startParams = OrderedDict()
-            for name in ['startVal', 'startType', 'startEstim']:
-                if name in sortedParams:
-                    startParams[name] = sortedParams.pop(name)
-            if startParams:
-                self.startCtrl = self.addStartStopCtrl(startParams)
-            # Make stop controls
-            stopParams = OrderedDict()
-            for name in ['stopVal', 'stopType', 'durationEstim']:
-                if name in sortedParams:
-                    stopParams[name] = sortedParams.pop(name)
-            if stopParams:
-                self.stopCtrl = self.addStartStopCtrl(stopParams)
             # Make controls
             for name, param in sortedParams.items():
                 self.addParam(name, param)
-            # Add growable
-            self.sizer.AddGrowableCol(1, 1)
             # Check depends
             self.checkDepends()
 
         def addParam(self, name, param):
-            # Make ctrl
-            self.ctrls[name] = ParamCtrls(self.dlg, param.label, param, self, name)
-            # Add value ctrl
-            _flag = wx.EXPAND | wx.ALL
-            if hasattr(self.ctrls[name].valueCtrl, '_szr'):
-                self.sizer.Add(self.ctrls[name].valueCtrl._szr, (self.row, 1), border=6, flag=_flag)
-            else:
-                self.sizer.Add(self.ctrls[name].valueCtrl, (self.row, 1), border=6, flag=_flag)
-            # Add other ctrl stuff
-            _flag = wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL
-            self.sizer.Add(self.ctrls[name].nameCtrl, (self.row, 0), (1, 1), border=5, flag=_flag)
-            if self.ctrls[name].typeCtrl:
-                self.sizer.Add(self.ctrls[name].typeCtrl, (self.row, 2), border=5, flag=_flag)
-            if self.ctrls[name].updateCtrl:
-                self.sizer.Add(self.ctrls[name].updateCtrl, (self.row, 3), border=5, flag=_flag)
-            # Link to depends callback
-            self.ctrls[name].setChangesCallback(self.doValidate)
-            if name == 'name':
-                self.ctrls[name].valueCtrl.SetFocus()
-            # Some param ctrls need to grow with page
-            if param.inputType in ('multi', 'fileList'):
-                self.sizer.AddGrowableRow(self.row, proportion=1)
-            # Iterate row
-            self.row += 1
+            # get class for param ctrl
+            ctrlCls = paramCtrls.inputTypes.get(
+                param.inputType,
+                paramCtrls.SingleLineCtrl
+            )
+            # make ctrl
+            self.ctrls[name] = ctrlCls(
+                frame=self.dlg, 
+                parent=self,
+                param=param,
+            )
+            self.sizer.Add(self.ctrls[name], border=6, flag=wx.EXPAND | wx.ALL)
 
         def addStartStopCtrl(self, params):
             # Make controls

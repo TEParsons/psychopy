@@ -22,7 +22,7 @@ class BaseCodeEditor(wx.stc.StyledTextCtrl, handlers.ThemeMixin):
        See the wxPython demo styledTextCtrl 2.
     """
 
-    def __init__(self, parent, ID, pos, size, style):
+    def __init__(self, parent, ID=wx.ID_ANY, pos=(-1, -1), size=(-1, -1), style=wx.BORDER_NONE):
         wx.stc.StyledTextCtrl.__init__(self, parent, ID, pos, size, style)
 
         self.notebook = parent
