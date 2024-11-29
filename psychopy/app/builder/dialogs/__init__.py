@@ -639,15 +639,15 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
                     action = thisDep['false']
                 if action == "hide":
                     # Track change if changed
-                    if dependentCtrls.getVisible():
+                    if dependentCtrls.IsShown():
                         isChanged = True
                     # Apply visibiliy
-                    dependentCtrls.setVisible(False)
+                    dependentCtrls.Show(False)
                 elif action == "show":
                     # Track change if changed
-                    if not dependentCtrls.getVisible():
+                    if not dependentCtrls.IsShown():
                         isChanged = True
-                    dependentCtrls.setVisible(True)
+                    dependentCtrls.Show(True)
                 elif action == "populate":
                     # only repopulate if dependency ctrl has changed
                     dependencyParam = self.parent.element.params[thisDep['dependsOn']]
