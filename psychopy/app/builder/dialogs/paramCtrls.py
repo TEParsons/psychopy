@@ -186,9 +186,12 @@ class BaseParamCtrl(wx.Panel):
         self.sizer.Add(self.ctrlSizer, flag=wx.EXPAND)
         # add a label
         self.label = wx.StaticText(self, label=param.label)
-        self.labelSizer.Add(self.label, border=6, flag=wx.ALIGN_BOTTOM)
+        self.labelSizer.Add(self.label, proportion=1, border=6, flag=wx.ALIGN_BOTTOM)
         # add an updates ctrl
-        self.updates = wx.Choice(self, choices=param.allowedUpdates or [])
+        self.updates = wx.Choice(
+            self, 
+            choices=param.allowedUpdates or [], 
+        )
         self.labelSizer.Add(self.updates, border=6, flag=wx.EXPAND |  wx.LEFT)
         # set updates from param
         if param.updates:
@@ -356,7 +359,81 @@ class ChoiceCtrl(BaseParamCtrl, inputType="choice"):
 
     def getValue(self):
         # Don't use wx.Choice.GetStringSelection here because label string is localized.
-        return self.choices[self.GetSelection()]
+        return self.choices[self.ctrl.GetSelection()]
+
+
+class MultiChoiceCtrl(BaseParamCtrl, inputType="multiChoice"):
+    def __init__(self, frame, parent, param):
+        # init base
+        BaseParamCtrl.__init__(self, frame, parent, param)
+        # store choices and labels
+        self._choices = param.allowedVals
+        self._labels = param.allowedLabels
+        # add checkbox list ctrl
+        self.ctrl = wx.CheckListBox(self, style=wx.LB_MULTIPLE)
+        self.ctrlSizer.Add(self.ctrl, proportion=1, flag=wx.EXPAND)
+        # populate options
+        self.populate()
+        self.setValue(param.val)
+    
+    def populate(self):
+        if callable(self._choices):
+            # if choices are given as a partial, execute it now to get values
+            choices = self._choices()
+        else:
+            # otherwise, treat it as a list
+            choices = list(self._choices)
+
+        if callable(self._labels):
+            # if labels are given as a partial, execute it now to get values
+            labels = self._labels()
+        elif self._labels:
+            # otherwise, treat it as a list
+            labels = list(self._labels)
+        else:
+            # if not given any labels, alias values
+            labels = choices
+        # Map labels to values
+        _labels = {}
+        for i, value in enumerate(choices):
+            if i < len(labels):
+                _labels[value] = _translate(labels[i]) if labels[i] != '' else ''
+            else:
+                _labels[value] = _translate(value) if value != '' else ''
+        labels = _labels
+        # store labels and choices
+        self.labels = labels
+        self.choices = choices
+
+        # apply to ctrl
+        self.ctrl.SetItems([str(self.labels[c]) for c in self.choices])
+
+    def setValue(self, value):
+        indices = []
+        for string in value:
+            strChoices = [str(choice) for choice in self.choices]
+            if string not in self.choices:
+                if string in strChoices:
+                    # If string is a stringified version of a value in choices, stringify the value in choices
+                    i = strChoices.index(string)
+                    self.labels[string] = self.labels.pop(self.choices[i])
+                    self.choices[i] = string
+                else:
+                    # Otherwise it is a genuinely new value, so add it to options
+                    self.choices.append(string)
+                    self.labels[string] = string
+                # Refresh items
+                self.ctrl.SetItems(
+                    [str(self.labels[c]) for c in self.choices]
+                )
+                # store index
+                indices.append(self.choices.index(string))
+        self.ctrl.SetChecked(indices)
+
+    def getValue(self):
+        return [
+            self.choices[i] for i in self.ctrl.GetChecked()
+        ]
 
 
 class InvalidCtrl(wx.TextCtrl):
@@ -439,103 +516,6 @@ class IntCtrl(wx.SpinCtrl, _ValidatorMixin, _HideMixin):
         elif evt.EventType == wx.EVT_SPIN_DOWN.evtType[0]:
             self.SetValue(str(int(self.GetValue()) - 1))
         validate(self, "int")
-
-
-class ChoiceCtrl(wx.Choice, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 val="", choices=[], labels=[], fieldName="",
-                 size=wx.Size(-1, -1)):
-        self._choices = choices
-        self._labels = labels
-        # Create choice ctrl from labels
-        wx.Choice.__init__(self)
-        self.Create(parent, -1, name=fieldName)
-        self.populate()
-        self.valType = valType
-        self.SetStringSelection(val)
-
-    def populate(self):
-        if callable(self._choices):
-            # if choices are given as a partial, execute it now to get values
-            choices = self._choices()
-        else:
-            # otherwise, treat it as a list
-            choices = list(self._choices)
-
-        if callable(self._labels):
-            # if labels are given as a partial, execute it now to get values
-            labels = self._labels()
-        elif self._labels:
-            # otherwise, treat it as a list
-            labels = list(self._labels)
-        else:
-            # if not given any labels, alias values
-            labels = choices
-        # Map labels to values
-        _labels = {}
-        for i, value in enumerate(choices):
-            if i < len(labels):
-                _labels[value] = _translate(labels[i]) if labels[i] != '' else ''
-            else:
-                _labels[value] = _translate(value) if value != '' else ''
-        labels = _labels
-        # store labels and choices
-        self.labels = labels
-        self.choices = choices
-
-        # apply to ctrl
-        self.SetItems([str(self.labels[c]) for c in self.choices])
-
-    def SetStringSelection(self, string):
-        strChoices = [str(choice) for choice in self.choices]
-        if string not in self.choices:
-            if string in strChoices:
-                # If string is a stringified version of a value in choices, stringify the value in choices
-                i = strChoices.index(string)
-                self.labels[string] = self.labels.pop(self.choices[i])
-                self.choices[i] = string
-            else:
-                # Otherwise it is a genuinely new value, so add it to options
-                self.choices.append(string)
-                self.labels[string] = string
-            # Refresh items
-            self.SetItems(
-                [str(self.labels[c]) for c in self.choices]
-            )
-        # Don't use wx.Choice.SetStringSelection here because label string is localized.
-        wx.Choice.SetSelection(self, self.choices.index(string))
-
-    def getValue(self):
-        # Don't use wx.Choice.GetStringSelection here because label string is localized.
-        return self.choices[self.GetSelection()]
-
-
-class MultiChoiceCtrl(wx.CheckListBox, _ValidatorMixin, _HideMixin):
-    def __init__(self, parent, valType,
-                 vals="", choices=[], fieldName="",
-                 size=wx.Size(-1, -1)):
-        wx.CheckListBox.__init__(self)
-        self.Create(parent, id=wx.ID_ANY, size=size, choices=choices, name=fieldName, style=wx.LB_MULTIPLE)
-        self.valType = valType
-        self._choices = choices
-        # Make initial selection
-        if isinstance(vals, str):
-            # Convert to list if needed
-            vals = data.utils.listFromString(vals, excludeEmpties=True)
-        self.SetCheckedStrings(vals)
-        self.validate()
-
-    def SetCheckedStrings(self, strings):
-        if not isinstance(strings, (list, tuple)):
-            strings = [strings]
-        for s in strings:
-            if s not in self._choices:
-                self._choices.append(s)
-                self.SetItems(self._choices)
-        wx.CheckListBox.SetCheckedStrings(self, strings)
-
-    def GetValue(self, evt=None):
-        return self.GetCheckedStrings()
 
 
 class RichChoiceCtrl(wx.Panel, _ValidatorMixin, _HideMixin):
