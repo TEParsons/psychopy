@@ -14,7 +14,8 @@ import queue
 
 import numpy as np
 from psychtoolbox import audio as audio
-from psychopy import logging as logging, prefs
+from psychopy import logging as logging, prefs, core
+from psychopy.hardware.exceptions import DeviceNotConnectedError
 from psychopy.localization import _translate
 from psychopy.constants import NOT_STARTED
 from psychopy.hardware import BaseDevice, BaseResponse, BaseResponseDevice
@@ -141,17 +142,21 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
     # other instances of MicrophoneDevice, stored by index
     _streams = {}
 
-    def __init__(self,
-                 index=None,
-                 sampleRateHz=None,
-                 channels=None,
-                 streamBufferSecs=2.0,
-                 maxRecordingSize=24000,
-                 policyWhenFull='roll',
-                 audioLatencyMode=None,
-                 audioRunMode=0,
-                 autoPolling=True,
-                 pollInterval=None):
+    def __init__(
+            self,
+            index=None,
+            sampleRateHz=None,
+            channels=None,
+            streamBufferSecs=2.0,
+            maxRecordingSize=24000,
+            policyWhenFull='roll',
+            exclusive=False,
+            audioRunMode=0,
+            autoPolling=True,
+            pollInterval=None,
+            # legacy
+            audioLatencyMode=None,
+        ):
 
         if not _hasPTB:  # fail if PTB is not installed
             raise ModuleNotFoundError(
@@ -176,10 +181,13 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
             _devices = MicrophoneDevice.getDevices()
             # if there are none, error
             if not len(_devices):
-                raise AudioInvalidCaptureDeviceError(_translate(
-                    "Could not choose default recording device as no recording "
-                    "devices are connected."
-                ))
+                raise DeviceNotConnectedError(
+                    _translate(
+                        "Could not choose default recording device as no recording "
+                        "devices are connected."
+                    ), 
+                    deviceClass=MicrophoneDevice
+                )
 
             # Try and get the best match which are compatible with the user's
             # specified settings.
@@ -258,15 +266,13 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
             self._sampleRateHz))
 
         # set the audio latency mode
-        if audioLatencyMode is None:
-            self._audioLatencyMode = int(prefs.hardware["audioLatencyMode"])
+        if exclusive:
+            self._audioLatencyMode = 2
         else:
-            self._audioLatencyMode = audioLatencyMode
-
-        logging.debug('Set audio latency mode to {}'.format(
-            self._audioLatencyMode))
-
-        assert 0 <= self._audioLatencyMode <= 4  # sanity check for pref
+            self._audioLatencyMode = 1
+        logging.debug(
+            'Set audio latency mode to {}'.format(self._audioLatencyMode)
+        )
 
         # internal recording buffer size in seconds
         assert isinstance(streamBufferSecs, (float, int))
@@ -301,6 +307,7 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
 
         # open stream
         self._stream = None
+        self._opening = self._closing = False
         self.open()
 
         # status flag for Builder
@@ -428,8 +435,11 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
             chosenDevice = fallbackDevice
         elif chosenDevice is None:
             # if no index match found, raise error
-            raise KeyError(
-                f"Could not find any device with index {index}"
+            raise DeviceNotConnectedError(
+                _translate(
+                    "Could not find any audio recording device with index {index}", 
+                ).format(index=index), 
+                deviceClass=MicrophoneDevice
             )
 
         return chosenDevice
@@ -944,7 +954,8 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
         # do nothing if stream is already open
         if self._stream is not None and not self._stream._closed:
             return
-        
+        # set flag that it's mid-open
+        self._opening = True
         # search for open streams and if there is one, use it
         if self._device.deviceIndex in MicrophoneDevice._streams:
             logging.debug(
@@ -1035,6 +1046,8 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
                 '#{}, `poll()` must be called manually every {} second(s) to '
                 'avoid stream buffer overflow'.format(
                     self._device.deviceIndex, self._streamBufferSecs))
+        # set flag that it's done opening
+        self._opening = False
         
     def close(self, force=False):
         """Close the audio stream.
@@ -1046,9 +1059,21 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
             that have not been written to the recording buffer will be lost.
 
         """
+        # clear any attached listeners
         self.clearListeners()
+        # do nothing further if already closed
         if self._stream._closed:
             return
+        # set flag that it's mid-close
+        self._closing = True
+        # remove ref to stream
+        if self._device.deviceIndex in MicrophoneDevice._streams:
+            MicrophoneDevice._streams.pop(self._device.deviceIndex)
+        # close stream
+        self._stream.close()
+        logging.debug('Stream closed')
+        # set flag that it's done closing
+        self._closing = False
 
         logging.debug('Closing audio stream for device #{}...'.format(
             self._device.deviceIndex))
@@ -1073,6 +1098,8 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
         """
         Calls self.close() then self.open() to reopen the stream.
         """
+        # get status at close
+        status = self.isStarted
         # start timer
         start = time.time()
         # close then open
@@ -1082,6 +1109,9 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
         logging.info(
             f"Reopened microphone #{self.index}, took {time.time() - start:.3f}s"
         )
+        # if mic was running beforehand, start it back up again now
+        if status:
+            self.start()
 
     def poll(self):
         """Poll audio samples.
@@ -1111,6 +1141,13 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
                 "Attempted to poll samples from mic which has been closed."
             )
             return
+        if self._opening or self._closing:
+            action = "opening" if self._opening else "closing"
+            logging.warning(
+                f"Attempted to poll microphone while the stream was still {action}. Samples will be "
+                f"lost."
+            )
+            return
 
         if self._autoPolling:  # need data lock for thread safety
             self._pollDataLock.acquire()
@@ -1121,6 +1158,27 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
 
         if self._autoPolling:
             self._pollDataLock.release()
+            self._stream.get_audio_data()
+        
+        if len(audioData):
+            # if we got samples, the device is awake, so stop figuring out if it's asleep
+            self._possiblyAsleep = False
+        elif self._possiblyAsleep is False:
+            # if it was awake and now we've got no samples, store the time
+            self._possiblyAsleep = time.time()
+        elif self._possiblyAsleep + 1 < time.time():
+            # if we've not had any evidence of it being awake for 1s, reopen
+            logging.error(
+                f"Microphone device appears to have gone to sleep, reopening to wake it up."
+            )
+            # mark as stopped so we don't recursively poll forever when stopping
+            self._isStarted = False
+            # reopen
+            self.reopen()
+            # start again
+            self.start()
+            # mark as not asleep so we don't restart again if the first poll is empty
+            self._possiblyAsleep = False
 
         overruns = self._recording.write(audioData)
         
@@ -1171,9 +1229,10 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
 
         """
         if self.isStarted:
-            raise AudioStreamError(
-                "Cannot get audio clip, recording was in progress. Be sure to "
-                "call `Microphone.stop` first.")
+            logging.warn(
+                "Cannot get audio clip while recording is in progress, so stopping recording now."
+            )
+            self.stop()
 
         # flush most recent samples from audio stream to recording buffer
         self.poll()
@@ -1276,6 +1335,95 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
             listener.receiveMessage(message)
         
         return message
+    
+    def findSpeakers(self, allowedSpeakers=None, threshold=0.01):
+        """
+        Find speakers which this microphone can hear.
+
+        Parameters
+        ----------
+        allowedSpeakers : list[SpeakerDevice or dict] or None
+            List of speakers to test, or leave as None to test all speakers. If speakers are given 
+            as a dict, SpeakerDevice objects will be created via DeviceManager. 
+        threshold : float
+            Necessary difference in volume (dB) between sound playing and not playing to conclude 
+            that this mic can hear the given speaker.
+
+        Returns
+        -------
+        list[SpeakerDevice]
+            List of speakers which this MicrophoneDevice can hear
+        """
+        from psychopy import sound
+        from psychopy.hardware import DeviceManager
+
+        def _takeReading(dur):
+            """
+            Take a reading from this MicrophoneDevice and return the average volume.
+
+            Parameters
+            ----------
+            dur : float
+                Time (s) to read for
+
+            Returns
+            -------
+            float
+                Average volume across samples and channels during the reading
+            """
+            # countdown for the duration
+            countdown = core.CountdownTimer(dur)
+            # start recording
+            self.start()
+            # poll while active
+            while countdown.getTime() > 0:
+                self.poll()
+            # get volume
+            vol = self.getCurrentVolume(timeframe=dur)
+            # if multi-channel, take the max
+            try:
+                vol = max(vol)
+            except TypeError:
+                pass
+            # stop recording
+            self.stop()
+
+            return vol
+        
+        # if no allowed speakers given, use all
+        if allowedSpeakers is None:
+            allowedSpeakers = DeviceManager.getAvailableDevices(
+                "psychopy.hardware.speaker.SpeakerDevice"
+            )
+        # list of found speakers
+        foundSpeakers = []
+        # iterate through allowed speakers
+        for speaker in allowedSpeakers:
+            # if given a dict, actualise it
+            if isinstance(speaker, dict):
+                speakerProfile = speaker
+                speaker = DeviceManager.getDevice(speakerProfile['deviceName'])
+                if speaker is None:
+                    speaker = DeviceManager.addDevice(**speakerProfile)
+            # generate a sound for this speaker
+            try:
+                snd = sound.Sound("A", stereo=True, speaker=speaker)
+            except:
+                # silently skip on error
+                continue
+            # get a baseline volume
+            baseline = _takeReading(1)
+            # start playing a beep
+            snd.play()
+            # get an active volume
+            active = _takeReading(1)
+            # stop the beep
+            snd.stop()
+            # if the difference is above the threshold, speaker is good
+            if active - baseline > threshold:
+                foundSpeakers.append(speaker)
+        
+        return foundSpeakers
 
     def __del__(self):
         """Close the audio stream when the object is deleted.
@@ -1321,7 +1469,7 @@ class RecordingBuffer:
                  maxRecordingSize=24000, policyWhenFull='ignore'):
         self._channels = channels
         self._sampleRateHz = sampleRateHz
-        self._maxRecordingSize = maxRecordingSize
+        self._maxRecordingSize = maxRecordingSize or 24000
         self._samples = None  # `ndarray` created in _allocRecBuffer`
         self._offset = 0  # recording offset
         self._lastSample = 0  # offset of the last sample from stream

@@ -11,6 +11,7 @@
 __all__ = ['Microphone']
 
 from pathlib import Path
+from psychopy import logging
 from psychopy.constants import NOT_STARTED
 from psychopy.hardware import DeviceManager
 from psychopy.tools.attributetools import logAttrib
@@ -25,11 +26,13 @@ class Microphone:
             streamBufferSecs=2.0,
             maxRecordingSize=24000,
             policyWhenFull='warn',
-            audioLatencyMode=None,
+            exclusive=False,
             audioRunMode=0,
             name="mic",
             recordingFolder=Path.home(),
             recordingExt="wav",
+            # legacy
+            audioLatencyMode=None,
     ):
         # store name
         self.name = name
@@ -54,7 +57,7 @@ class Microphone:
                 streamBufferSecs=streamBufferSecs,
                 maxRecordingSize=maxRecordingSize,
                 policyWhenFull=policyWhenFull,
-                audioLatencyMode=audioLatencyMode,
+                exclusive=exclusive,
                 audioRunMode=audioRunMode
             )
         # set policy when full (in case device already existed)
@@ -201,6 +204,9 @@ class Microphone:
     def close(self):
         return self.device.close()
 
+    def reopen(self):
+        return self.device.reopen()
+
     def poll(self):
         return self.device.poll()
 
@@ -215,6 +221,7 @@ class Microphone:
         """
         # iterate through all clips
         for tag in self.clips:
+            logging.info(f"Saving {len(self.clips[tag])} audio clips with tag {tag}")
             for i, clip in enumerate(self.clips[tag]):
                 # construct filename
                 filename = self.getClipFilename(tag, i)

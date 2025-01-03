@@ -172,6 +172,8 @@ class TrialHandler(_BaseTrialHandler):
 
         self.originPath, self.origin = self.getOriginPathAndFile(originPath)
         self._exp = None  # the experiment handler that owns me!
+        # starting status
+        self.status = constants.NOT_STARTED
 
     def __iter__(self):
         return self
@@ -282,7 +284,7 @@ class TrialHandler(_BaseTrialHandler):
         inputArray = np.asarray(inputArray, 'O')
         # get some simple variables for later
         dims = inputArray.shape
-        dimsProd = np.product(dims)
+        dimsProd = np.prod(dims)
         dimsN = len(dims)
         dimsList = list(range(dimsN))
         listOfLists = []
@@ -291,7 +293,7 @@ class TrialHandler(_BaseTrialHandler):
 
         # for each dimension create list of its indices (using modulo)
         for thisDim in dimsList:
-            prevDimsProd = np.product(dims[:thisDim])
+            prevDimsProd = np.prod(dims[:thisDim])
             # NB this means modulus in python
             thisDimVals = np.arange(dimsProd) / prevDimsProd % dims[thisDim]
             listOfLists.append(thisDimVals)
@@ -1080,6 +1082,15 @@ class TrialHandler2(_BaseTrialHandler):
     next = __next__  # allows user to call without a loop `val = trials.next()`
 
     @property
+    def thisIndex(self):
+        if self.thisTrial is None:
+            if len(self.elapsedTrials):
+                return self.elapsedTrials[-1].thisIndex
+            else:
+                return -1
+        return self.thisTrial.thisIndex
+
+    @property
     def thisN(self):
         if self.thisTrial is None:
             if len(self.elapsedTrials):
@@ -1117,7 +1128,7 @@ class TrialHandler2(_BaseTrialHandler):
         # start off at 0 trial
         thisTrialN = 0
         thisN = 0
-        thisRepN = 0
+        thisRepN = -1
         # empty array to store indices once taken
         prevIndices = []
         # empty array to store remaining indices
@@ -1248,7 +1259,7 @@ class TrialHandler2(_BaseTrialHandler):
         self.thisTrial.status = constants.STOPPING
         # before iterating, add "skipped" to data
         self.addData("skipped", True)
-        # iterate n times (-1 to account for current trial)
+        # iterate n times
         for i in range(n):
             self.__next__()
             # before iterating, add "skipped" to data
@@ -1271,26 +1282,27 @@ class TrialHandler2(_BaseTrialHandler):
         """
         # treat -n as n
         n = abs(n)
-        # account for the fact current trial will end once skipped
-        n += 1
         # if rewinding past first trial, print warning and rewind to first trial
         if n > len(self.elapsedTrials):
             logging.warn(
                 f"Requested rewind of {n} trials when only {len(self.elapsedTrials)} trials have "
-                f"elapsed. Rewinding to the first trial."
+                f"elapsed. Rewinding to before the first trial."
             )
             n = len(self.elapsedTrials)
-        # mark current trial as skipping so it ends
-        self.thisTrial.status = constants.STOPPING
         # start with no trials
-        rewound = [self.thisTrial]
+        if self.thisTrial is None:
+            rewound = []
+        else:
+            rewound = [self.thisTrial]
         # pop the last n values from elapsed trials
         for i in range(n):
             rewound = [self.elapsedTrials.pop(-1)] + rewound
-        # set thisTrial from first rewound value
-        self.thisTrial = rewound.pop(0)
+        # clear thisTrial so we progress to the first rewound trial
+        self.thisTrial = None
         # prepend rewound trials to upcoming array
         self.upcomingTrials = rewound + self.upcomingTrials
+        # progress so we get the first upcoming trial
+        self.__next__()
 
         return self.thisTrial
     

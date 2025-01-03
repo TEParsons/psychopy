@@ -17,6 +17,7 @@ __all__ = ['Frustum',
            'generalizedPerspectiveProjection',
            'orthoProjectionMatrix',
            'perspectiveProjectionMatrix',
+           'viewMatrix',
            'lookAt',
            'pointToNdc',
            'cursorToRay',
@@ -29,6 +30,9 @@ import psychopy.tools.mathtools as mt
 
 DEG_TO_RAD = np.pi / 360.0
 VEC_FWD_AND_UP = np.array(((0., 0., -1.), (0., 1., 0.)), dtype=np.float32)
+
+
+lookAt = mt.lookAt  # moved to mathtools, but keep here for legacy reasons
 
 
 def visualAngle(size, distance, degrees=True, out=None, dtype=None):
@@ -91,6 +95,9 @@ def visualAngle(size, distance, degrees=True, out=None, dtype=None):
         toReturn = 2 * np.arctan(size / (2 * distance), dtype=dtype)
         if degrees:
             toReturn[:] = np.degrees(toReturn, dtype=dtype)
+
+    if toReturn.size == 1:
+        return toReturn.item()  # return scalar
 
     return toReturn
 
@@ -487,7 +494,13 @@ def generalizedPerspectiveProjection(posBottomLeft,
 
     # projection matrix to return
     projMat = perspectiveProjectionMatrix(
-        left, right, bottom, top, nearClip, farClip, dtype=dtype)
+        left.item(), 
+        right.item(), 
+        bottom.item(), 
+        top.item(), 
+        nearClip.item(), 
+        farClip.item(), 
+        dtype=dtype)
 
     # view matrix to return, first compute the rotation component
     rotMat = np.zeros((4, 4), dtype=dtype)
@@ -628,74 +641,6 @@ def perspectiveProjectionMatrix(left, right, bottom, top, nearClip=0.01,
     projMat[2, 3] = -(u * farClip * nearClip) / (farClip - nearClip)
 
     return projMat
-
-
-def lookAt(eyePos, centerPos, upVec=(0.0, 1.0, 0.0), out=None, dtype=None):
-    """Create a transformation matrix to orient a view towards some point. Based
-    on the same algorithm as 'gluLookAt'. This does not generate a projection
-    matrix, but rather the matrix to transform the observer's view in the scene.
-
-    For more information see:
-    https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/gluLookAt.xml
-
-    Parameters
-    ----------
-    eyePos : list of float or ndarray
-        Eye position in the scene.
-    centerPos : list of float or ndarray
-        Position of the object center in the scene.
-    upVec : list of float or ndarray, optional
-        Vector defining the up vector. Default is +Y is up.
-    out : ndarray, optional
-        Optional output array. Must be same `shape` and `dtype` as the expected
-        output if `out` was not specified.
-    dtype : dtype or str, optional
-        Data type for arrays, can either be 'float32' or 'float64'. If `None` is
-        specified, the data type is inferred by `out`. If `out` is not provided,
-        the default is 'float64'.
-
-    Returns
-    -------
-    ndarray
-        4x4 view matrix
-
-    Notes
-    -----
-
-    * The returned matrix is row-major. Values are floats with 32-bits of
-      precision stored as a contiguous (C-order) array.
-
-    """
-    if out is None:
-        dtype = np.float64 if dtype is None else np.dtype(dtype).type
-    else:
-        dtype = np.dtype(out.dtype).type
-
-    toReturn = np.zeros((4, 4,), dtype=dtype) if out is None else out
-    if out is not None:
-        toReturn.fill(0.0)
-
-    eyePos = np.asarray(eyePos, dtype=dtype)
-    centerPos = np.asarray(centerPos, dtype=dtype)
-    upVec = np.asarray(upVec, dtype=dtype)
-
-    f = centerPos - eyePos
-    f /= np.linalg.norm(f)
-    upVec /= np.linalg.norm(upVec)
-
-    s = np.cross(f, upVec)
-    u = np.cross(s / np.linalg.norm(s), f)
-
-    rotMat = np.zeros((4, 4), dtype=dtype)
-    rotMat[0, :3] = s
-    rotMat[1, :3] = u
-    rotMat[2, :3] = -f
-    rotMat[3, 3] = 1.0
-
-    transMat = np.identity(4, dtype=dtype)
-    transMat[:3, 3] = -eyePos
-
-    return np.matmul(rotMat, transMat, out=toReturn)
 
 
 def viewMatrix(pos, ori=(0., 0., 0., -1.), out=None, dtype=None):

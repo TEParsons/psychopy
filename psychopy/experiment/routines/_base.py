@@ -30,6 +30,8 @@ class BaseStandaloneRoutine:
     version = "0.0.0"
     # is it still in beta?
     beta = False
+    # hide this Component in Builder view?
+    hidden = False
 
     def __init__(self, exp, name='',
                  stopType='duration (s)', stopVal='',
@@ -823,7 +825,6 @@ class Routine(list):
         code = ("TrialHandler.fromSnapshot(snapshot); // ensure that .thisN vals are up to date\n\n"
                 "//--- Prepare to start Routine '%(name)s' ---\n"
                 "t = 0;\n"
-                "%(name)sClock.reset(); // clock\n"
                 "frameN = -1;\n"
                 "continueRoutine = true; // until we're told otherwise\n"
                 % self.params)
@@ -831,7 +832,17 @@ class Routine(list):
         # can we use non-slip timing?
         maxTime, useNonSlip = self.getMaxTime()
         if useNonSlip:
-            buff.writeIndented('routineTimer.add(%f);\n' % (maxTime))
+            code = (
+                "%(name)sClock.reset(routineTimer.getTime());\n"
+                "routineTimer.add({maxTime:f});\n"
+            ).format(maxTime=maxTime)
+            buff.writeIndentedLines(code % self.params)
+        else:
+            code = (
+                "%(name)sClock.reset();\n"
+                "routineTimer.reset();\n"
+            )
+            buff.writeIndentedLines(code % self.params)
         # keep track of whether max duration is reached
         code = (
             "%(name)sMaxDurationReached = false;\n"
@@ -1007,9 +1018,9 @@ class Routine(list):
         if useNonSlip:
             code = (
                 "if (%(name)sMaxDurationReached) {{\n"
-                "    routineTimer.add(%(name)sMaxDuration);\n"
+                "    %(name)sClock.add(%(name)sMaxDuration);\n"
                 "}} else {{\n"
-                "    routineTimer.add(-{:f});\n"
+                "    %(name)sClock.add({:f});\n"
                 "}}\n"
             ).format(maxTime)
             buff.writeIndented(code % self.params)
@@ -1077,8 +1088,8 @@ class Routine(list):
                     nonSlipSafe = False
                 if duration == FOREVER:
                     # only the *start* of an unlimited event should contribute
-                    # to maxTime
-                    duration = 0  # plus some minimal duration so it's visible
+                    # to maxTime, plus some minimal duration so it's visible
+                    duration = 0 if self.settings.params['forceNonSlip'] else 1
                 # now see if we have a end t value that beats the previous max
                 try:
                     # will fail if either value is not defined:

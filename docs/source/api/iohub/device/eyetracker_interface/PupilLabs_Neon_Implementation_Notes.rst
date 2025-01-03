@@ -67,12 +67,12 @@ Setting Up |PsychoPy|
 
         <video controls src="https://raw.githubusercontent.com/wiki/pupil-labs/psychopy-eyetracker-pupil-labs/images/companion-stream-info.mp4" width="240" height="536"/>
 
-   -  ``Recording enabled`` - Enable this option to create a recording on the Companion device.
-
 5. Add AprilTag components to the routines that require eyetracking.
-   -  Three tags is generally considered a bare minimum, but more tags will yield more robust detection and more accurate mapping.
-   -  All the tags which are visible together must each have a unique ID.
-   -  Tags can be placed anywhere on the screen as long as they are fully visible and do not overlap.
+   -  The ``April Tag Frame`` component provides an easy way to add an array of AprilTag markers around the edges of the display.
+   -  If the ``April Tag Frame`` is not workable (for example, you need to render a stimulus in the corner of the display), advanced marker placement is possible using individual ``April Tag`` components.
+      -  Three markers is generally considered a bare minimum, but more markers will yield more robust detection and more accurate mapping.
+      -  All markers which are displayed simultaneously must each use a unique marker ID.
+      -  Markers can be placed anywhere on the screen as long as they are fully visible and do not overlap.
 
 A `sample experiment <https://github.com/pupil-labs/psychopy-gaze-contingent-demo>`_ is available for reference.
 
@@ -83,8 +83,8 @@ Implementation and API Overview
 EyeTracker Class
 ================
 
-.. autoclass:: psychopy.iohub.devices.eyetracker.hw.pupil_labs.pupil_core.EyeTracker
-    :members: surface_topic, trackerTime, trackerSec, setConnectionState, isConnected,
+.. autoclass:: psychopy.iohub.devices.eyetracker.hw.pupil_labs.neon.EyeTracker
+    :members: trackerTime, trackerSec, setConnectionState, isConnected,
         setRecordingState, isRecordingEnabled, getLastSample, getLastGazePosition
     :undoc-members:
     :show-inheritance:
@@ -92,11 +92,9 @@ EyeTracker Class
 Supported Event Types
 =====================
 
-The Neon–|PsychoPy| integration provides real-time access to
-:py:class:`BinocularEyeSampleEvents <psychopy.iohub.devices.eyetracker.BinocularEyeSampleEvent>`
-events. The supported fields are described below.
+The Neon–|PsychoPy| integration provides real-time access to :py:class:`MonocularEyeSampleEvent <psychopy.iohub.devices.eyetracker.MonocularEyeSampleEvent>` events for gaze data.
 
-.. autoclass:: psychopy.iohub.devices.eyetracker.BinocularEyeSampleEvent
+.. autoclass:: psychopy.iohub.devices.eyetracker.MonocularEyeSampleEvent
 
     .. attribute:: device_time
         :type: float
@@ -122,14 +120,91 @@ events. The supported fields are described below.
     .. attribute:: gaze_x
         :type: float
 
-        x component of gaze location in display coordinates. Set to ``float("nan")`` in
-        pupillometry-only mode.
+        - x component of gaze location in display coordinates.
 
     .. attribute:: gaze_y
         :type: float
 
-        y component of gaze location in display coordinates. Set to ``float("nan")`` in
-        pupillometry-only mode.
+        y component of gaze location in display coordinates.
+
+Eye state data, if enabled, is provided through :py:class:`BinocularEyeSampleEvent <psychopy.iohub.devices.eyetracker.BinocularEyeSampleEvent>` events.
+
+.. autoclass:: psychopy.iohub.devices.eyetracker.BinocularEyeSampleEvent
+
+    .. attribute:: device_time
+        :type: float
+
+        time of eye state measurement, in sec.msec format, using Pupil Capture clock
+
+    .. attribute:: logged_time
+        :type: float
+
+        time at which the sample was received in PsychoPy, in sec.msec format, using PsychoPy clock
+
+    .. attribute:: time
+        :type: float
+
+        time of eye state measurement, in sec.msec format, using PsychoPy clock
+
+    .. attribute:: delay
+        :type: float
+
+        The difference between ``logged_time`` and ``time``, in sec.msec format
+
+    .. attribute:: left_eye_cam_x
+        :type: float
+
+        - x component of left eye's position relative to the scene camera
+
+    .. attribute:: left_eye_cam_y
+        :type: float
+
+        - y component of left eye's position relative to the scene camera
+
+    .. attribute:: left_eye_cam_z
+        :type: float
+
+        - z component of left eye's position relative to the scene camera
+
+    .. attribute:: left_gaze_x
+        :type: float
+
+        - x component of left eye's optical axis vector
+
+    .. attribute:: left_gaze_y
+        :type: float
+
+        - y component of left eye's optical axis vector
+
+    .. attribute:: left_gaze_z
+        :type: float
+
+        - z component of left eye's optical axis vector
+
+    .. attribute:: left_pupil_measure1
+        :type: float
+
+        - left eye pupil diameter in mm
+
+    .. attribute:: right_gaze_x
+        :type: float
+
+        - x component of right eye's optical axis vector
+
+    .. attribute:: right_gaze_y
+        :type: float
+
+        - y component of right eye's optical axis vector
+
+    .. attribute:: right_gaze_z
+        :type: float
+
+        - z component of right eye's optical axis vector
+
+    .. attribute:: right_pupil_measure1
+        :type: float
+
+        - right eye pupil diameter in mm
 
 
 Default Device Settings
@@ -139,4 +214,4 @@ Default Device Settings
     :language: yaml
 
 
-**Last Updated:** September, 2023
+**Last Updated:** October, 2024
