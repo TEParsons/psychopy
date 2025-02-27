@@ -19,6 +19,10 @@ nonalphanumeric_re = re.compile(r'\W')  # will match all bad var name chars
 list_like_re = re.compile(r"(?<!\\),")  # will match for strings which could be a list
 
 
+# possible expInfo keys for participant ID
+participantIdAliases = ('participant', 'Participant', 'Subject', 'Observer')
+
+
 class CodeGenerationException(Exception):
     """
     Exception thrown by a component when it is unable to generate its code.
