@@ -1081,7 +1081,7 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
         # get the segment
         return self._getSegment()  # full recording
     
-    def getCurrentVolume(self, timeframe=0.2):
+    def getCurrentVolume(self, timeframe=0.2, channel=None):
         """
         Get the current volume measured by the mic.
 
@@ -1096,7 +1096,9 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
             Current volume registered by the mic, will depend on relative volume 
             of the mic but should mostly be between 0 (total silence) and 1 
             (very loud).
-
+        channel : int or None
+            Channel to measure volume on, leave as None to get an average across all channels. 
+            Channel numbers start at 0. 
         """
         # if mic hasn't started yet, return 0 as it's recorded nothing
         if not self.isStarted or self._stream._closed:
@@ -1131,7 +1133,11 @@ class MicrophoneDevice(BaseDevice, aliases=["mic", "microphone"]):
         # round
         rms = np.round(rms.astype(np.float64), decimals=3)
 
-        return rms
+        # choose channel
+        if channel is None:
+            return np.mean(rms)
+        else:
+            return rms[channel]
 
     def addListener(self, listener, startLoop=False):
         """
