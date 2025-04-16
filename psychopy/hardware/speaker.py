@@ -38,30 +38,16 @@ class SpeakerDevice(BaseDevice):
     latencyClass : int
         One of:
 
-        * 0: Don't take exclusive control over the speaker, so other apps can still use it. Send 
-        sounds via the system mixer so that sample rates are all handled, even though this 
-        introduces latency.
+        * 0: Don't take exclusive control over the speaker, so other apps can still use it. Send sounds via the system mixer so that sample rates are all handled, even though this introduces latency.
 
-        * 1: Don't take exclusive control over the speaker, so other apps can still use it. Send 
-        sounds directly to reduce latency, so sounds will need to match the sample rate of the 
-        speaker. **Recommended in most cases; if `resample` is True then sample rates are 
-        already handled on load!**
+        * 1: Don't take exclusive control over the speaker, so other apps can still use it. Send sounds directly to reduce latency, so sounds will need to match the sample rate of the speaker. **Recommended in most cases; if `resample` is True then sample rates are already handled on load!**
 
-        * 2: Take exclusive control over the speaker, so other apps can't use it. Send sounds 
-        directly to reduce latency, so sounds will need to be the same sample rate as one 
-        another, but this can be any sample rate supported by the speaker.
+        * 2: Take exclusive control over the speaker, so other apps can't use it. Send sounds directly to reduce latency, so sounds will need to be the same sample rate as one another, but this can be any sample rate supported by the speaker.
 
-        * 3: Take exclusive control over the speaker, so other apps can't use it. Send sounds 
-        directly to reduce latency, so sounds will need to be the same sample rate as one 
-        another, but this can be any sample rate supported by the speaker. Force the system to 
-        prioritise resources towards playing sounds on this speaker for absolute minimum 
-        latency, but fallback to mode 2 if the system rejects this.
+        * 3: Take exclusive control over the speaker, so other apps can't use it. Send sounds directly to reduce latency, so sounds will need to be the same sample rate as one another, but this can be any sample rate supported by the speaker. Force the system to prioritise resources towards playing sounds on this speaker for absolute minimum latency, but fallback to mode 2 if the system rejects this.
 
-        * 4: Take exclusive control over the speaker, so other apps can't use it. Send sounds 
-        directly to reduce latency, so sounds will need to be the same sample rate as one 
-        another, but this can be any sample rate supported by the speaker. Force the system to 
-        prioritise resources towards playing sounds on this speaker for absolute minimum 
-        latency, and raise an error if the system rejects this.
+        * 4: Take exclusive control over the speaker, so other apps can't use it. Send sounds directly to reduce latency, so sounds will need to be the same sample rate as one another, but this can be any sample rate supported by the speaker. Force the system to prioritise resources towards playing sounds on this speaker for absolute minimum latency, and raise an error if the system rejects this.
+    
     resample : bool, optional
         If the sample rate of an audio clip doesn't match the sample rate of the speaker, should 
         PsychoPy resample the sound on load?

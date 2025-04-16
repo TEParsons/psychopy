@@ -82,7 +82,7 @@ class PluginStub:
         cls.docsLink = docsHome + docsRef
         # create doc string point to new location
         cls.__doc__ = (
-            "`{mro} <{docsLink}>`_ is now located within the `{plugin} <{docsHome}>`_ plugin."
+            "`{mro} <{docsLink}>`__ is now located within the `{plugin} <{docsHome}>`__ plugin."
         ).format(
             mro=cls.__module__,
             plugin=plugin,

@@ -69,6 +69,7 @@ rst_epilog = """
    :format: html
 
 .. |PsychoPy| replace:: :raw-html:`PsychoPy<sup>®</sup>`
+.. |PsychoJS| replace:: :raw-html:`PsychoJS<sup>®</sup>`
 .. |Pavlovia| replace:: :raw-html:`<a href="https://pavlovia.org">Pavlovia<sup>®</sup></a>`
 """
 

@@ -337,7 +337,7 @@ def cielch2rgb(lch,
     Parameters
     ----------
     lch : tuple, list or ndarray
-        1-, 2-, 3-D vector of CIE `L*C*h*` coordinates to convert. The last
+        1-, 2-, 3-D vector of CIE `L\*C\*h\*` coordinates to convert. The last
         dimension should be length-3 in all cases specifying a single
         coordinate. The hue angle *h is expected in degrees.
     whiteXYZ : tuple, list or ndarray

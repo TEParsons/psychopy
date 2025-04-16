@@ -3,11 +3,3 @@
 
 .. automodule:: psychopy.logging
     :members:
-    
-:func:`flush`
-----------------------------------
-.. autofunction:: psychopy.logging.flush
-
-:func:`setDefaultClock`
-----------------------------------
-.. autofunction:: psychopy.logging.setDefaultClock

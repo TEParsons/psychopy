@@ -466,7 +466,7 @@ def createProgramObjectARB():
 
     This creates an *Architecture Review Board* (ARB) program variant which is
     compatible with older GLSL versions and OpenGL coding practices (eg.
-    immediate mode) on some platforms. Use *ARB variants of shader helper
+    immediate mode) on some platforms. Use *ARB* variants of shader helper
     functions (eg. `compileShaderObjectARB` instead of `compileShader`) when
     working with these ARB program objects. This was included for legacy support
     of existing PsychoPy shaders. However, it is recommended that you use
@@ -1917,8 +1917,10 @@ def attachImage(fbo, attachPoint, imageBuffer):
     ----------
     fbo : :obj:`FramebufferInfo`
         Framebuffer descriptor to attach buffer to.
+    
     attachPoint :obj:`int`
         Attachment point for 'imageBuffer' (e.g. GL.GL_COLOR_ATTACHMENT0).
+    
     imageBuffer : :obj:`TexImage2D` or :obj:`RenderbufferInfo`
         Framebuffer-attachable buffer descriptor.
 
@@ -5411,11 +5413,11 @@ class ObjMeshInfo:
 
 
 def loadObjFile(objFile):
-    """Load a Wavefront OBJ file (*.obj).
+    """Load a Wavefront OBJ file (\*.obj).
 
-    Loads vertex, normals, and texture coordinates from the provided `*.obj` file
+    Loads vertex, normals, and texture coordinates from the provided `\*.obj` file
     into arrays. These arrays can be processed then loaded into vertex buffer
-    objects (VBOs) for rendering. The `*.obj` file must at least specify vertex
+    objects (VBOs) for rendering. The `\*.obj` file must at least specify vertex
     position data to be loaded successfully. Normals and texture coordinates are
     optional.
 
@@ -5430,7 +5432,7 @@ def loadObjFile(objFile):
     Parameters
     ----------
     objFile : :obj:`str`
-        Path to the `*.OBJ` file to load.
+        Path to the `\*.OBJ` file to load.
 
     Returns
     -------
@@ -5439,18 +5441,16 @@ def loadObjFile(objFile):
 
     See Also
     --------
-    loadMtlFile : Load a `*.mtl` file.
+    loadMtlFile : Load a `\*.mtl` file.
 
     Notes
     -----
-    1. This importer should work fine for most sanely generated files. Export
-       your model with Blender for best results, even if you used some other
-       package to create it.
+    1. This importer should work fine for most sanely generated files. Export your model with Blender for best results, even if you used some other package to create it.
     2. The mesh cannot contain both triangles and quads.
 
     Examples
     --------
-    Loading a `*.obj` mode from file::
+    Loading a `\*.obj` mode from file::
 
         objModel = loadObjFile('/path/to/file.obj')
         # load the material (*.mtl) file, textures are also loaded
@@ -5633,7 +5633,7 @@ def loadObjFile(objFile):
 
 
 def loadMtlFile(mtllib, texParams=None):
-    """Load a material library file (*.mtl).
+    """Load a material library file (\*.mtl).
 
     Parameters
     ----------
@@ -5655,14 +5655,14 @@ def loadMtlFile(mtllib, texParams=None):
 
     See Also
     --------
-    loadObjFile : Load an `*.OBJ` file.
+    loadObjFile : Load an `\*.OBJ` file.
 
     Examples
     --------
-    Load material associated with an `*.OBJ` file::
+    Load material associated with an `\*.OBJ` file::
 
         objModel = loadObjFile('/path/to/file.obj')
-        # load the material (*.mtl) file, textures are also loaded
+        # load the material (\*.mtl) file, textures are also loaded
         mtllib = loadMtl('/path/to/' + objModel.mtlFile)
 
     Use a material when rendering vertex arrays::

@@ -16,8 +16,7 @@ HIGH_PRIORITY_CLASS = -10
 class Computer():
     """Computer provides access to OS and Process level functionality:
 
-    * Read the current time in sec.msec format. The time base used is shared by
-      the ioHub and PsychoPy processes.
+    * Read the current time in sec.msec format. The time base used is shared by the ioHub and PsychoPy processes.
     * Access the iohub and psychopy psutil.Process objects
     * Get / set process priority and affinity.
     * Read system memory and CPU usage
@@ -145,14 +144,9 @@ class Computer():
         Attempts to change the current processes priority based on level.
         Supported levels are:
 
-          * 'normal': sets the current process priority to
-          NORMAL_PRIORITY_CLASS on Windows, or to the processes original
-          nice value on Linux.
-          * 'high': sets the current process priority to HIGH_PRIORITY_CLASS
-          on Windows, or to a nice value of -10 value on Linux.
-          * 'realtime': sets the current process priority to
-          REALTIME_PRIORITY_CLASS on Windows, or to a nice value of -18
-          value on Linux.
+          * 'normal': sets the current process priority to NORMAL_PRIORITY_CLASS on Windows, or to the processes original nice value on Linux.
+          * 'high': sets the current process priority to HIGH_PRIORITY_CLASS on Windows, or to a nice value of -10 value on Linux.
+          * 'realtime': sets the current process priority to REALTIME_PRIORITY_CLASS on Windows, or to a nice value of -18 value on Linux.
 
         If level is 'normal', Python GC is also enabled.
         If level is 'high' or 'realtime', and disable_gc is True, then the
@@ -193,8 +187,7 @@ class Computer():
 
         * processing_unit_count = num_cpus*num_cores_per_cpu*num_hyperthreads.
         * For single core CPU's,  num_cores_per_cpu = 1.
-        * For CPU's that do not support hyperthreading,  num_hyperthreads =
-        1, otherwise num_hyperthreads = 2.
+        * For CPU's that do not support hyperthreading,  num_hyperthreads = 1, otherwise num_hyperthreads = 2.
 
         Args:
             None
@@ -328,16 +321,10 @@ class Computer():
 
         Currently:
 
-        * If the system is detected to have 1 processing unit, or greater
-        than 8 processing units, nothing is done by the method.
-        * For a system that has two processing units, the PsychoPy Process
-        is assigned to index 0, ioHub Process assigned to 1.
-        * For a system that has four processing units, the PsychoPy Process
-        is assigned to index's 0,1 and the ioHub Process assigned to 2,3.
-        * For a system that has eight processing units, the PsychoPy Process
-        is assigned to index 2,3, ioHub Process assigned to 4,5. All other
-        processes running on the OS are attempted to be assigned to indexes
-        0,1,6,7.
+        * If the system is detected to have 1 processing unit, or greater than 8 processing units, nothing is done by the method.
+        * For a system that has two processing units, the PsychoPy Process is assigned to index 0, ioHub Process assigned to 1.
+        * For a system that has four processing units, the PsychoPy Process is assigned to index's 0,1 and the ioHub Process assigned to 2,3.
+        * For a system that has eight processing units, the PsychoPy Process is assigned to index 2,3, ioHub Process assigned to 4,5. All other processes running on the OS are attempted to be assigned to indexes 0,1,6,7.
 
         Args:
             None
@@ -369,9 +356,7 @@ class Computer():
     @staticmethod
     def getCurrentProcessAffinity():
         """
-        Returns a list of 'processor' ID's (from 0 to
-        Computer.processing_unit_count-1)
-        that the current (calling) process is able to run on.
+        Returns a list of 'processor' ID's (from 0 to Computer.processing_unit_count-1) that the current (calling) process is able to run on.
 
         Args:
             None
@@ -384,9 +369,7 @@ class Computer():
     @staticmethod
     def setCurrentProcessAffinity(processorList):
         """
-        Sets the list of 'processor' ID's (from 0 to
-        Computer.processing_unit_count-1)
-        that the current (calling) process should only be allowed to run on.
+        Sets the list of 'processor' ID's (from 0 to Computer.processing_unit_count-1) that the current (calling) process should only be allowed to run on.
 
         Args:
            processorList (list): list of int processor ID's to set the
@@ -421,9 +404,7 @@ class Computer():
     @staticmethod
     def getProcessAffinityByID(process_id):
         """
-        Returns a list of 'processor' ID's (from 0 to
-        Computer.processing_unit_count-1)
-        that the process with the provided processID is able to run on.
+        Returns a list of 'processor' ID's (from 0 to Computer.processing_unit_count-1) that the process with the provided processID is able to run on.
 
         Args:
            processID (int): The system process ID that the affinity should
@@ -441,31 +422,16 @@ class Computer():
             processor_list,
             exclude_process_id_list=[]):
         """
-        Sets the affinity for all OS Processes other than those specified in
-        the
-        exclude_process_id_list, to the processing unit indexes specified in
-        processor_list.
-        Valid values in the processor_list are between 0 to
-        Computer.processing_unit_count-1.
+        Sets the affinity for all OS Processes other than those specified in the exclude_process_id_list, to the processing unit indexes specified in processor_list. Valid values in the processor_list are between 0 to Computer.processing_unit_count-1.exclude_process_id_list should be a list of OS Process ID integers, or an empty list (indicating to set the affiinty to all processing units).
 
-        exclude_process_id_list should be a list of OS Process ID integers,
-        or an empty list (indicating to set the affiinty to all processing
-        units).
+        Note that the OS may not allow the calling process to set the affinity of every other process running on the system. For example, some system level processing can not have their affinity set by a user level application.
 
-        Note that the OS may not allow the calling process to set the affinity
-        of every other process running on the system. For example, some system
-        level processing can not have their affinity set by a user level
-        application.
-
-        However, in general, many processes can have their affinity set by
-        another user process.
+        However, in general, many processes can have their affinity set by another user process.
 
         Args:
-           processor_list (list): list of int processor ID's to set all OS
-           Processes to. An empty list means all processors.
+           processor_list (list): list of int processor ID's to set all OS Processes to. An empty list means all processors.
 
-           exclude_process_id_list (list):  A list of process ID's that
-           should not have their process affinity settings changed.
+           exclude_process_id_list (list): A list of process ID's that should not have their process affinity settings changed.
 
         Returns:
            None
@@ -498,22 +464,15 @@ class Computer():
         The underlying timer that is used is based on OS and Python version.
         Three requirements exist for the ioHub time base implementation:
 
-        * The Python interpreter does not apply an offset to the times
-        returned based on when the timer module being used was loaded or
-        when the timer function first called was first called.
-        * The timer implementation used must be monotonic and report elapsed
-        time between calls, 'not' CPU usage time.
-        * The timer implementation must provide a resolution of 50 usec or
-        better.
+        * The Python interpreter does not apply an offset to the times returned based on when the timer module being used was loaded or when the timer function first called was first called.
+        * The timer implementation used must be monotonic and report elapsed time between calls, 'not' CPU usage time.
+        * The timer implementation must provide a resolution of 50 usec or better.
 
         Given the above requirements, ioHub selects a timer implementation
         as follows:
 
-        * On Windows, the Windows Query Performance Counter API is used
-        using ctypes access.
-        * On other OS's, if the Python version being used is 2.6 or lower,
-        time.time is used. For Python 2.7 and above,
-        the timeit.default_timer function is used.
+        * On Windows, the Windows Query Performance Counter API is used using ctypes access.
+        * On other OS's, if the Python version being used is 2.6 or lower, time.time is used. For Python 2.7 and above, the timeit.default_timer function is used.
 
         Args:
            None
@@ -554,8 +513,7 @@ class Computer():
         * vmem.available: the available amount of memory in bytes.
         * vmem.percent: the percent of memory in use by the system.
         * vmem.used: the used amount of memory in bytes.
-        * vmem.free: the amount of memory that is free in bytes.On Windows,
-        this is the same as vmem.available.
+        * vmem.free: the amount of memory that is free in bytes.On Windows, this is the same as vmem.available.
 
         """
         m = psutil.virtual_memory()

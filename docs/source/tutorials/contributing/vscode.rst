@@ -76,6 +76,7 @@ Once you have a virtual environment, you should be able to run PsychoPy! You can
 Go to Run -> Open Configurations to view the JSON file which defines run configurations for this project. Copy this to the "configurations" section to add a configuration for running the PsychoPy app:
 
 .. code-block:: json
+
     {
         "name": "PsychoPy",
         "type": "debugpy",
@@ -87,6 +88,7 @@ Go to Run -> Open Configurations to view the JSON file which defines run configu
 You can also add configurations to run PsychoPy with a specific frame open (e.g. only opening Builder, not Coder) with the following:
 
 .. code-block:: json
+
     {
         "name": "PsychoPy: Builder",
         "type": "debugpy",

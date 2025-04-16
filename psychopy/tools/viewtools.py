@@ -292,8 +292,10 @@ def projectFrustum(frustum, dist, dtype=None):
         Frustum parameters (left, right, bottom, top, near, far), you can
         exclude `far` since it is not used in this calculation. However, the
         function will still succeed if given.
+    
     dist : float
         Distance to project points to in meters.
+    
     dtype : dtype or str, optional
         Data type for arrays, can either be 'float32' or 'float64'. If `None` is
         specified, the data type is inferred by `out`. If `out` is not provided,

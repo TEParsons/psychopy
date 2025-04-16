@@ -501,55 +501,39 @@ class DlgFromDict(Dlg):
     ----------
 
     dictionary : dict
-        A dictionary defining the input fields (keys) and pre-filled values
-        (values) for the user dialog
+        A dictionary defining the input fields (keys) and pre-filled values (values) for the user dialog
         
     title : str
         The title of the dialog window
 
     labels : dict
-        A dictionary defining labels (values) to be displayed instead of
-        key strings (keys) defined in `dictionary`. Not all keys in
-        `dictionary` need to be contained in labels.
+        A dictionary defining labels (values) to be displayed instead of key strings (keys) defined in `dictionary`. Not all keys in `dictionary` need to be contained in labels.
 
     fixed : list
-        A list of keys for which the values shall be displayed in non-editable
-        fields
+        A list of keys for which the values shall be displayed in non-editable fields
     
     order : list
-        A list of keys defining the display order of keys in `dictionary`.
-        If not all keys in `dictionary`` are contained in `order`, those
-        will appear in random order after all ordered keys.
+        A list of keys defining the display order of keys in `dictionary`. If not all keys in `dictionary`` are contained in `order`, those will appear in random order after all ordered keys.
 
     tip : list
         A dictionary assigning tooltips to the keys
 
     screen : int
-        Screen number where the Dialog is displayed. If -1, the Dialog will
-        be displayed on the primary screen.
+        Screen number where the Dialog is displayed. If -1, the Dialog will be displayed on the primary screen.
 
     sortKeys : bool
         A boolean flag indicating that keys are to be sorted alphabetically.
 
     copyDict : bool
-        If False, modify `dictionary` in-place. If True, a copy of
-        the dictionary is created, and the altered version (after
-        user interaction) can be retrieved from
-        :attr:~`psychopy.gui.DlgFromDict.dictionary`.
+        If False, modify `dictionary` in-place. If True, a copy of the dictionary is created, and the altered version (after user interaction) can be retrieved from :attr:~`psychopy.gui.DlgFromDict.dictionary`.
         
     labels : dict
-        A dictionary defining labels (dict values) to be displayed instead of
-        key strings (dict keys) defined in `dictionary`. Not all keys in
-        `dictionary´ need to be contained in labels.
+        A dictionary defining labels (dict values) to be displayed instead of key strings (dict keys) defined in `dictionary`. Not all keys in `dictionary` need to be contained in labels.
 
     show : bool
-        Whether to immediately display the dialog upon instantiation.
-        If False, it can be displayed at a later time by calling
-        its `show()` method.
+        Whether to immediately display the dialog upon instantiation. If False, it can be displayed at a later time by calling its `show()` method.
 
-    e.g.:
-
-    ::
+    For example ::
 
         info = {'Observer':'jwp', 'GratingOri':45,
                 'ExpVersion': 1.1, 'Group': ['Test', 'Control']}
@@ -560,13 +544,9 @@ class DlgFromDict(Dlg):
         else:
             print('User Cancelled')
 
-    In the code above, the contents of *info* will be updated to the values
-    returned by the dialogue box.
+    In the code above, the contents of *info* will be updated to the values returned by the dialogue box.
 
-    If the user cancels (rather than pressing OK),
-    then the dictionary remains unchanged. If you want to check whether
-    the user hit OK, then check whether DlgFromDict.OK equals
-    True or False
+    If the user cancels (rather than pressing OK), then the dictionary remains unchanged. If you want to check whether the user hit OK, then check whether DlgFromDict.OK equals True or False
 
     See GUI.py for a usage demo, including order and tip (tooltip).
     """

@@ -4710,7 +4710,7 @@ def lensCorrection(xys, coefK=(1.0,), distCenter=(0., 0.), out=None,
     for optical distortion introduced by lenses placed in the optical path of
     the viewer and the display (such as in an HMD).
 
-    See references[1]_ for implementation details.
+    See reference [1]_ for implementation details.
 
     Parameters
     ----------
@@ -4788,7 +4788,7 @@ def lensCorrectionSpherical(xys, coefK=1.0, aspect=1.0, out=None, dtype=None):
     """Simple lens correction.
 
     Lens correction for a spherical lenses with distortion centered at the
-    middle of the display. See references[1]_ for implementation details.
+    middle of the display. See reference [1]_ for implementation details.
 
     Parameters
     ----------

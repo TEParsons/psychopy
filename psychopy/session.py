@@ -155,25 +155,25 @@ class Session:
     be sent commands and have variables changed while running. Methods of
     Session can be called from a second thread, meaning they don't have to wait
     for `runExperiment` to return on the main thread. For example, you could
-    pause an experiment after 10s like so:
+    pause an experiment after 10s like so: 
+    
+    ::
 
-    ```
-    # define a function to run in a second thread
-    def stopAfter10s(thisSession):
-        # wait 10s
-        time.sleep(10)
-        # pause
-        thisSession.pauseExperiment()
-    # create a second thread
-    thread = threading.Thread(
-        target=stopAfter10s,
-        args=(thisSession,)
-    )
-    # start the second thread
-    thread.start()
-    # run the experiment (in main thread)
-    thisSession.runExperiment("testExperiment")
-    ```
+        # define a function to run in a second thread
+        def stopAfter10s(thisSession):
+            # wait 10s
+            time.sleep(10)
+            # pause
+            thisSession.pauseExperiment()
+        # create a second thread
+        thread = threading.Thread(
+            target=stopAfter10s,
+            args=(thisSession,)
+        )
+        # start the second thread
+        thread.start()
+        # run the experiment (in main thread)
+        thisSession.runExperiment("testExperiment")
 
     When calling methods of Session which have the parameter `blocking` from
     outside of the main thread, you can use `blocking=False` to force them to
@@ -184,26 +184,25 @@ class Session:
     main thread. For example, you could alternatively run the code above like
     this:
 
-    ```
-    # define a function to run in a second thread
-    def stopAfter10s(thisSession):
-        # start the experiment in the main thread
-        thisSession.runExperiment("testExperiment", blocking=False)
-        # wait 10s
-        time.sleep(10)
-        # pause
-        thisSession.pauseExperiment()
-    # create a second thread
-    thread = threading.Thread(
-        target=stopAfter10s,
-        args=(thisSession,)
-    )
-    # start the second thread
-    thread.start()
-    # start the Session so that non-blocking methods are executed
-    thisSession.start()
-    ```
+    ::
 
+        # define a function to run in a second thread
+        def stopAfter10s(thisSession):
+            # start the experiment in the main thread
+            thisSession.runExperiment("testExperiment", blocking=False)
+            # wait 10s
+            time.sleep(10)
+            # pause
+            thisSession.pauseExperiment()
+        # create a second thread
+        thread = threading.Thread(
+            target=stopAfter10s,
+            args=(thisSession,)
+        )
+        # start the second thread
+        thread.start()
+        # start the Session so that non-blocking methods are executed
+        thisSession.start()
 
     Parameters
     ----------
@@ -215,12 +214,14 @@ class Session:
 
     loggingLevel : str
         How much output do you want in the log files? Should be one of the following:
-            - 'error'
-            - 'warning'
-            - 'data'
-            - 'exp'
-            - 'info'
-            - 'debug'
+        
+        * 'error'
+        * 'warning'
+        * 'data'
+        * 'exp'
+        * 'info'
+        * 'debug'
+
         ('error' is fewest messages, 'debug' is most)
 
     inputs: dict, str or None

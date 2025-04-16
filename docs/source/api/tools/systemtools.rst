@@ -1,6 +1,6 @@
 
 :mod:`psychopy.tools.systemtools`
--------------------------------
+--------------------------------------------
 
 Tools for interacting with the system PsychoPy is installed on. This involves
 things such as getting information about installed devices and software.

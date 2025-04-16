@@ -9,27 +9,9 @@ This is a lazy-imported class, therefore import using full path
 Attributes
 =============
 
-.. currentmodule:: psychopy.visual
+.. currentmodule:: psychopy.visual.aperture
 
-
-.. autosummary::
-
-    Aperture
-    Aperture.win
-    Aperture.size
-    Aperture.pos
-    Aperture.ori
-    Aperture.nVert
-    Aperture.shape
-    Aperture.inverted
-    Aperture.units
-    Aperture.name
-    Aperture.autoLog
-
-Details
-=======
-
-.. autoclass:: psychopy.visual.Aperture
+.. autoclass:: Aperture
     :members:
     :undoc-members:
     :inherited-members:    

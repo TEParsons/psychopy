@@ -7,8 +7,3 @@ AT THE MOMENT JOYSTICK DOES NOT APPEAR TO WORK UNDER PYGLET. We need someone mot
 
 .. automodule:: psychopy.hardware.joystick
     :members:
-
-.. autoclass:: psychopy.hardware.joystick.Joystick
-    :members:
-    :undoc-members:
-    :inherited-members:
