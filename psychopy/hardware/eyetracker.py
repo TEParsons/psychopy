@@ -1,11 +1,97 @@
 from psychopy.constants import STARTED, NOT_STARTED, PAUSED, STOPPED, FINISHED
 from psychopy.alerts import alert
 from psychopy import logging
+from psychopy.hardware.base import BaseResponseDevice
+from psychopy.hardware.mouse import Mouse
+from psychopy.layout import Position
 from psychopy.iohub.devices import importDeviceModule
 from psychopy.tools.attributetools import AttributeGetSetMixin
 from copy import copy
 import importlib
 import sys
+
+
+class EyetrackerSample:
+    def __init__(self, t, pos: Position):
+        self.t = t
+        self.pos = pos
+
+
+class BaseEyetrackerDevice(BaseResponseDevice):
+
+    def isSameDevice(self, other):
+        raise NotImplementedError(
+            "All subclasses of BaseEyetrackerDevice must implement the method `isSameDevice`"
+        )
+    
+    @staticmethod
+    def getAvailableDevices():
+        raise NotImplementedError(
+            "All subclasses of BaseEyetrackerDevice must implement the method `getAvailableDevices`"
+        )
+
+    def dispatchMessages(self):
+        """
+        Fetch events from the eyetracker and store them in this object.
+        """
+        raise NotImplementedError(
+            "All subclasses of BaseEyetrackerDevice must implement the method `dispatchMessages`"
+        )
+
+    def parseMessage(self, message):
+        """
+        Parse an incoming message and convert it to the relevant event
+        """
+        raise NotImplementedError(
+            "All subclasses of BaseEyetrackerDevice must implement the method `parseMessage`"
+        )
+
+
+class MouseGazeEyetrackerDevice(BaseEyetrackerDevice):
+
+    def __init__(self, mouse: Mouse):
+        self.mouse = mouse
+
+    def isSameDevice(self, other):
+        if isinstance(other, type(self)):
+            # if other is a MouseGazeEyetrackerDevice, check if it's the same mouse
+            return self.mouse.isSameDevice(other.mouse)
+        elif isinstance(other, Mouse):
+            # if other is a Mouse, compare it to this mouse
+            return self.mouse.isSameDevice(other)
+        else:
+            # if not the same class, it won't be the same device
+            return False
+    
+    @staticmethod
+    def getAvailableDevices():
+        return Mouse.getAvailableDevices()
+
+    def dispatchMessages(self):
+        """
+        Fetch events from the mouse and store them in this object.
+        """
+        # get mouse position
+        raw = self.mouse.getPos()
+        # parse into an EyetrackerSample object
+        msg = self.parseMessage(raw)
+        # store
+        self.receiveMessage(msg)
+
+    def parseMessage(self, message):
+        """
+        Parse an incoming message and convert it to the relevant event
+        """
+        # incoming messages will be the ouput of Mouse.getPos
+        msg = EyetrackerSample(
+            pos=Position(
+                value=message,
+                units=self.mouse.win.units,
+                win=self.mouse.win
+            )
+        )
+
+        return msg
 
 
 class EyetrackerControl(AttributeGetSetMixin):
