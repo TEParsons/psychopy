@@ -583,8 +583,8 @@ class ShapeStim(BaseShapeStim):
                  win,
                  units='',
                  colorSpace='rgb',
-                 fillColor=False,
-                 lineColor=False,
+                 fillColor="white",
+                 lineColor=None,
                  lineWidth=1.5,
                  vertices=((-0.5, 0), (0, +0.5), (+0.5, 0)),
                  windingRule=None,  # default GL.GLU_TESS_WINDING_ODD
