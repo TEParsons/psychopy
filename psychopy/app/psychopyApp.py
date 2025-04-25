@@ -100,7 +100,7 @@ depends on the type of the [files]:
     from psychopy.preferences import prefs
     from psychopy.app import startApp, quitApp
     # setup prefs
-    prefs.getPaths(userDir=args.userDir)
+    prefs.loadAll(userDir=args.userDir)
     # insert fallbacks from prefs for unsupplied call args
     if args.showSplash is None:
         args.showSplash = prefs.app['showSplash']

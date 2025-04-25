@@ -71,7 +71,6 @@ class Preferences:
         self.paths = {}  # this will remain a dictionary
         self.keys = {}  # does not remain a dictionary
 
-        self.getPaths()
         self.loadAll()
         # setting locale is now handled in psychopy.localization.init
         # as called upon import by the app
@@ -277,12 +276,13 @@ class Preferences:
                     Path(self.paths['themes']) / file.name
                 )
 
-    def loadAll(self):
+    def loadAll(self, userDir=None):
         """Load the user prefs and the application data
         """
         self._validator = validate.Validator()
-
-        # note: self.paths['userPrefsDir'] gets set in loadSitePrefs()
+        # get paths to relevant folders
+        self.getPaths(userDir=userDir)
+        # get paths to prefs files
         self.paths['appDataFile'] = join(
             self.paths['userPrefsDir'], 'appData.cfg')
         self.paths['userPrefsFile'] = join(
