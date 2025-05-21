@@ -8,6 +8,7 @@
 # Copyright (C) 2002-2018 Jonathan Peirce (C) 2019-2025 Open Science Tools Ltd.
 # Distributed under the terms of the GNU General Public License (GPL).
 
+from psychopy.hardware.base import BaseDevice
 from .calibData import wavelength_5nm, juddVosXYZ1976_5nm, cones_SmithPokorny
 from psychopy import __version__, logging
 
@@ -60,7 +61,7 @@ except OSError as err:
         raise
 
 
-class Monitor:
+class Monitor(BaseDevice):
     """Creates a monitor object for storing calibration details.
     This will be loaded automatically from disk if the
     monitor name is already defined (see methods).
@@ -90,7 +91,9 @@ class Monitor:
     or not (in which case the changes will be lost)
     """
 
-    def __init__(self, name,
+    def __init__(self, name="default",
+                 index=0,
+                 size=None,
                  width=None,
                  distance=None,
                  gamma=None,
@@ -106,6 +109,8 @@ class Monitor:
         super(Monitor, self).__init__()
         self.__type__ = 'psychoMonitor'
         self.name = name
+        self.index = index
+        self.size = size
         self.autoLog = autoLog
         self.currentCalib = currentCalib or {}
         self.currentCalibName = strFromDate(time.mktime(time.localtime()))
@@ -135,6 +140,42 @@ class Monitor:
             self.setNotes(notes)
         if useBits != None:
             self.setUseBits(useBits)
+    
+    def isSameDevice(self, other):
+        if not isinstance(other, Monitor):
+            return False
+        return other.index == self.index
+
+    @staticmethod
+    def getAvailableDevices():
+        import pyglet
+
+        # get screens
+        display = pyglet.canvas.Display()
+        allScrs = display.get_screens()
+        # construct profiles
+        profiles = []
+        for i, screen in enumerate(allScrs):
+            profiles.append({
+                'deviceClass': "psychopy.hardware.monitor.MonitorDevice",
+                'deviceName': f"Monitor {screen._handle}",
+                'index': i,
+                'size': (screen.width, screen.height)
+            })
+    
+    @property
+    def size(self):
+        return self.currentCalib['sizePix']
+    
+    @size.setter
+    def size(self, value):
+        if value is None:
+            # when size is set to None, get from device profile
+            for profile in self.getAvailableDevices():
+                if profile['index'] == self.index:
+                    value = profile['size']
+        # set as normal
+        self.currentCalib['sizePix'] = value
 
     def gammaIsDefault(self):
         """Determine whether we're using the default gamma values

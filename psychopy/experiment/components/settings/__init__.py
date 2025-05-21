@@ -17,6 +17,7 @@ from psychopy.monitors import Monitor
 from psychopy.alerts import alert
 from psychopy.tools.filetools import genDelimiter
 from psychopy.data.utils import parsePipeSyntax
+from .monitors import MonitorDeviceBackend
 
 # for creating html output folders:
 import shutil
@@ -262,6 +263,29 @@ class SettingsComponent:
             "frameRate",
             "frameRateMsg",
         ]
+        def getDevices():
+            # iterate through known devices
+            devices = [("", _translate("Default"))]
+            for name, device in prefs.devices.items():
+                # if device is a monitor, include it
+                if isinstance(device, MonitorDeviceBackend):
+                    devices.append(
+                        (name, name)
+                    )
+            return devices
+        def getLabels():
+            return [device[1] for device in getDevices()]
+        def getValues():
+            return [device[0] for device in getDevices()]
+        # label to refer to device by
+        self.params['Monitor'] = Param(
+            monitor, valType="str", inputType="device", categ="Screen",
+            allowedVals=getValues,
+            allowedLabels=getLabels,
+            label=_translate("Monitor"),
+            hint=_translate(
+                "The named monitor from Device Manager to use for this experiment.")
+        )
         self.params['Full-screen window'] = Param(
             fullScr, valType='bool', inputType="bool", allowedTypes=[],
             hint=_translate("Run the experiment full-screen (recommended)"),
@@ -280,12 +304,6 @@ class SettingsComponent:
             screen, valType='num', inputType="spin", allowedTypes=[],
             hint=_translate("Which physical screen to run on (1 or 2)"),
             label=_translate("Screen"), categ='Screen')
-        self.params['Monitor'] = Param(
-            monitor, valType='str', inputType="single", allowedTypes=[],
-            hint=_translate("Name of the monitor (from Monitor Center). Right"
-                            "-click to go there, then copy & paste a monitor "
-                            "name here."),
-            label=_translate("Monitor"), categ="Screen")
         self.params['color'] = Param(
             color, valType='color', inputType="color", allowedTypes=[],
             hint=_translate("Color of the screen (e.g. black, $[1.0,1.0,1.0],"

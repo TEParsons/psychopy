@@ -19,6 +19,7 @@ from psychopy.contrib.lazy_import import lazy_import
 from psychopy import colors, event
 from psychopy.localization import _translate
 from psychopy.tools.systemtools import getCurrentPID, registerPID
+from psychopy.hardware import DeviceManager
 import math
 # from psychopy.clock import monotonicClock
 
@@ -357,26 +358,27 @@ class Window():
 
         self._toLog = []
         self._toCall = []
-        # settings for the monitor: local settings (if available) override
-        # monitor
-        # if we have a monitors.Monitor object (psychopy 0.54 onwards)
-        # convert to a Monitor object
-        if not monitor:
-            self.monitor = monitors.Monitor('__blank__', autoLog=autoLog)
-        elif isinstance(monitor, str):
-            self.monitor = monitors.Monitor(monitor, autoLog=autoLog)
-        elif hasattr(monitor, 'keys'):
-            # convert into a monitor object
-            self.monitor = monitors.Monitor('temp', currentCalib=monitor,
-                                            verbose=False, autoLog=autoLog)
-        else:
-            self.monitor = monitor
+
+        # if given None, get first monitor we find
+        if monitor is None:
+            for device in DeviceManager.getInitialisedDevices("psychopy.hardware.monitor.MonitorDevice").values():
+                monitor = device
+                break
+        # if given a name, get from Device Manager
+        if isinstance(monitor, str):
+            monitor = DeviceManager.getDevice(monitor)
+        # if still None, make a monitor
+        if monitor is None:
+            for profile in DeviceManager.getAvailableDevices("psychopy.hardware.monitor.MonitorDevice"):
+                monitor = DeviceManager.addDevice(**profile)
+        # store monitor config
+        self.monitor = monitor
 
         # otherwise monitor will just be a dict
         self.scrWidthCM = self.monitor.getWidth()
         self.scrDistCM = self.monitor.getDistance()
 
-        scrSize = self.monitor.getSizePix()
+        scrSize = self.monitor.size
         if scrSize is None:
             self.scrWidthPIX = None
         else:
