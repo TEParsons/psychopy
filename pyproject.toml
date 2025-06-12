@@ -37,6 +37,7 @@ dependencies = [
     "questplus>=2023.1",
     "openpyxl",
     "xmlschema",
+    "jsonschema",
     # for core stimuli
     "soundfile",
     "imageio",

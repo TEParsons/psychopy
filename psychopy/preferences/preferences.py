@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import errno
+import json
+import jsonschema
 import os
 import sys
 import platform
 from pathlib import Path
 from psychopy import logging
-from . import devices
+from . import devices, defaults, parser
 from .. import __version__
 
 from packaging.version import Version
@@ -381,48 +383,47 @@ class Preferences:
         if not appDir.is_dir():  # if no app dir this may be just lib install
             return {}
         # get spec to validate configuration against
-        appDataSpec = ConfigObj(
-            join(self.paths['appDir'], 'appData.spec'), encoding='UTF8', list_values=False
-        )
-        # get configuration from file
+        appDataSpecFile = Path(self.paths['appDir']) / "appData.schema.json"
+        with appDataSpecFile.open("r", encoding="utf-8") as f:
+            appDataSpec = json.load(f)
         try:
-            cfg = ConfigObj(
-                self.paths['appDataFile'], encoding='UTF8', configspec=appDataSpec
+            # get configuration from file
+            appDataFile = Path(self.paths['userPrefsDir']) / "appData.json"
+            if appDataFile.is_file():
+                with appDataFile.open("r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+            # validate configuration
+            try:
+                jsonschema.validate(cfg, schema=appDataSpec)
+            except jsonschema.exceptions.ValidationError as err:
+                logging.error(
+                    f"Failed to load app data file, reason: {err}"
+                )
+                cfg = defaults.defaults(appDataSpec)
+        except FileNotFoundError as err:
+            logging.debug(
+                "No app data found, using defaults."
             )
-        except ConfigObjError as err:
-            # if invalid, print a warning and reset to defaults
-            logging.warn(
-                f"Failed to load preferences file, falling back to defaults. Reason:\n{err}"
+            cfg = defaults.defaults(appDataSpec)
+        except (jsonschema.exceptions.ValidationError, json.decoder.JSONDecodeError) as err:
+            logging.error(
+                f"Failed to load app data file, reverting to defaults. Reason: {err}"
             )
-            # create blank config
-            cfg = ConfigObj(
-                None, encoding='UTF8', configspec=appDataSpec
-            )
-            # point blank config object to file
-            cfg.filename = self.paths['appDataFile']
-            # overwrite existing prefs
-            cfg.write()
-        # validate configuration
-        resultOfValidate = cfg.validate(self._validator,
-                                        copy=True,
-                                        preserve_errors=True)
-        self.restoreBadPrefs(cfg, resultOfValidate)
-        # force favComponent level values to be integers
-        if 'favComponents' in cfg['builder']:
-            for key in cfg['builder']['favComponents']:
-                _compKey = cfg['builder']['favComponents'][key]
-                cfg['builder']['favComponents'][key] = int(_compKey)
+            cfg = defaults.defaults(appDataSpec)
+        
         return cfg
 
     def saveAppData(self):
         """Save the various setting to the appropriate files
         (or discard, in some cases)
         """
-        # copy means all settings get saved:
-        self.appDataCfg.validate(self._validator, copy=True)
+        # make sure folder exists
         if not os.path.isdir(self.paths['userPrefsDir']):
             os.makedirs(self.paths['userPrefsDir'])
-        self.appDataCfg.write()
+        # save config
+        appDataFile = Path(self.paths['userPrefsDir']) / "appData.json"
+        with appDataFile.open("w", encoding="utf-8") as f:
+            json.dump(self.appDataCfg, f, cls=parser.ConfigEncoder, indent=True)
 
     def validate(self):
         """Validate (user) preferences and reset invalid settings to defaults

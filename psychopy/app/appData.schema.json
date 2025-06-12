@@ -1,0 +1,344 @@
+{
+    "title": "PsychoPy App Data",
+    "description": "Information about the PsychoPy app, particularly the state it was in when last open",
+    "type": "object",
+    "properties": {
+        "lastFrame": {
+            "description": "Frames (builder, runner, coder) which were open when app last closed",
+            "default": ["builder", "coder", "runner"],
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["builder", "coder", "runner"]
+            }
+        },
+        "skipVersion": {
+            "description": "Skipping any updates of this version",
+            "default": "",
+            "type": "string",
+            "pattern": "^\\d*\\.\\d*(\\.\\d*)?$|^$"
+        },
+        "tipIndex": {
+            "description": "Index of the tips dialog",
+            "default": 0,
+            "type": "integer"
+        },
+        "flowSize": {
+            "description": "Zoom-in state of the Flow panel",
+            "default": 2,
+            "type": "integer",
+            "enum": [0, 1, 2]
+        },
+        "routineSize": {
+            "description": "Zoom-in state of the Routine panel",
+            "default": 2,
+            "type": "integer",
+            "enum": [0, 1, 2]
+        },
+        "showLoopInfoInFlow": {
+            "description": "Show information about a loop in the Flow panel",
+            "default": false,
+            "type": "boolean"
+        },
+        "testSubset": {
+            "description": "If running tests, which subset to run?",
+            "default": "all tests",
+            "type": "string"
+        },
+        "lastNewsDate": {
+            "description": "Last time the news popup was displayed to the user",
+            "default": "2018-12-21T12:00:00.000Z",
+            "type": "string",
+            "format": "date-time"
+        },
+        "runner" : {
+            "description": "Information specific to the Runner view",
+            "type": "object",
+            "properties": {
+                "taskList": {
+                    "description": "Tasks loaded when window was last closed",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri",
+                        "pattern": "\\.psyexp$|\\.psyrun$|\\.py$"
+                    }
+                }
+            },
+            "required": [
+                "taskList"
+            ]
+        },
+        "coder": {
+            "description": "Information specific to Coder view",
+            "type": "object",
+            "properties": {
+                "winX": {
+                    "description": "Horizontal position of the window (pixels from left",
+                    "default": 20,
+                    "type": "integer"
+                },
+                "winY": {
+                    "description": "Vertical position of the window (pixels from top)",
+                    "default": 20,
+                    "type": "integer"
+                },
+                "winW": {
+                    "description": "Width of the window (pixels)",
+                    "default": 900,
+                    "type": "integer"
+                },
+                "winH": {
+                    "description": "Height of the window (pixels)",
+                    "default": 600,
+                    "type": "integer"
+                },
+                "state": {
+                    "description": "State the window was last in (normal or maximised)",
+                    "default": "normal",
+                    "type": "string",
+                    "enum": ["normal", "maxim"]
+                },
+                "auiPerspective": {
+                    "description": "Stringified data from wx.aui describing the layout of panels in this window",
+                    "default": "",
+                    "type": "string"
+                },
+                "fileHistory": {
+                    "description": "Last few files to have been open",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "prevFiles": {
+                    "description": "Files which were open when the window last closed",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "showIndentGuides": {
+                    "description": "Whether indentation guides were shown",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "showWhitespace": {
+                    "description": "Whether whitespace indicators were shown",
+                    "default": true,
+                    "type": "boolean"
+                },
+                "showEOLs": {
+                    "description": "Whether EOL indicators were shown",
+                    "default": false,
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "winX",
+                "winY",
+                "winW",
+                "winH",
+                "auiPerspective",
+                "state",
+                "fileHistory",
+                "prevFiles",
+                "showIndentGuides",
+                "showWhitespace",
+                "showEOLs"
+            ]
+        },
+        "builder": {
+            "description": "Information pertaining to Builder view",
+            "type": "object",
+            "properties": {
+                "fileHistory": {
+                    "description": "Last few files to have been open",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "prevFiles": {
+                    "description": "Files which were open when the window last closed",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "favComponents": {
+                    "description": "Stores Components and number of times clicked so that favorites can be calculated",
+                    "default": {},
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "default": 0
+                    }
+                },
+                "frames": {
+                    "description": "Frames which were open when the app last closed",
+                    "default": {},
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "winX": {
+                                "description": "Horizontal position of the window (pixels from left",
+                                "default": 20,
+                                "type": "integer"
+                            },
+                            "winY": {
+                                "description": "Vertical position of the window (pixels from top)",
+                                "default": 20,
+                                "type": "integer"
+                            },
+                            "winW": {
+                                "description": "Width of the window (pixels)",
+                                "default": 900,
+                                "type": "integer"
+                            },
+                            "winH": {
+                                "description": "Height of the window (pixels)",
+                                "default": 600,
+                                "type": "integer"
+                            },
+                            "state": {
+                                "description": "State the window was last in (normal or maximised)",
+                                "default": "normal",
+                                "type": "string",
+                                "enum": ["normal", "maxim"]
+                            },
+                            "auiPerspective": {
+                                "description": "Stringified data from wx.aui describing the layout of panels in this window",
+                                "default": "",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "winX",
+                            "winY",
+                            "winH",
+                            "winW",
+                            "state",
+                            "auiPerspective"
+                        ]
+                    }
+                },
+                "defaultFrame": {
+                    "description": "Frame information for the default frame",
+                    "type": "object",
+                    "properties": {
+                        "winX": {
+                            "description": "Horizontal position of the window (pixels from left",
+                            "default": 20,
+                            "type": "integer"
+                        },
+                        "winY": {
+                            "description": "Vertical position of the window (pixels from top)",
+                            "default": 20,
+                            "type": "integer"
+                        },
+                        "winW": {
+                            "description": "Width of the window (pixels)",
+                            "default": 900,
+                            "type": "integer"
+                        },
+                        "winH": {
+                            "description": "Height of the window (pixels)",
+                            "default": 600,
+                            "type": "integer"
+                        },
+                        "state": {
+                            "description": "State the window was last in (normal or maximised)",
+                            "default": "normal",
+                            "type": "string",
+                            "enum": ["normal", "maxim"]
+                        },
+                        "auiPerspective": {
+                            "description": "Stringified data from wx.aui describing the layout of panels in this window",
+                            "default": "",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "winX",
+                        "winY",
+                        "winH",
+                        "winW",
+                        "state",
+                        "auiPerspective"
+                    ]
+                }
+            },
+            "required": [
+                "fileHistory",
+                "prevFiles",
+                "favComponents",
+                "frames",
+                "defaultFrame"
+            ]
+        },
+        "projects": {
+            "description": "Information pertaining to Pavlovia projects",
+            "type": "object",
+            "properties": {
+                "fileHistory": {
+                    "description": "Projects in Pavlovia history",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "prevFiles": {
+                    "description": "Projects which were open when app last closed",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "user": {
+                    "description": "OSF user who was last logged in",
+                    "default": "",
+                    "type": "string"
+                },
+                "pavloviaUser": {
+                    "description": "Pavlovia user who was last logged in",
+                    "default": "",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "fileHistory",
+                "prevFiles",
+                "user",
+                "pavloviaUser"
+            ]            
+        }
+    },
+    "required": [ 
+        "lastFrame", 
+        "lastNewsDate",
+        "tipIndex",
+        "flowSize",
+        "routineSize",
+        "showLoopInfoInFlow",
+        "testSubset",
+        "runner",
+        "coder",
+        "builder",
+        "projects"
+    ]
+}

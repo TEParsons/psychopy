@@ -468,8 +468,6 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
             if self.prefs.app['defaultView'] == 'all':
                 startView = ["builder", "coder", "runner"]
             elif self.prefs.app['defaultView'] == "last":
-                if self.prefs.appData['lastFrame'] == "both" or not self.prefs.appData['lastFrame']:
-                    self.prefs.appData['lastFrame'] = "builder-coder-runner"
                 startView = self.prefs.appData['lastFrame'].split("-")
             elif self.prefs.app['defaultView'] in ["builder", "coder", "runner"]:
                 startView = self.prefs.app['defaultView']
@@ -1057,14 +1055,25 @@ class PsychoPyApp(wx.App, handlers.ThemeMixin):
                 openFrames.append("coder")
             if type(frame).__name__ == "RunnerFrame" and "runner" not in openFrames:
                 openFrames.append("runner")
-        self.prefs.appData['lastFrame'] = "-".join(openFrames)
+        self.prefs.appData['lastFrame'] = openFrames
         # save current version for next run
         self.prefs.appData['lastVersion'] = self.version
         # update app data while closing each frame
         # start with an empty list to be appended by each frame
         self.prefs.appData['builder']['prevFiles'] = []
         self.prefs.appData['coder']['prevFiles'] = []
-
+        # store properties of open builder frames
+        for frame in self.getAllFrames("builder"):
+            filename = getattr(frame, "filename", None)
+            if filename:
+                self.prefs.appData['builder']['frames'][filename] = {
+                    'winX': int(frame.Position[0]),
+                    'winY': int(frame.Position[1]),
+                    'winW': int(frame.Size[0]),
+                    'winH': int(frame.Size[1]),
+                    'state': "normal",
+                    'auiPerspective': frame._mgr.SavePerspective()
+                }
         # write plugins config if changed during the session
         # saveStartUpPluginsConfig()
 
