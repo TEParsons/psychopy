@@ -9,7 +9,7 @@ import sys
 import platform
 from pathlib import Path
 from psychopy import logging
-from . import devices, defaults, parser
+from . import devices, parser
 from .. import __version__
 
 from packaging.version import Version
@@ -399,17 +399,17 @@ class Preferences:
                 logging.error(
                     f"Failed to load app data file, reason: {err}"
                 )
-                cfg = defaults.defaults(appDataSpec)
+                cfg = parser.defaults(appDataSpec)
         except FileNotFoundError as err:
             logging.debug(
                 "No app data found, using defaults."
             )
-            cfg = defaults.defaults(appDataSpec)
+            cfg = parser.defaults(appDataSpec)
         except (jsonschema.exceptions.ValidationError, json.decoder.JSONDecodeError) as err:
             logging.error(
                 f"Failed to load app data file, reverting to defaults. Reason: {err}"
             )
-            cfg = defaults.defaults(appDataSpec)
+            cfg = parser.defaults(appDataSpec)
         
         return cfg
 
