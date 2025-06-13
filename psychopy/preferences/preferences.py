@@ -389,23 +389,29 @@ class Preferences:
         try:
             # get configuration from file
             appDataFile = Path(self.paths['userPrefsDir']) / "appData.json"
-            if appDataFile.is_file():
-                with appDataFile.open("r", encoding="utf-8") as f:
-                    cfg = json.load(f)
+            with appDataFile.open("r", encoding="utf-8") as f:
+                cfg = json.load(f)
             # validate configuration
             try:
                 jsonschema.validate(cfg, schema=appDataSpec)
             except jsonschema.exceptions.ValidationError as err:
                 logging.error(
-                    f"Failed to load app data file, reason: {err}"
+                    f"Failed to load app data file, attempting sanitization. Reason: {err}"
                 )
-                cfg = parser.defaults(appDataSpec)
+                # try to sanitize
+                try:
+                    parser.sanitize(cfg, schema=appDataSpec)
+                except parser.JSONSanitizationError as err:
+                    logging.error(
+                        f"Failed to sanitize app data file, reason: {err}"
+                    )
+                    cfg = parser.defaults(appDataSpec)
         except FileNotFoundError as err:
             logging.debug(
                 "No app data found, using defaults."
             )
             cfg = parser.defaults(appDataSpec)
-        except (jsonschema.exceptions.ValidationError, json.decoder.JSONDecodeError) as err:
+        except json.decoder.JSONDecodeError as err:
             logging.error(
                 f"Failed to load app data file, reverting to defaults. Reason: {err}"
             )
