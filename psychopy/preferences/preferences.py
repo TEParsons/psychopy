@@ -15,26 +15,6 @@ from .. import __version__
 from packaging.version import Version
 import shutil
 
-try:
-    import configobj
-    if (sys.version_info.minor >= 7 and
-            Version(configobj.__version__) < Version('5.1.0')):
-        raise ImportError('Installed configobj does not support Python 3.7+')
-    _haveConfigobj = True
-except ImportError:
-    _haveConfigobj = False
-
-
-if _haveConfigobj:  # Use the "global" installation.
-    from configobj import ConfigObj, ConfigObjError
-    try:
-        from configobj import validate
-    except ImportError:  # Older versions of configobj
-        import validate
-else:  # Use our contrib package if configobj is not installed or too old.
-    from psychopy.contrib import configobj
-    from psychopy.contrib.configobj import ConfigObj, ConfigObjError
-    from psychopy.contrib.configobj import validate
 join = os.path.join
 
 
@@ -288,7 +268,6 @@ class Preferences:
         """Load the user prefs and the application data
         """
         self.getPaths(userDir=userDir)
-        self._validator = validate.Validator()
 
         # note: self.paths['userPrefsDir'] gets set in loadSitePrefs()
         self.paths['appDataFile'] = join(
@@ -305,7 +284,6 @@ class Preferences:
 
         self.userPrefsCfg = self.loadUserPrefs()
         self.appDataCfg = self.loadAppData()
-        self.validate()
 
         # simplify namespace
         self.general = self.userPrefsCfg['general']
@@ -329,7 +307,7 @@ class Preferences:
         ----------
         file : pathlib.Path
             File to load prefs from
-        schemaFile : _type_
+        schemaFile : pathlib.Path
             File to load schema from
         """
         # load schema from file
@@ -375,9 +353,6 @@ class Preferences:
         fine, eg for key-bindings, but outside it (where user prefs will
         live) is not allowed by easy_install (security risk)
         """
-        self.prefsSpec = ConfigObj(self.paths['prefsSpecFile'],
-                                   encoding='UTF8', list_values=False)
-
         # check/create path for user prefs
         if not os.path.isdir(self.paths['userPrefsDir']):
             try:
@@ -387,23 +362,10 @@ class Preferences:
                        " will be read-only")
                 print(msg % self.paths['userPrefsDir'])
         # load configuration from file
-        try:
-            cfg = ConfigObj(
-                self.paths['userPrefsFile'], encoding='UTF8', configspec=self.prefsSpec
-            )
-        except ConfigObjError as err:
-            # if invalid, print a warning and reset to defaults
-            logging.warn(
-                f"Failed to load preferences file, falling back to defaults. Reason:\n{err}"
-            )
-            # create blank config
-            cfg = ConfigObj(
-                None, encoding='UTF8', configspec=self.prefsSpec
-            )
-            # point blank config object to file
-            cfg.filename = self.paths['userPrefsFile']
-            # overwrite existing prefs
-            cfg.write()
+        cfg, self.prefsSpec = self.loadFile(
+            file=Path(self.paths['userPrefsDir']) / "userPrefs.schema.json",
+            schemaFile=Path(__file__).parent / "preferences.schema.json"
+        )
         
         return cfg
     
@@ -420,10 +382,13 @@ class Preferences:
         """Validate and save the various setting to the appropriate files
         (or discard, in some cases)
         """
-        self.validate()
+        # make sure folder exists
         if not os.path.isdir(self.paths['userPrefsDir']):
             os.makedirs(self.paths['userPrefsDir'])
-        self.userPrefsCfg.write()
+        # save config
+        file = Path(self.paths['userPrefsDir']) / "userPrefs.json"
+        with file.open("w", encoding="utf-8") as f:
+            json.dump(self.userPrefsCfg, f, cls=parser.ConfigEncoder, indent=True)
 
     def loadAppData(self):
         """Fetch app data config (unless this is a lib-only installation)
@@ -451,25 +416,5 @@ class Preferences:
         with appDataFile.open("w", encoding="utf-8") as f:
             json.dump(self.appDataCfg, f, cls=parser.ConfigEncoder, indent=True)
 
-    def validate(self):
-        """Validate (user) preferences and reset invalid settings to defaults
-        """
-        result = self.userPrefsCfg.validate(self._validator, copy=True)
-        self.restoreBadPrefs(self.userPrefsCfg, result)
-
-    def restoreBadPrefs(self, cfg, result):
-        """result = result of validate
-        """
-        if result == True:
-            return
-        vtor = validate.Validator()
-        for sectionList, key, _ in configobj.flatten_errors(cfg, result):
-            if key is not None:
-                _secList = ', '.join(sectionList)
-                val = cfg.configspec[_secList][key]
-                cfg[_secList][key] = vtor.get_default_value(val)
-            else:
-                msg = "Section [%s] was missing in file '%s'"
-                print(msg % (', '.join(sectionList), cfg.filename))
 
 prefs = Preferences()

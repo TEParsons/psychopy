@@ -1,0 +1,989 @@
+{
+    "title": "PsychoPy Preferences",
+    "description": "Defines preferences for PsychoPy",
+    "type": "object",
+    "properties": {
+        "general": {
+            "title": "General",
+            "description": "General settings",
+            "type": "object",
+            "properties": {
+                "units": {
+                    "title": "Spatial units",
+                    "description": "The default units for windows and visual stimuli",
+                    "type": "string",
+                    "enum": ["deg", "norm", "cm", "pix", "height"],
+                    "default": "norm"
+                },
+                "fullscr": {
+                    "title": "Fullscreen",
+                    "description": "Full screen is best for accurate timing",
+                    "type": "boolean",
+                    "default": false
+                },
+                "allowGUI": {
+                    "title": "Show mouse",
+                    "description": "Enable subjects to use the mouse and GUIs during experiments",
+                    "type": "boolean",
+                    "default": true
+                },
+                "version": {
+                    "title": "PsychoPy version",
+                    "description": "For internal usage",
+                    "type": "string",
+                    "default": "",
+                    "pattern": "^\\d*\\.\\d*(\\.\\d*)?$|^$"
+                },
+                "paths": {
+                    "title": "Module paths",
+                    "description": "Add paths here to your custom Python modules",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "default": []
+                }, 
+                "flac": {
+                    "title": "FLAC path",
+                    "description": "Path to flac (lossless audio compression) on this operating system",
+                    "type": "string",
+                    "format": "uri",
+                    "default": ""
+                },
+                "shutdownKey": {
+                    "title": "Shutdown key",
+                    "description": "Shutdown key, following the pyglet naming scheme.",
+                    "type": "string",
+                    "default": ""
+                },
+                "shutdownKeyModifiers": {
+                    "title": "Shutdown key modifiers",
+                    "description": "Modifier keys for shutdown keys",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "gammaErrorPolicy": {
+                    "title": "Gamma error policy",
+                    "description": "What to do if gamma-correction not possible",
+                    "type": "string",
+                    "enum": ["abort", "warn"],
+                    "default": "abort"
+                },
+                "startupPlugins": {
+                    "title": "Startup plugins",
+                    "description": "Add plugin names here to load when PsychoPy starts",
+                    "deprecated": true,
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "appKeyGoogleCloud": {
+                    "description": "Google Cloud Platform key, required for the audio transcription using Google Speech Recognition. Specified as a path to a JSON file containing the key data.",
+                    "type": "string",
+                    "default": ""
+                },
+                "winType": {
+                    "description": "Which system to use as a backend for drawing",
+                    "deprecated": true,
+                    "type": "string",
+                    "enum": ["pyglet", "pygame", "glfw"],
+                    "default": "pyglet"
+                }
+            },
+            "required": [
+                "units",
+                "fullscr",
+                "allowGUI",
+                "version",
+                "paths", 
+                "flac",
+                "shutdownKey",
+                "shutdownKeyModifiers",
+                "gammaErrorPolicy",
+                "appKeyGoogleCloud"
+            ]
+        },
+        "app": {
+            "title": "Application",
+            "description": "Application settings",
+            "type": "object",
+            "properties": {
+                "showStartupTips": {
+                    "title": "Show startup tips",
+                    "description": "Display tips when starting PsychoPy",
+                    "type": "boolean",
+                    "default": true
+                },
+                "defaultView": {
+                    "title": "Default view",
+                    "description": "What windows to display when PsychoPy starts",
+                    "enum": ["last", "builder", "coder", "runner", "all"],
+                    "default": "last"
+                },
+                "resetPrefs": {
+                    "title": "Reset preferences",
+                    "description": "Reset preferences to defaults on next restart of PsychoPy",
+                    "type": "boolean",
+                    "default": false
+                },
+                "autoSavePrefs": {
+                    "title": "Auto-save preferences",
+                    "description": "Save any unsaved preferences before closing the window",
+                    "type": "boolean",
+                    "default": false
+                },
+                "debugMode": {
+                    "title": "Debug mode",
+                    "description": "enable features for debugging PsychoPy itself, including unit-tests",
+                    "type": "boolean",
+                    "default": false
+                },
+                "locale": {
+                    "title": "Locale",
+                    "description": "Language to use in menus etc; not all translations are available. Select a value, then restart the app.",
+                    "type": "string",
+                    "default": ""
+                },
+                "errorDialog": {
+                    "title": "Error dialog",
+                    "description": "Show an error dialog when PsychoPy encounters an unhandled internal error",
+                    "type": "boolean",
+                    "default": true
+                },
+                "theme": {
+                    "title": "Theme",
+                    "description": "Control the look and feel of PsychoPy",
+                    "type": "string",
+                    "default": "PsychoPyLight"
+                },
+                "showSplash": {
+                    "title": "Show splash",
+                    "description": "Whether to show a splash screen while loading",
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "required": [
+                "showStartupTips",
+                "defaultView",
+                "resetPrefs",
+                "autoSavePrefs",
+                "debugMode",
+                "locale",
+                "errorDialog",
+                "theme",
+                "showSplash"
+            ]
+        },
+        "coder": {
+            "title": "Coder",
+            "description": "Settings for the Coder window",
+            "type": "object",
+            "properties": {
+                "readonly": {
+                    "title": "readonly",
+                    "description": "open Coder files as read-only (allows running without accidental changes)",
+                    "type": "boolean",
+                    "default": false
+                },
+                "outputFont": {
+                    "title": "output Font",
+                    "description": "a list of font names; the first one found on the system will be used",
+                    "type": "string",
+                    "default": "From Theme..."
+                },
+                "codeFont": {
+                    "title": "code Font",
+                    "description": "a list of font names; the first one found on the system will be used",
+                    "type": "string",
+                    "default": "From Theme..."
+                },
+                "codeFontSize": {
+                    "title": "code Font Size",
+                    "description": "Font size (in pts) takes an integer between 6 and 24",
+                    "type": "integer",
+                    "default": 10
+                },
+                "outputFontSize": {
+                    "title": "output Font Size",
+                    "description": "Font size (in pts) takes an integer between 6 and 24",
+                    "type": "integer",
+                    "default": 10
+                },
+                "lineSpacing": {
+                    "title": "line Spacing",
+                    "description": "Spacing between lines",
+                    "type": "integer",
+                    "default": 4
+                },
+                "edgeGuideColumn": {
+                    "title": "edge Guide Column",
+                    "description": "Long line edge guide, specify zero to disable",
+                    "type": "integer",
+                    "default": 80
+                },
+                "showSourceAsst": {
+                    "title": "show Source Asst",
+                    "description": "Set the source assistant panel to be visible by default",
+                    "type": "boolean",
+                    "default": true
+                },
+                "showOutput": {
+                    "title": "show Output",
+                    "description": "Set the output/shell to be visible by default",
+                    "type": "boolean",
+                    "default": true
+                },
+                "autocomplete": {
+                    "title": "autocomplete",
+                    "description": "Show code completion suggestion and calltips automatically when typing.",
+                    "type": "boolean",
+                    "default": true
+                },
+                "reloadPrevFiles": {
+                    "title": "reload Prev Files",
+                    "description": "reload previously opened files after start",
+                    "type": "boolean",
+                    "default": true
+                },
+                "preferredShell": {
+                    "title": "preferred Shell",
+                    "description": "for coder shell window, which shell to use",
+                    "type": "string",
+                    "default": "pyshell",
+                    "enum": [
+                        "pyshell"
+                    ]
+                }
+            },
+            "required": [
+                "readonly",
+                "outputFont",
+                "codeFont",
+                "codeFontSize",
+                "outputFontSize",
+                "lineSpacing",
+                "edgeGuideColumn",
+                "showSourceAsst",
+                "showOutput",
+                "autocomplete",
+                "reloadPrevFiles",
+                "preferredShell"
+            ]
+        },
+        "builder": {
+            "title": "Builder",
+            "description": "Settings for the Builder window",
+            "type": "object",
+            "properties": {
+                "reloadPrevExp": {
+                    "title": "reload Prev Exp",
+                    "description": "whether to automatically reload a previously open experiment",
+                    "type": "boolean",
+                    "default": true
+                },
+                "codeComponentLanguage": {
+                    "title": "code Component Language",
+                    "description": "Default to when writing code components",
+                    "type": "string",
+                    "default": "Auto->JS",
+                    "enum": [
+                        "Auto->JS"
+                    ]
+                },
+                "unclutteredNamespace": {
+                    "title": "uncluttered Namespace",
+                    "description": "if False will create scripts with an 'easier' but more cluttered namespace",
+                    "type": "boolean",
+                    "default": false
+                },
+                "componentsFolders": {
+                    "title": "components Folders",
+                    "description": "folder names for custom components; expects a comma-separated list",
+                    "type": "array",
+                    "default": ["/Users/Shared/PsychoPy3/components"]
+                },
+                "componentFilter": {
+                    "title": "component Filter",
+                    "description": "Only show components which work in...",
+                    "type": "string",
+                    "default": "Any",
+                    "enum": [
+                        "PsychoPy", 
+                        "PsychoJS", 
+                        "Any", 
+                        "Both"
+                    ]
+                },
+                "hiddenComponents": {
+                    "title": "hidden Components",
+                    "description": "a list of components to hide (eg, because you never use them)",
+                    "type": "array",
+                    "default": [
+                        "RatingScaleComponent", 
+                        "PatchComponent", 
+                        "UnknownComponent"
+                    ]
+                },
+                "abbreviateLongCompNames": {
+                    "title": "abbreviate Long Comp Names",
+                    "description": "Abbreviate long component names to maximise timeline space?",
+                    "type": "boolean",
+                    "default": false
+                },
+                "unpackedDemosDir": {
+                    "title": "unpacked Demos Dir",
+                    "description": "where the Builder demos are located on this computer (after unpacking)",
+                    "type": "string",
+                    "default": ""
+                },
+                "savedDataFolder": {
+                    "title": "saved Data Folder",
+                    "description": "name of the folder where subject data should be saved (relative to the script)",
+                    "type": "string",
+                    "default": "data"
+                },
+                "builderLayout": {
+                    "title": "builder Layout",
+                    "description": "Panels arrangement: Should Flow be on the top or bottom, and should Components be on the left or right?",
+                    "type": "string",
+                    "default": "FlowBottom_CompRight",
+                    "enum": [
+                        "FlowBottom_CompRight",
+                        "FlowBottom_CompLeft",
+                        "FlowTop_CompRight",
+                        "FlowTop_CompLeft"
+                    ]
+                },
+                "alwaysShowReadme": {
+                    "title": "always Show Readme",
+                    "description": "Display text in a floating window that describes the experiment",
+                    "type": "boolean",
+                    "default": true
+                },
+                "maxFavorites": {
+                    "title": "max Favorites",
+                    "description": "Upper limit on how many components can be in favorites",
+                    "type": "integer",
+                    "default": 10
+                },
+                "confirmRoutineClose": {
+                    "title": "confirm Routine Close",
+                    "description": "Ask for confirmation when closing a routine tab.",
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "required": [
+                "reloadPrevExp",
+                "codeComponentLanguage",
+                "unclutteredNamespace",
+                "componentsFolders",
+                "componentFilter",
+                "hiddenComponents",
+                "abbreviateLongCompNames",
+                "unpackedDemosDir",
+                "savedDataFolder",
+                "builderLayout",
+                "alwaysShowReadme",
+                "maxFavorites",
+                "confirmRoutineClose"
+            ]
+        },
+        "hardware": {
+            "title": "Hardware",
+            "description": "Settings for hardware",
+            "type": "object",
+            "properties": {
+                "audioLib": {
+                    "title": "Audio library",
+                    "description": "Choice of audio library",
+                    "type": "array",
+                    "default": [
+                        "ptb", 
+                        "sounddevice", 
+                        "pyo", 
+                        "pygame"
+                    ],
+                    "deprecated": true
+                },
+                "audioWASAPIOnly": {
+                    "title": "WASAPI-only audio",
+                    "description": "Exclude non-WASAPI audio devices",
+                    "type": "boolean",
+                    "default": true
+                },
+                "audioDriver": {
+                    "title": "audio Driver",
+                    "description": "Audio driver to use",
+                    "type": "array",
+                    "default": [
+                        "Primary Sound",
+                        "ASIO",
+                        "Audigy"
+                    ]
+                },
+                "audioDevice": {
+                    "title": "Audio device",
+                    "description": "Audio device to use (if audioLib allows control)",
+                    "type": "string",
+                    "default": "default"
+                },
+                "parallelPorts": {
+                    "title": "Parallel ports",
+                    "description": "A list of parallel ports",
+                    "type": "array",
+                    "default": ["0x0378", "0x03BC"]
+                },
+                "qmixConfiguration": {
+                    "title": "qmix Configuration",
+                    "description": "The name of the Qmix pump configuration to use",
+                    "type": "string",
+                    "default": "qmix_config",
+                    "deprecated": true
+                }
+            },
+            "required": [
+                "audioWASAPIOnly",
+                "audioDriver",
+                "audioDevice",
+                "parallelPorts"
+            ]
+        },
+        "piloting": {
+            "title": "Piloting",
+            "description": "Settings for piloting mode",
+            "type": "object",
+            "properties": {
+                "forceWindowed": {
+                    "title": "force Windowed",
+                    "description": "Prevent the experiment from being fullscreen when piloting",
+                    "type": "boolean",
+                    "default": true
+                },
+                "forceMouseVisible": {
+                    "title": "force Mouse Visible",
+                    "description": "Always show the mouse when piloting",
+                    "type": "boolean",
+                    "default": true
+                },
+                "forcedWindowSize": {
+                    "title": "forced Window Size",
+                    "description": "What window size to use when forced to windowed mode",
+                    "type": "array",
+                    "default": ["800", "600"]
+                },
+                "pilotLoggingLevel": {
+                    "title": "pilot Logging Level",
+                    "description": "How much output to include in the log file when piloting ('error' is fewest messages, 'debug' is most)",
+                    "type": "string",
+                    "default": "debug",
+                    "enum": [
+                        "error", 
+                        "warning", 
+                        "data", 
+                        "exp", 
+                        "info", 
+                        "debug"
+                    ]
+                },
+                "pilotConsoleLoggingLevel": {
+                    "title": "pilot Console Logging Level",
+                    "description": "How much output to display in the console / app when piloting ('error' is fewest messages, 'debug' is most).",
+                    "type": "string",
+                    "default": "warning",
+                    "enum": [
+                        "error", 
+                        "warning", 
+                        "data", 
+                        "exp", 
+                        "info", 
+                        "debug"
+                    ]
+                },
+                "showPilotingIndicator": {
+                    "title": "show Piloting Indicator",
+                    "description": "Show an orange border around the window when in piloting mode",
+                    "type": "boolean",
+                    "default": true
+                },
+                "forceNonRush": {
+                    "title": "force Non Rush",
+                    "description": "Prevent experiment from enabling rush mode when piloting",
+                    "type": "boolean",
+                    "default": true
+                },
+                "replaceParticipantID": {
+                    "title": "replace Participant ID",
+                    "description": "Replace default participant ID with \"pilot\" when piloting",
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "required": [
+                "forceWindowed",
+                "forceMouseVisible",
+                "forcedWindowSize",
+                "pilotLoggingLevel",
+                "pilotConsoleLoggingLevel",
+                "showPilotingIndicator",
+                "forceNonRush",
+                "replaceParticipantID"
+            ]
+        },
+        "connections": {
+            "title": "Connections",
+            "description": "Settings for connections",
+            "type": "object",
+            "properties": {
+                "proxy": {
+                    "title": "proxy",
+                    "description": "the http proxy for usage stats and auto-updating; format is host: port",
+                    "type": "string",
+                    "default": "\"\""
+                },
+                "autoProxy": {
+                    "title": "auto Proxy",
+                    "description": "override the above proxy settings with values found in the environment (if possible)",
+                    "type": "boolean",
+                    "default": true
+                },
+                "allowUsageStats": {
+                    "title": "allow Usage Stats",
+                    "description": "allow PsychoPy to send anonymous usage stats; please allow if possible, it helps PsychoPy's development",
+                    "type": "boolean",
+                    "default": true
+                },
+                "checkForUpdates": {
+                    "title": "check For Updates",
+                    "description": "allow PsychoPy to check for new features and bug fixes",
+                    "type": "boolean",
+                    "default": true
+                },
+                "timeout": {
+                    "title": "timeout",
+                    "description": "max time to wait for a connection response",
+                    "type": "number",
+                    "default": 20
+                }
+            },
+            "required": [
+                "proxy",
+                "autoProxy",
+                "allowUsageStats",
+                "checkForUpdates",
+                "timeout"
+            ]
+        },
+        "keyBindings": {
+            "title": "Key Bindings",
+            "description": "Rebind shortcut keys (takes effect on restart)",
+            "type": "object",
+            "properties": {
+                "open": {
+                    "title": "open",
+                    "description": "open an existing file",
+                    "type": "string",
+                    "default": "Ctrl+O"
+                },
+                "new": {
+                    "title": "new",
+                    "description": "start a new experiment or script",
+                    "type": "string",
+                    "default": "Ctrl+N"
+                },
+                "save": {
+                    "title": "save",
+                    "description": "save a Builder or Coder file",
+                    "type": "string",
+                    "default": "Ctrl+S"
+                },
+                "saveAs": {
+                    "title": "save As",
+                    "description": "save a Builder or Coder file under a new name",
+                    "type": "string",
+                    "default": "Ctrl+Shift+S"
+                },
+                "revealFolder": {
+                    "title": "reveal Folder",
+                    "description": "reveal the folder containing the current Builder file",
+                    "type": "string",
+                    "default": "Alt+Shift+R"
+                },
+                "print": {
+                    "title": "print",
+                    "description": "Coder: print the file",
+                    "type": "string",
+                    "default": "Ctrl+P"
+                },
+                "close": {
+                    "title": "close",
+                    "description": "close the Builder or Coder window",
+                    "type": "string",
+                    "default": "Ctrl+W"
+                },
+                "quit": {
+                    "title": "quit",
+                    "description": "end the application (PsychoPy)",
+                    "type": "string",
+                    "default": "Alt+F4"
+                },
+                "preferences": {
+                    "title": "preferences",
+                    "description": "    #open the preferences dialog",
+                    "type": "string",
+                    "default": "Ctrl+,"
+                },
+                "exportHTML": {
+                    "title": "export HTML",
+                    "description": "export Builder experiment to HTML",
+                    "type": "string",
+                    "default": "Ctrl+E"
+                },
+                "cut": {
+                    "title": "cut",
+                    "description": "",
+                    "type": "string",
+                    "default": "Ctrl+X"
+                },
+                "copy": {
+                    "title": "copy",
+                    "description": "Coder: copy",
+                    "type": "string",
+                    "default": "Ctrl+C"
+                },
+                "paste": {
+                    "title": "paste",
+                    "description": "Coder: paste",
+                    "type": "string",
+                    "default": "Ctrl+V"
+                },
+                "duplicate": {
+                    "title": "duplicate",
+                    "description": "Coder: duplicate",
+                    "type": "string",
+                    "default": "Ctrl+D"
+                },
+                "indent": {
+                    "title": "indent",
+                    "description": "Coder: indent code by one level (4 spaces)",
+                    "type": "string",
+                    "default": "Ctrl+]"
+                },
+                "dedent": {
+                    "title": "dedent",
+                    "description": "Coder: reduce indentation by one level (4 spaces)",
+                    "type": "string",
+                    "default": "Ctrl+["
+                },
+                "smartIndent": {
+                    "title": "smart Indent",
+                    "description": "Coder: indent to fit python syntax",
+                    "type": "string",
+                    "default": "Shift+Tab"
+                },
+                "find": {
+                    "title": "find",
+                    "description": "Coder: find",
+                    "type": "string",
+                    "default": "Ctrl+F"
+                },
+                "findAgain": {
+                    "title": "find Again",
+                    "description": "Coder: find again",
+                    "type": "string",
+                    "default": "Ctrl+G"
+                },
+                "undo": {
+                    "title": "undo",
+                    "description": "Coder: undo",
+                    "type": "string",
+                    "default": "Ctrl+Z"
+                },
+                "redo": {
+                    "title": "redo",
+                    "description": "Coder: redo",
+                    "type": "string",
+                    "default": "Ctrl+Shift+Z"
+                },
+                "comment": {
+                    "title": "comment",
+                    "description": "to the start of the line(s)",
+                    "type": "string",
+                    "default": "\"Ctrl+'\""
+                },
+                "uncomment": {
+                    "title": "uncomment",
+                    "description": "from start of line(s)",
+                    "type": "string",
+                    "default": "\"Ctrl+Shift+'\""
+                },
+                "toggle comment": {
+                    "title": "toggle comment",
+                    "description": "from start of line(s)",
+                    "type": "string",
+                    "default": "\"Ctrl+/\""
+                },
+                "fold": {
+                    "title": "fold",
+                    "description": "Coder: fold this block of code",
+                    "type": "string",
+                    "default": "Ctrl+Home"
+                },
+                "enlargeFont": {
+                    "title": "enlarge Font",
+                    "description": "Coder: increase font size this block of code",
+                    "type": "string",
+                    "default": "Ctrl+="
+                },
+                "shrinkFont": {
+                    "title": "shrink Font",
+                    "description": "Coder: decrease font size this block of code",
+                    "type": "string",
+                    "default": "Ctrl+-"
+                },
+                "analyseCode": {
+                    "title": "analyse Code",
+                    "description": "",
+                    "type": "string",
+                    "default": "F4"
+                },
+                "compileScript": {
+                    "title": "compile Script",
+                    "description": "convert a Builder .psyexp script into a python script and open it in the Coder",
+                    "type": "string",
+                    "default": "F5"
+                },
+                "runScript": {
+                    "title": "run Script",
+                    "description": "launch a script, Builder or Coder, or run unit-tests",
+                    "type": "string",
+                    "default": "Ctrl+Shift+R"
+                },
+                "runnerScript": {
+                    "title": "runner Script",
+                    "description": "launch a script, Builder or Coder, or run unit-tests",
+                    "type": "string",
+                    "default": "Ctrl+Alt+R"
+                },
+                "stopScript": {
+                    "title": "stop Script",
+                    "description": "attempt to interrupt and halt a running script",
+                    "type": "string",
+                    "default": "Ctrl+."
+                },
+                "toggleWhitespace": {
+                    "title": "toggle Whitespace",
+                    "description": "",
+                    "type": "string",
+                    "default": "Ctrl+Shift+W"
+                },
+                "toggleEOLs": {
+                    "title": "toggle EOLs",
+                    "description": "Coder: show / hide end of line characters",
+                    "type": "string",
+                    "default": "Ctrl+Shift+L"
+                },
+                "toggleIndentGuides": {
+                    "title": "toggle Indent Guides",
+                    "description": "Coder: show / hide indentation level lines",
+                    "type": "string",
+                    "default": "Ctrl+Shift+I"
+                },
+                "expSettings": {
+                    "title": "exp Settings",
+                    "description": "",
+                    "type": "string",
+                    "default": "Ctrl+Shift+X"
+                },
+                "newRoutine": {
+                    "title": "new Routine",
+                    "description": "Builder: create a new routine",
+                    "type": "string",
+                    "default": "Ctrl+Shift+N"
+                },
+                "copyRoutine": {
+                    "title": "copy Routine",
+                    "description": "Builder: copy an existing routine",
+                    "type": "string",
+                    "default": "Ctrl+Shift+C"
+                },
+                "pasteRoutine": {
+                    "title": "paste Routine",
+                    "description": "Builder: paste the copied routine",
+                    "type": "string",
+                    "default": "Ctrl+Shift+V"
+                },
+                "pasteCompon": {
+                    "title": "paste Compon",
+                    "description": "Builder: paste the copied component",
+                    "type": "string",
+                    "default": "Ctrl+Alt+V"
+                },
+                "builderFind": {
+                    "title": "builder Find",
+                    "description": "Builder: find",
+                    "type": "string",
+                    "default": "Ctrl+F"
+                },
+                "toggleOutputPanel": {
+                    "title": "toggle Output Panel",
+                    "description": "Coder: show / hide the output panel",
+                    "type": "string",
+                    "default": "Ctrl+Shift+O"
+                },
+                "renameRoutine": {
+                    "title": "rename Routine",
+                    "description": "    #Builder: rename an existing routine",
+                    "type": "string",
+                    "default": "Ctrl+Shift+M"
+                },
+                "cycleWindows": {
+                    "title": "cycle Windows",
+                    "description": "switch between windows",
+                    "type": "string",
+                    "default": "Ctrl+L"
+                },
+                "largerFlow": {
+                    "title": "larger Flow",
+                    "description": "increase display size in Flow",
+                    "type": "string",
+                    "default": "Ctrl+="
+                },
+                "smallerFlow": {
+                    "title": "smaller Flow",
+                    "description": "decrease display size in Flow",
+                    "type": "string",
+                    "default": "Ctrl+-"
+                },
+                "largerRoutine": {
+                    "title": "larger Routine",
+                    "description": "increase display size of Routines",
+                    "type": "string",
+                    "default": "Ctrl+Shift+="
+                },
+                "smallerRoutine": {
+                    "title": "smaller Routine",
+                    "description": "decrease display size of Routines",
+                    "type": "string",
+                    "default": "Ctrl+Shift+-"
+                },
+                "toggleReadme": {
+                    "title": "toggle Readme",
+                    "description": "    #show or hide the readme (info) for this experiment if possible",
+                    "type": "string",
+                    "default": "Ctrl+I"
+                },
+                "pavlovia_logIn": {
+                    "title": "pavlovia_log In",
+                    "description": "",
+                    "type": "string",
+                    "default": "Ctrl+Alt+I"
+                },
+                "OSF_logIn": {
+                    "title": "OSF_log In",
+                    "description": "Projects: Log in to OSF",
+                    "type": "string",
+                    "default": "Ctrl+Alt+Shift+I"
+                },
+                "projectsSync": {
+                    "title": "projects Sync",
+                    "description": "Projects: Sync project",
+                    "type": "string",
+                    "default": "Ctrl+Alt+Y"
+                },
+                "projectsFind": {
+                    "title": "projects Find",
+                    "description": "Projects: Find projects",
+                    "type": "string",
+                    "default": "Ctrl+Shift+F"
+                },
+                "projectsOpen": {
+                    "title": "projects Open",
+                    "description": "Projects: Open project",
+                    "type": "string",
+                    "default": "Ctrl+Alt+O"
+                },
+                "projectsNew": {
+                    "title": "projects New",
+                    "description": "Projects: Create new project",
+                    "type": "string",
+                    "default": "Ctrl+Alt+N"
+                }
+            },
+            "required": [
+                "open",
+                "new",
+                "save",
+                "saveAs",
+                "revealFolder",
+                "print",
+                "close",
+                "quit",
+                "preferences",
+                "exportHTML",
+                "cut",
+                "copy",
+                "paste",
+                "duplicate",
+                "indent",
+                "dedent",
+                "smartIndent",
+                "find",
+                "findAgain",
+                "undo",
+                "redo",
+                "comment",
+                "uncomment",
+                "toggle comment",
+                "fold",
+                "enlargeFont",
+                "shrinkFont",
+                "analyseCode",
+                "compileScript",
+                "runScript",
+                "runnerScript",
+                "stopScript",
+                "toggleWhitespace",
+                "toggleEOLs",
+                "toggleIndentGuides",
+                "expSettings",
+                "newRoutine",
+                "copyRoutine",
+                "pasteRoutine",
+                "pasteCompon",
+                "builderFind",
+                "toggleOutputPanel",
+                "renameRoutine",
+                "cycleWindows",
+                "largerFlow",
+                "smallerFlow",
+                "largerRoutine",
+                "smallerRoutine",
+                "toggleReadme",
+                "pavlovia_logIn",
+                "OSF_logIn",
+                "projectsSync",
+                "projectsFind",
+                "projectsOpen",
+                "projectsNew"
+            ]
+        }
+    },
+    "required": [
+        "general",
+        "app",
+        "coder",
+        "builder",
+        "hardware",
+        "piloting",
+        "connections",
+        "keyBindings"
+    ]
+}
