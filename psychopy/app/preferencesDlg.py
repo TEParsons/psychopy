@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import importlib
 import json
 import sys
 from pathlib import Path
@@ -157,14 +158,14 @@ class PrefPropGrid(wx.Panel):
         self.helpText[name] = helpText
 
     def addStringArrayItem(self, section, label=wx.propgrid.PG_LABEL,
-                           name=wx.propgrid.PG_LABEL, values=(), helpText=""):
+                           name=wx.propgrid.PG_LABEL, value=(), helpText=""):
         """Add a string array item."""
         if section not in self.sections.keys():
             self.sections[section] = dict()
 
         self.sections[section].update(
             {name: wx.propgrid.ArrayStringProperty(
-                label, name, value=[str(i) for i in values])})
+                label, name, value=[str(i) for i in value])})
 
         self.helpText[name] = helpText
 
@@ -453,166 +454,74 @@ class PreferencesDlg(wx.Dialog):
     def populatePrefs(self):
         """Populate pages with property items for each preference."""
         # clear pages
-        for sectionName in self.prefsSpec.keys():
+        for sectionName in self.prefsSpec['properties'].keys():
+            # get spec and prefs pages
             prefsSection = self.prefsCfg[sectionName]
-            specSection = self.prefsSpec[sectionName]
+            specSection = self.prefsSpec['properties'][sectionName]
 
-            for prefName in specSection:
-                if prefName in ['version']:  # any other prefs not to show?
-                    continue
-                # allowModuleImports pref is handled by generateSpec.py
-                # NB if something is in prefs but not in spec then it won't be
-                # shown (removes outdated prefs)
+            for prefName in specSection['properties']:
+                # get spec and pref
                 thisPref = prefsSection[prefName]
-                thisSpec = specSection[prefName]
-
+                thisSpec = specSection['properties'][prefName]
                 # for keybindings replace Ctrl with Cmd on Mac
-                if platform.system() == 'Darwin' and \
-                        sectionName == 'keyBindings':
-                    if thisSpec.startswith('string'):
+                if platform.system() == 'Darwin' and sectionName == 'keyBindings':
+                    if thisSpec['type'] == "string":
                         thisPref = thisPref.replace('Ctrl+', 'Cmd+')
-
-                # can we translate this pref?
-                pLabel = _translate(prefName)
-
-                # get tooltips from comment lines from the spec, as parsed by
-                # configobj
-                helpText = ''
-                hints = self.prefsSpec[sectionName].comments[prefName]  # a list
-                if len(hints):
-                    # use only one comment line, from right above the pref
-                    hint = hints[-1].lstrip().lstrip('#').lstrip()
-                    helpText = _translate(hint)
-
-                if type(thisPref) is bool:
-                    # only True or False - use a checkbox
-                    self.proPrefs.addBoolItem(
-                        sectionName, pLabel, prefName, thisPref,
-                        helpText=helpText)
-
-                # # properties for fonts, dropdown gives a list of system fonts
-                elif prefName in ('codeFont', 'commentFont', 'outputFont'):
-                    try:
-                        default = self.fontList.index(thisPref)
-                    except ValueError:
-                        default = 0
-                    labels = [_translate(font) for font in self.fontList]
-                    self.proPrefs.addEnumItem(
-                            sectionName,
-                            pLabel,
-                            prefName,
-                            labels=labels,
-                            values=[i for i in range(len(self.fontList))],
-                            value=default, helpText=helpText)
-                elif prefName in ('theme',):
-                    try:
-                        default = self.themeList.index(thisPref)
-                    except ValueError:
-                        default = self.themeList.index("PsychopyLight")
-                    self.proPrefs.addEnumItem(
-                            sectionName,
-                            pLabel,
-                            prefName,
-                            labels=self.themeList,
-                            values=[i for i in range(len(self.themeList))],
-                            value=default, helpText=helpText)
-                elif prefName == 'locale':
-                    thisPref = self.app.prefs.app['locale']
-                    # '' corresponds to system locale
-                    locales = [''] + self.app.localization.available
-                    try:
-                        default = locales.index(thisPref)
-                    except ValueError:
-                        # set default locale ''
-                        default = locales.index('')
-                    # '' must be appended after other labels are translated
-                    labels = self.app.localization.available.copy()
-                    labels.insert(0, _translate('system locale'))
-                    self.proPrefs.addEnumItem(
-                            sectionName,
-                            pLabel,
-                            prefName,
-                            labels=labels,
-                            values=[i for i in range(len(locales))],
-                            value=default, helpText=helpText)
-                # # single directory
-                elif prefName in ('unpackedDemosDir',):
-                    self.proPrefs.addDirItem(
-                        sectionName, pLabel, prefName, thisPref,
-                        helpText=helpText)
-                # single file
-                elif prefName in ('flac', 'appKeyGoogleCloud',):
-                    self.proPrefs.addFileItem(
-                        sectionName, pLabel, prefName, thisPref,
-                        helpText=helpText)
-                # window backend items
-                elif prefName == 'winType':
-                    from psychopy.visual.backends import getAvailableWinTypes
-                    labels = getAvailableWinTypes()
-                    default = labels.index('pyglet')  # is always included
-                    self.proPrefs.addEnumItem(
-                            sectionName,
-                            pLabel,
-                            prefName,
-                            labels=labels,
-                            values=[i for i in range(len(labels))],
-                            value=default, helpText=helpText)
-                # # option items are given a dropdown, current value is shown
-                # # in the box
-                elif thisSpec.startswith('option') or prefName == 'audioDevice':
-                    if prefName == 'audioDevice':
-                        options = self.audioDevNames
-                        try:
-                            default = self.audioDevNames.index(
-                                self.audioDevDefault[0])
-                        except ValueError:
-                            default = 0
+                # get label and tooltip
+                label = _translate(thisSpec.get('title', prefName))
+                hint = _translate(thisSpec.get('description', ""))
+                # args are always the same, so compile them here
+                args = {
+                    'section': sectionName, 
+                    'label': label, 
+                    'name': prefName, 
+                    'value': thisPref,
+                    'helpText': hint
+                }
+                # handle special cases
+                if prefName == "unpackedDemosDir":
+                    # demos dir is a folder rather than a file
+                    self.proPrefs.addDirItem(**args)
+                    continue
+                if prefName in ("codeFont", "outputFont"):
+                    # fonts need populating dynamically
+                    thisSpec['enum'] = ["From theme..."] + self.fontList
+                if prefName == "theme":
+                    # themes need populating dynamically
+                    thisSpec['enum'] = self.themeList
+                if prefName == 'locale':
+                    # locales need populating dynamically
+                    thisSpec['enum'] = ["system locale"] + self.app.localization.available
+                # add a ctrl
+                if thisSpec['type'] == "boolean":
+                    # checkbox for booleans
+                    self.proPrefs.addBoolItem(**args)
+                elif thisSpec['type'] == "integer":
+                    # spinner for integers
+                    self.proPrefs.addIntegerItem(**args)
+                elif thisSpec['type'] == 'string' and thisSpec.get('format', None) == "uri":
+                    # file ctrl for uri strings
+                    self.proPrefs.addFileItem(**args)
+                elif thisSpec['type'] == "array" and thisSpec.get('items', {}).get('type', None) == "string":
+                    # string list ctrl for lists of strings
+                    self.proPrefs.addStringArrayItem(**args)
+                elif "enum" in thisSpec:
+                    # use enum for labels
+                    args['labels'] = thisSpec['enum']
+                    # values are numeric indices of labels
+                    args['values'] = list(range(len(args['labels'])))
+                    # make sure value is an index
+                    if args['value'] in args['labels']:
+                        args['value'] = args['labels'].index(args['value'])
                     else:
-                        vals = thisSpec.replace("option(", "").replace("'", "")
-                        # item -1 is 'default=x' from spec
-                        vals = vals.replace(", ", ",").split(',')
-                        options = vals[:-1]
-                        try:
-                            # set the field to the value in the pref
-                            default = options.index(thisPref)
-                        except ValueError:
-                            try:
-                                # use first if default not in list
-                                default = vals[-1].strip('()').split('=')[1]
-                            except IndexError:
-                                # no default
-                                default = 0
-
-                    labels = []  # display only
-                    for opt in options:
-                        labels.append(_translate(opt))
-
-                    self.proPrefs.addEnumItem(
-                            sectionName,
-                            pLabel,
-                            prefName,
-                            labels=labels,
-                            values=[i for i in range(len(labels))],
-                            value=default, helpText=helpText)
-                    if prefName == 'builderLayout':
-                        item = self.proPrefs.sections[sectionName][prefName]
-                        for i in range(len(item.GetChoices())):
-                            choice = item.GetChoices()[i]
-                            icon = icons.ButtonIcon(stem=choice.Text).bitmap
-                            choice.SetBitmap(icon)
-                # # lists are given a property that can edit and reorder items
-                elif thisSpec.startswith('list'):  # list
-                    self.proPrefs.addStringArrayItem(
-                        sectionName, pLabel, prefName,
-                        [str(i) for i in thisPref], helpText)
-                # integer items
-                elif thisSpec.startswith('integer'):  # integer
-                    self.proPrefs.addIntegerItem(
-                        sectionName, pLabel, prefName, thisPref, helpText)
-                # # all other items just use a string field
+                        args['value'] = 0
+                    # choice ctrl for enum items
+                    self.proPrefs.addEnumItem(**args)
                 else:
+                    # everything else, treat as a string
                     self.proPrefs.addStringItem(
-                        sectionName, pLabel, prefName, thisPref, helpText)
+                        **args
+                    )
 
         self.proPrefs.populateGrid()
 
@@ -624,8 +533,8 @@ class PreferencesDlg(wx.Dialog):
         if platform.system() == 'Darwin':
             re_cmd2ctrl = re.compile(r'^Cmd\+', re.I)
 
-        for sectionName in self.prefsSpec:
-            for prefName in self.prefsSpec[sectionName]:
+        for sectionName in self.prefsSpec['properties']:
+            for prefName in self.prefsSpec['properties'][sectionName]['properties']:
                 if prefName in ['version']:  # any other prefs not to show?
                     continue
 
@@ -666,7 +575,7 @@ class PreferencesDlg(wx.Dialog):
                 self.prefsCfg[sectionName][prefName] = thisPref
 
                 # make sure list values are converted back to lists (from str)
-                if self.prefsSpec[sectionName][prefName].startswith('list'):
+                if self.prefsSpec['properties'][sectionName]['properties'][prefName]['type'] == "array":
                     try:
                         # if thisPref is not a null string, do eval() to get a
                         # list.
@@ -692,11 +601,8 @@ class PreferencesDlg(wx.Dialog):
                         self.prefsCfg[sectionName][prefName] = [newVal]
                     else:
                         self.prefsCfg[sectionName][prefName] = newVal
-                elif self.prefsSpec[sectionName][prefName].startswith('option'):
-                    vals = self.prefsSpec[sectionName][prefName].replace(
-                        "option(", "").replace("'", "")
-                    # item -1 is 'default=x' from spec
-                    options = vals.replace(", ", ",").split(',')[:-1]
+                elif "enum" in self.prefsSpec['properties'][sectionName]['properties'][prefName]:
+                    options = self.prefsSpec['properties'][sectionName]['properties'][prefName]['enum']
                     self.prefsCfg[sectionName][prefName] = options[thisPref]
 
         self.app.prefs.saveUserPrefs()  # includes a validation

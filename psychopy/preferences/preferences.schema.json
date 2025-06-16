@@ -12,7 +12,13 @@
                     "title": "Spatial units",
                     "description": "The default units for windows and visual stimuli",
                     "type": "string",
-                    "enum": ["deg", "norm", "cm", "pix", "height"],
+                    "enum": [
+                        "deg", 
+                        "norm", 
+                        "cm", 
+                        "pix", 
+                        "height"
+                    ],
                     "default": "norm"
                 },
                 "fullscr": {
@@ -70,7 +76,10 @@
                     "title": "Gamma error policy",
                     "description": "What to do if gamma-correction not possible",
                     "type": "string",
-                    "enum": ["abort", "warn"],
+                    "enum": [
+                        "abort", 
+                        "warn"
+                    ],
                     "default": "abort"
                 },
                 "startupPlugins": {
@@ -92,7 +101,11 @@
                     "description": "Which system to use as a backend for drawing",
                     "deprecated": true,
                     "type": "string",
-                    "enum": ["pyglet", "pygame", "glfw"],
+                    "enum": [
+                        "pyglet", 
+                        "pygame", 
+                        "glfw"
+                    ],
                     "default": "pyglet"
                 }
             },
@@ -123,7 +136,14 @@
                 "defaultView": {
                     "title": "Default view",
                     "description": "What windows to display when PsychoPy starts",
-                    "enum": ["last", "builder", "coder", "runner", "all"],
+                    "type": "string",
+                    "enum": [
+                        "last", 
+                        "builder", 
+                        "coder", 
+                        "runner", 
+                        "all"
+                    ],
                     "default": "last"
                 },
                 "resetPrefs": {
@@ -148,7 +168,7 @@
                     "title": "Locale",
                     "description": "Language to use in menus etc; not all translations are available. Select a value, then restart the app.",
                     "type": "string",
-                    "default": ""
+                    "default": "system locale"
                 },
                 "errorDialog": {
                     "title": "Error dialog",
@@ -160,7 +180,7 @@
                     "title": "Theme",
                     "description": "Control the look and feel of PsychoPy",
                     "type": "string",
-                    "default": "PsychoPyLight"
+                    "default": "PsychopyLight"
                 },
                 "showSplash": {
                     "title": "Show splash",
@@ -193,25 +213,25 @@
                     "default": false
                 },
                 "outputFont": {
-                    "title": "output Font",
-                    "description": "a list of font names; the first one found on the system will be used",
+                    "title": "Output font",
+                    "description": "Font to display code output in",
                     "type": "string",
-                    "default": "From Theme..."
+                    "default": "From theme..."
                 },
                 "codeFont": {
-                    "title": "code Font",
-                    "description": "a list of font names; the first one found on the system will be used",
+                    "title": "Code font",
+                    "description": "Font to display code in",
                     "type": "string",
-                    "default": "From Theme..."
+                    "default": "From theme..."
                 },
                 "codeFontSize": {
-                    "title": "code Font Size",
+                    "title": "Code font size",
                     "description": "Font size (in pts) takes an integer between 6 and 24",
                     "type": "integer",
                     "default": 10
                 },
                 "outputFontSize": {
-                    "title": "output Font Size",
+                    "title": "Output font size",
                     "description": "Font size (in pts) takes an integer between 6 and 24",
                     "type": "integer",
                     "default": 10
@@ -294,6 +314,9 @@
                     "type": "string",
                     "default": "Auto->JS",
                     "enum": [
+                        "Python",
+                        "JS",
+                        "Both",
                         "Auto->JS"
                     ]
                 },
