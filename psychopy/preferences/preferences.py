@@ -319,6 +319,55 @@ class Preferences:
 
         # keybindings:
         self.keys = self.userPrefsCfg['keyBindings']
+    
+    def loadFile(self, file, schemaFile):
+        """
+        Load preferences from a JSON file, supplying a JSON schema file to validate against and 
+        derive defaults/fallbacks from.
+
+        Parameters
+        ----------
+        file : pathlib.Path
+            File to load prefs from
+        schemaFile : _type_
+            File to load schema from
+        """
+        # load schema from file
+        with schemaFile.open("r", encoding="utf-8") as f:
+            schema = json.load(f)
+        # try to load config
+        try:
+            with file.open("r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        except FileNotFoundError as err:
+            logging.debug(
+                f"Failed find file {file}, reverting to defaults."
+            )
+            cfg = parser.defaults(schema)
+        except json.decoder.JSONDecodeError as err:
+            logging.error(
+                f"Failed load file {file}, reverting to defaults. Reason: {err}"
+            )
+            cfg = parser.defaults(schema)
+        # validate
+        try:
+            jsonschema.validate(cfg, schema=schema)
+        except jsonschema.exceptions.ValidationError as err:
+            # alert if validation fails
+            logging.error(
+                f"File {file} is invalid against schema {schemaFile}, attempting sanitization. Reason: {err}"
+            )
+            # try to sanitize
+            try:
+                parser.sanitize(cfg, schema=schema)
+            except parser.JSONSanitizationError as err:
+                logging.error(
+                    f"Failed to sanitize app data file, reverting to defaults. Reason: {err}"
+                )
+                cfg = parser.defaults(schema)
+        
+        return cfg, schema
+        
 
     def loadUserPrefs(self):
         """load user prefs, if any; don't save to a file because doing so
@@ -382,40 +431,11 @@ class Preferences:
         appDir = Path(self.paths['appDir'])
         if not appDir.is_dir():  # if no app dir this may be just lib install
             return {}
-        # get spec to validate configuration against
-        appDataSpecFile = Path(self.paths['appDir']) / "appData.schema.json"
-        with appDataSpecFile.open("r", encoding="utf-8") as f:
-            appDataSpec = json.load(f)
-        try:
-            # get configuration from file
-            appDataFile = Path(self.paths['userPrefsDir']) / "appData.json"
-            with appDataFile.open("r", encoding="utf-8") as f:
-                cfg = json.load(f)
-            # validate configuration
-            try:
-                jsonschema.validate(cfg, schema=appDataSpec)
-            except jsonschema.exceptions.ValidationError as err:
-                logging.error(
-                    f"Failed to load app data file, attempting sanitization. Reason: {err}"
-                )
-                # try to sanitize
-                try:
-                    parser.sanitize(cfg, schema=appDataSpec)
-                except parser.JSONSanitizationError as err:
-                    logging.error(
-                        f"Failed to sanitize app data file, reason: {err}"
-                    )
-                    cfg = parser.defaults(appDataSpec)
-        except FileNotFoundError as err:
-            logging.debug(
-                "No app data found, using defaults."
-            )
-            cfg = parser.defaults(appDataSpec)
-        except json.decoder.JSONDecodeError as err:
-            logging.error(
-                f"Failed to load app data file, reverting to defaults. Reason: {err}"
-            )
-            cfg = parser.defaults(appDataSpec)
+        # get configuration from file
+        cfg, schema = self.loadFile(
+            file=Path(self.paths['userPrefsDir']) / "appData.json",
+            schemaFile=Path(self.paths['appDir']) / "appData.schema.json",
+        )
         
         return cfg
 
