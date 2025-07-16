@@ -1960,7 +1960,7 @@ class Camera:
 
         self._isStarted = True
 
-    def record(self, clearLastRecording=True, waitForStart=True):
+    def record(self, clearLastRecording=True, waitForStart=False):
         """Start recording frames.
 
         This function will start recording frames and audio (if available). The
@@ -1992,8 +1992,13 @@ class Camera:
             Capture video only when the camera and microphone are ready. This 
             will result in a longer delay before the recording starts, but will
             ensure the microphone is actually recording valid samples. In some 
-            cases this will result in a delay of up to 1 second before the
-            recording starts.
+            cases this will result in a delay of up to several seconds before 
+            the recording starts, depending on the camera and microphone
+            hardware and drivers. If `False`, the recording will start
+            as quickly as possible regardless of the actual readiness of the 
+            microphone. If you wish to ensure all capture devices are ready,
+            monitor the status of the `isReady` property and wait until it
+            returns `True` before continuing. Default is `False`.
 
         """
         if self.isNotStarted:
