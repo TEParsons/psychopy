@@ -641,23 +641,14 @@ class VersionCtrl(ChoiceCtrl):
     inputType = "version"
 
     def populate(self):
-        import requests
-
+        from psychopy.tools.versionchooser import availableVersions
         # start off empty
         self.choices = [""]
         self.labels = ["latest"]
-        # use allowedVals to get versions from GitHub
-        try:
-            url = f"https://api.github.com/repos/{self.param.allowedVals}/releases"
-            resp = requests.get(url).json()
-            # list tags
-            for ver in resp:
-                self.choices.append(ver['tag_name'])
-                self.labels.append(ver['tag_name'])
-        except:
-            # if failed to get versions, just leave blank
-            self.choices = [""]
-            self.labels = ["Failed to get versions from GitHub"]
+        # get versions
+        for val in availableVersions():
+            self.choices.append(val)
+            self.labels.append(val)
         # apply to ctrl
         self.ctrl.SetItems(self.labels)
         # disable if param is readonly
