@@ -113,17 +113,6 @@ class ParamCtrls():
             initial = param.val.tolist()  # convert numpy arrays to lists
         label = _translate(label)
         self.nameCtrl = wx.StaticText(parent, -1, label, size=wx.DefaultSize)
-
-        if fieldName == 'Use version':
-            # _localVersionsCache is the default (faster) when creating
-            # settings. If remote info has become available in the meantime,
-            # now populate with that as well
-            if vc._remoteVersionsCache:
-                options = vc._versionFilter(
-                    vc.versionOptions(local=False), wx.__version__)
-                versions = vc._versionFilter(
-                    vc.availableVersions(local=False), wx.__version__)
-                param.allowedVals = (options + [''] + versions)
         
         # create a param ctrl
         self.valueCtrl = paramCtrls.ParamCtrl(
