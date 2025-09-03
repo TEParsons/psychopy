@@ -85,7 +85,7 @@ class SettingsComponent:
     hidden = True
 
     def __init__(
-            self, parentName, exp, expName='', fullScr=True, runMode=0, rush=False,
+            self, parentName, exp, expName='', fullScr=True, runMode=False, rush=False,
             winSize=(1024, 768), screen=1, monitor='testMonitor', winBackend='pyglet',
             showMouse=False, saveLogFile=True, showExpInfo=True,
             expInfo="{'participant':'f\"{randint(0, 999999):06.0f}\"', 'session':'\"001\"'}",
@@ -179,7 +179,7 @@ class SettingsComponent:
         )
         self.params['runMode'] = Param(
             runMode, valType="code", inputType="choice", categ="Basic",
-            allowedVals=[0, 1],
+            allowedVals=[False, True],
             allowedLabels=[_translate("Piloting"), _translate("Running")],
             label=_translate("Run mode"),
             hint=_translate(
