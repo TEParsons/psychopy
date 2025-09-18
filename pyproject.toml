@@ -109,10 +109,12 @@ tests = [
 ]
 docs = [
     "sphinx",
+    "jinja2",
     "sphinx-design",
     "sphinx-copybutton",
-    "jinja2",
-    "psychopy-sphinx-theme"
+    "myst-parser",
+    "sphinxcontrib.svg2pdfconverter",  # requires inkscape
+    "psychopy-sphinx-theme",
 ]
 building = [
     "bdist-mpkg>=0.5.0; platform_system == \"Darwin\"",

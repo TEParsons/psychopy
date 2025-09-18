@@ -17,6 +17,7 @@ from collections import OrderedDict
 import numpy
 import re
 import wx
+from wx.lib import scrolledpanel
 
 import psychopy.experiment.utils
 from psychopy.experiment import Param
@@ -428,9 +429,12 @@ class StartStopCtrls(wx.GridBagSizer):
 
 
 class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
-    class CategoryPage(wx.Panel, handlers.ThemeMixin):
+    class CategoryPage(scrolledpanel.ScrolledPanel, handlers.ThemeMixin):
         def __init__(self, parent, dlg, params, categ=None):
             wx.Panel.__init__(self, parent, size=(600, -1))
+            self.SetupScrolling()
+            self.SetMaxSize((-1, 1080))
+            self.SetMinSize((720, 512))
             self.parent = parent
             self.parent = parent
             self.dlg = dlg
@@ -478,6 +482,8 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
         def addParam(self, name, param):
             # Make ctrl
             self.ctrls[name] = ParamCtrls(self.dlg, param.label, param, self, name)
+            # Bind change event
+            self.ctrls[name].valueCtrl.Bind(paramCtrls.EVT_PARAM_CHANGED, self.emitChangeEvent)
             # Add value ctrl
             _flag = wx.EXPAND | wx.ALL
             if hasattr(self.ctrls[name].valueCtrl, '_szr'):
@@ -589,6 +595,9 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
                 if isinstance(self.dlg, wx.Dialog):
                     self.dlg.Fit()
                 self.Refresh()
+        
+        def emitChangeEvent(self, evt): 
+            wx.PostEvent(self, evt)
 
         def doValidate(self, event=None):
             self.Validate()
@@ -629,8 +638,13 @@ class ParamNotebook(wx.Notebook, handlers.ThemeMixin):
         for categ, params in paramsByCateg.items():
             page = self.CategoryPage(self, self.parent, params, categ=categ)
             self.paramCtrls.update(page.ctrls)
+            # Bind change event
+            page.Bind(paramCtrls.EVT_PARAM_CHANGED, self.emitChangeEvent)
             # Add page to notebook
             self.AddPage(page, _translate(categ))
+    
+    def emitChangeEvent(self, evt): 
+        wx.PostEvent(self, evt)
 
     def checkDepends(self, event=None):
         """
@@ -1303,8 +1317,9 @@ class DlgLoopProperties(_BaseParamsDlg):
             row += 1
         panelSizer.AddGrowableCol(1, 1)
         self.globalCtrls['name'].valueCtrl.Bind(wx.EVT_TEXT, self.Validate)
-        self.Bind(wx.EVT_CHOICE, self.onTypeChanged,
-                  self.globalCtrls['loopType'].valueCtrl)
+        self.globalCtrls['loopType'].valueCtrl.Bind(
+            paramCtrls.EVT_PARAM_CHANGED, self.onTypeChanged,
+        )
         return panel
 
     def makeConstantsCtrls(self):
@@ -1578,7 +1593,7 @@ class DlgLoopProperties(_BaseParamsDlg):
         self.setCtrls(value)
 
     def onTypeChanged(self, evt=None):
-        newType = evt.GetString()
+        newType = self.globalCtrls['loopType'].valueCtrl.getValue()
         if newType == self.currentType:
             return
         self.setCtrls(newType)

@@ -125,7 +125,7 @@ class CameraComponent(BaseDeviceComponent):
             return [device[0] for device in getMicDevices()]
         # label to refer to device by
         self.params['micDeviceLabel'] = Param(
-            micDeviceLabel, valType="str", inputType="device", categ="Device",
+            micDeviceLabel, valType="device", inputType="device", categ="Device",
             allowedVals=getMicValues,
             allowedLabels=getMicLabels,
             label=_translate("Microphone device"),

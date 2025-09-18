@@ -410,6 +410,10 @@ class SingleLineCtrl(BaseParamCtrl):
                 self.setValue(
                     re.sub(r"(?<!\\)[\u201c\u201d]", "\"", self.getValue())
                 )
+            if re.findall(r"(?<!\\)[\u2018\u2019]", self.getValue()):
+                self.setValue(
+                    re.sub(r"(?<!\\)[\u2018\u2019]", "\'", self.getValue())
+                )
         else:
             pass
 
@@ -429,7 +433,12 @@ class NameCtrl(SingleLineCtrl):
         # start off valid
         BaseParamCtrl.validate(self)
         # is name a valid name?
-        if NameSpace.isValid(self.getValue()):
+        if self.getValue() == "":
+            # prompt to enter a name if blank
+            self.setWarning(_translate(
+                "Please enter a name"
+            ), allowed=False)
+        elif NameSpace.isValid(self.getValue()):
             # if we have an experiment, is the name used already?
             if self.element:
                 # if unchanged from original name, it does exist but is valid
@@ -580,6 +589,13 @@ class ChoiceCtrl(BaseParamCtrl):
                 self.labels.append(str(labels[i]))
             else:
                 self.labels.append(str(choices[i]))
+        # translate labels
+        for i in range(len(self.labels)):
+            # An empty string must not be translated
+            # because it returns meta information of
+            # .mo file (due to specification of gettext)
+            if self.labels[i] != '':
+                self.labels[i] = _translate(self.labels[i])
         # apply to ctrl
         self.ctrl.SetItems(self.labels)
         # disable if param is readonly
@@ -594,7 +610,11 @@ class ChoiceCtrl(BaseParamCtrl):
         if str(value) not in self.choices:
             # if not known, add it to possible choices
             self.choices.append(str(value))
-            self.labels.append(str(value))
+            # translate label if the value is not ''
+            if str(value) != '':
+                self.labels.append(_translate(str(value)))
+            else:
+                self.labels.append(str(value))
             self.ctrl.SetItems(self.labels)
         # set
         self.ctrl.SetSelection(
@@ -809,15 +829,15 @@ class TableCtrl(FileCtrl):
         """
         Either open the specified excel sheet, or make a new one from a template
         """
+        file = Path(self.getValue())
         # make path absolute
         if not file.is_absolute():
             file = self.rootDir / file
         # open a template if not a valid file
-        if not (file.is_file() or file.suffix not in self.validExt):
+        if file == self.rootDir or not (file.is_file() or file.suffix not in self.validExt):
             dlg = wx.MessageDialog(self, _translate(
-                    "Once you have created and saved your table,"
-                    "please remember to add it to {name}"
-                ).format(name=_translate(self.Name)),
+                    "Once you have created and saved your table, remember to add it here."
+                ),
                 caption=_translate("Reminder")
             )
             dlg.ShowModal()

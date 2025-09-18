@@ -384,7 +384,7 @@ class SpeakerDeviceBackend(DeviceBackend):
             "resample",
         ]
         self.params['latencyClass'] = Param(
-            1, valType="code", inputType="choice", categ="Device",
+            1, valType="code", inputType="choice",
             allowedVals=[0, 1, 2, 3, 4],
             allowedLabels=[
                 _translate("Shared"), 
@@ -400,7 +400,7 @@ class SpeakerDeviceBackend(DeviceBackend):
             )
         )
         self.params['resample'] = Param(
-            True, valType="str", inputType="bool", categ="Device",
+            True, valType="str", inputType="bool",
             label=_translate("Resample"),
             hint=_translate(
                 "If the sample rate of a clip doesn't match the sample rate of the speaker, should "

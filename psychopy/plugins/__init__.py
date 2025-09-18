@@ -801,7 +801,7 @@ def loadPlugin(plugin):
                 msg = f"Skipping entry point {ep.value} (from {plugin}) to {ep.group}:{ep.name}"
                 # append reason
                 if isinstance(err, ImportError):
-                    msg += f" as {ep.value} cannot be imported."
+                    msg += f" as {ep.value} cannot be imported ({err})."
                 else:
                     msg += f", reason: {err}"
                 # log message

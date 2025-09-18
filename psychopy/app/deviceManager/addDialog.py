@@ -1,4 +1,3 @@
-import threading
 from psychopy.app.deviceManager.utils import DeviceImageList
 from psychopy.app.builder.dialogs.paramCtrls import EVT_PARAM_CHANGED, ParamCtrl
 from psychopy.app.builder.validators import WarningManager
@@ -158,10 +157,6 @@ class AddDeviceDlg(wx.Dialog):
         self.devicesLoadingLbl.Hide()
         self.devicesCtrl.Show()
         self.Layout()
-    
-    def __del__(self):
-        # imageList has to be deleted manually due to garbage collection bug in TreeCtrl
-        del self.imageList
 
     def populateAsync(self, evt):
         """
@@ -173,10 +168,7 @@ class AddDeviceDlg(wx.Dialog):
             wx event triggering this call
         """
         # populate
-        threading.Thread(
-            target=self.populate,
-            daemon=True
-        ).start()
+        self.populate()
         # unbind
         if evt.EventType == wx.EVT_IDLE.typeId:
             self.Unbind(wx.EVT_IDLE)
@@ -199,6 +191,9 @@ class AddDeviceDlg(wx.Dialog):
 
     def onSelectItem(self, evt):
         evt.Skip()
+        # this event is triggered on deletion due to a bug in wx.TreeCtrl, so catch it
+        if not self.devicesCtrl:
+            return
         # get id of selected profile and its parent
         item = self.devicesCtrl.GetSelection()
         branch = self.devicesCtrl.GetItemParent(item)

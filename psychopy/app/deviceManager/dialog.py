@@ -103,8 +103,7 @@ class DeviceManagerDlg(wx.Dialog):
             self.profilesNotebook.RemovePage(
                 self.profilesNotebook.FindPage(self.pages[None])
             )
-        # set icon list
-
+            del self.pages[None]
     
     def renameDevice(self, oldname, newname):
         # set name param
@@ -156,7 +155,9 @@ class DeviceManagerDlg(wx.Dialog):
     def onOK(self, evt):
         # run on OK methods from all params
         for i in range(self.profilesNotebook.GetPageCount()):
-            self.profilesNotebook.GetPage(i).onElementOk(evt)
+            page = self.profilesNotebook.GetPage(i)
+            if hasattr(page, "onElementOk"):
+                page.onElementOk(evt)
         # save config
         self.devices.save()
         # reload in prefs so changes are applied this session

@@ -137,6 +137,7 @@ def getSemanticVersion():
             describe = getGitDescribe()
             parts = describe.split('-')
             nCommits = parts[1]
+            label = "rc"  # release candidate because this is release branch and version not yet tagged
             if len(parts) >= 3:
                 tag = parts[0]
                 nCommits = int(parts[1])
