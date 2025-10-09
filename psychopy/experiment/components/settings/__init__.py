@@ -922,13 +922,6 @@ class SettingsComponent:
             "from psychopy import prefs\n"
             "from psychopy import plugins\n"
             "plugins.activatePlugins()\n"  # activates plugins
-        )
-        # adjust the prefs for this study if needed
-        if self.params['Audio lib'].val.lower() != 'use prefs':
-            buff.writelines(
-                "prefs.hardware['audioLib'] = {}\n".format(self.params['Audio lib'])
-            )
-        buff.write(
             "from psychopy import %s\n" % ', '.join(psychopyImports) +
             "from psychopy.tools import environmenttools\n"
             "from psychopy.constants import (\n"
