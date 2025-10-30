@@ -241,6 +241,14 @@ class VisualValidatorRoutine(BaseValidatorRoutine, PluginDevicesMixin):
             f"%(name)s.resetTimer({clockStr})\n"
         )
         buff.writeIndentedLines(code % self.params)
+                # create blank columns for validation
+        code = (
+            "thisExp.addData('{name}.%(name)s.started', None)\n"
+            "thisExp.addData('{name}.%(name)s.startDelay', None)\n"
+            "thisExp.addData('{name}.%(name)s.stopped', None)\n"
+            "thisExp.addData('{name}.%(name)s.stopDelay', None)\n"
+        )
+        buff.writeIndentedLines(code.format(**stim.params) % self.params)
 
         # return change in indent level
         return buff.indentLevel - startIndent
