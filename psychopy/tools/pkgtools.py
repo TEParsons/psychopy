@@ -653,7 +653,7 @@ def getPackageMetadata(packageName):
     try:
         dist = importlib.metadata.distribution(packageName)
     except importlib.metadata.PackageNotFoundError:
-        return  # do nothing
+        return {}  # do nothing
 
     metadict = dict(dist.metadata)
 
