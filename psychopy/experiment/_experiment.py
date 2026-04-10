@@ -358,8 +358,6 @@ class Experiment:
             self_copy.settings.writeDataCode(script)
             # make logfile
             self_copy.settings.writeLoggingCode(script)
-            # setup window
-            self_copy.settings.writeWindowCode(script)  # create our visual.Window()
             # setup devices
             self_copy.settings.writeDevicesCode(script)
             # pause experiment
