@@ -132,21 +132,10 @@ class SoundSensorComponent(BaseDeviceComponent):
         buff.writeIndentedLines(code % inits)
 
     def writeRoutineStartCode(self, buff):
-        # choose a clock to sync to according to component's params
-        if "syncScreenRefresh" in self.params and self.params['syncScreenRefresh']:
-            clockStr = ""
-        else:
-            clockStr = "clock=routineTimer"
-        # sync component start/stop timers with validator clocks
-        code = (
-            f"# synchronise device clock for %(name)s with Routine timer\n"
-            f"%(name)s.resetTimer({clockStr})\n"
-        )
-        buff.writeIndentedLines(code % self.params)
         # clear keys
         code = (
             "# clear %(name)s button presses\n"
-            "%(name)s.times = []\n"
+            "%(name)s.rt = []\n"
             "%(name)s.corr = []\n"
             )
         buff.writeIndentedLines(code % self.params)
@@ -161,6 +150,16 @@ class SoundSensorComponent(BaseDeviceComponent):
         # writes an if statement to determine whether to draw etc
         indented = self.writeStartTestCode(buff)
         if indented:
+            # sync component start/stop timers
+            if self.params['syncScreenRefresh']:
+                code = (
+                    "win.callOnFlip(%(name)s.resetTimer, core.Clock())"
+                )
+            else:
+                code = (
+                    "%(name)s.resetTimer(core.Clock())"
+                )
+            buff.writeIndentedLines(code % self.params)
             # dispatch and clear messages
             code = (
                 "# clear any messages from before starting\n"
@@ -184,7 +183,7 @@ class SoundSensorComponent(BaseDeviceComponent):
             if self.params['store'] == "all":
                 # if storing all, append
                 code += (
-                "    %(name)s.times.append(_thisResp.t)\n"
+                "    %(name)s.rt.append(_thisResp.t)\n"
                 )
                 # include code to get correct
                 if self.params['storeCorrect']:
@@ -197,7 +196,7 @@ class SoundSensorComponent(BaseDeviceComponent):
             elif self.params['store'] == "last":
                 # if storing last, replace
                 code += (
-                "    %(name)s.times = _thisResp.t\n"
+                "    %(name)s.rt = _thisResp.t\n"
                 )
                 # include code to get correct
                 if self.params['storeCorrect']:
@@ -211,7 +210,7 @@ class SoundSensorComponent(BaseDeviceComponent):
                 # if storing first, replace but only if empty
                 code += (
                 "    if not %(name)s.buttons:\n"
-                "        %(name)s.times = _thisResp.t\n"
+                "        %(name)s.rt = _thisResp.t\n"
                 )
                 # include code to get correct
                 if self.params['storeCorrect']:
@@ -229,7 +228,7 @@ class SoundSensorComponent(BaseDeviceComponent):
             if self.params['forceEndRoutine']:
                 code = (
                     "# end Routine if %(name)s got response\n"
-                    "if %(name)s.times:\n"
+                    "if %(name)s.rt:\n"
                     "    continueRoutine = False\n"
                 )
                 buff.writeIndentedLines(code % params)
@@ -250,7 +249,7 @@ class SoundSensorComponent(BaseDeviceComponent):
         # write code to save responses
         code = (
             "# store data from %(name)s\n"
-            "thisExp.addData('%(name)s.times', %(name)s.times)\n"
+            "thisExp.addData('%(name)s.rt', %(name)s.rt)\n"
             "thisExp.addData('%(name)s.corr', %(name)s.corr)\n"
         )
         buff.writeIndentedLines(code % params)

@@ -166,11 +166,11 @@ class ButtonBoxComponent(BaseDeviceComponent):
         # writes an if statement to determine whether to draw etc
         indented = self.writeStartTestCode(buff)
         if indented:
-            # sync component start/stop timers with validator clocks
+            # sync component start/stop timers
             if self.params['syncScreenRefresh']:
                 code = (
                     "win.callOnFlip(%(name)s.resetTimer, core.Clock())"
-                ) % self.params
+                )
             else:
                 code = (
                     "%(name)s.resetTimer(core.Clock())"
@@ -271,7 +271,7 @@ class ButtonBoxComponent(BaseDeviceComponent):
         code = (
             "# store data from %(name)s\n"
             "thisExp.addData('%(name)s.buttons', %(name)s.buttons)\n"
-            "thisExp.addData('%(name)s.rt', %(name)s.times)\n"
+            "thisExp.addData('%(name)s.rt', %(name)s.rt)\n"
             "thisExp.addData('%(name)s.corr', %(name)s.corr)\n"
         )
         buff.writeIndentedLines(code % params)
