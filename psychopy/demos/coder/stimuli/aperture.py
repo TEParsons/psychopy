@@ -5,33 +5,61 @@
 Demo for the class psychopy.visual.Aperture().
 
 Draw two gabor circles, one with an irregular aperture and one with no aperture.
+
+The contents of this file are in the public domain.
 """
 
 from psychopy import visual, event
 
-# Need to allowStencil=True for a window with an Aperture:
-win = visual.Window([400, 400], allowStencil=True, units='norm')
+# create a window
+win = visual.Window(
+    [600, 600], 
+    units='norm',
+    # stencil needs to be allowed for Aperture to work
+    allowStencil=True
+)
+# add some instructions
+instr = visual.TextBox2(
+    win, 
+    text="Press any key to quit", 
+    pos=(-0.9, -0.9),
+    anchor="bottom left",
+    alignment="bottom left"
+)
+# track mouse position
+mouse = event.Mouse()
+# add some gratings
+gabor1 = visual.GratingStim(
+    win, 
+    size=2, 
+    sf=4,
+    color="purple"
+)
+gabor2 = visual.GratingStim(
+    win, 
+    size=2, 
+    sf=4,
+    color="yellow"
+)
+# create our aperture - this is the area that's visible
+# the size and shape of the aperture can be controlled in much the same way as a Polygon
+aperture = visual.Aperture(
+    win,
+    size=0.5,
+    shape="circle"
+)
 
-instr = visual.TextStim(win, text="Any key to quit", pos=(0, -.7))
-gabor1 = visual.GratingStim(win, mask='circle', sf=4, size=1.2, color=[0.5, -0.5, 1])
-gabor2 = visual.GratingStim(win, mask='circle', sf=4, size=1.2, color=[-0.5, -0.5, -1])
-vertices = [(-0.02, -0.0), (-.8, .2), (0, .6), (.1, 0.06), (.8, .3), (.6, -.4)]
-
-# `sizes in Aperture refers to the diameter when shape='circle';
-# vertices or other shapes are scaled accordingly
-aperture = visual.Aperture(win, size=0.9, shape=vertices)  # try shape='square'
-aperture.enabled = False  # enabled by default when created
-
-gabor1.draw()
-instr.draw()
-
-# drawing will now only be done within the aperture shape:
-aperture.enabled = True
-gabor2.draw()
-
-win.flip()
-event.waitKeys()
-
-win.close()
-
-# The contents of this file are in the public domain.
+# start a frame loop
+while not event.getKeys():
+    # apertures can be repositioned, so let's make it follow the mouse
+    aperture.pos = mouse.getPos()
+    # draw the purple grating with the aperture disabled - so the whole thing is visible
+    aperture.enabled = False
+    gabor1.draw()
+    # draw the yellow gabor with the aperture enabled - so only the area within the aperture is visible
+    aperture.enabled = True
+    gabor2.draw()
+    # draw instructions and flip the window
+    aperture.enabled = False
+    instr.draw()
+    win.flip()

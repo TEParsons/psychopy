@@ -1,30 +1,49 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from psychopy import core, visual, event
+"""
+Shows how to create gabor patches using GratingStim
 
-# create a window to draw in
-win = visual.Window([400, 400.0], allowGUI=False)
+The contents of this file are in the public domain.
+"""
 
-# INITIALISE SOME STIMULI
-gabor = visual.GratingStim(win, tex="sin", mask="gauss", texRes=256, 
-           size=[1.0, 1.0], sf=[4, 0], ori = 0, name='gabor1')
-gabor.autoDraw = True
-message = visual.TextStim(win, pos=(0.0, -0.9), text='Hit Q to quit')
-trialClock = core.Clock()
+from psychopy import visual, event
 
-# repeat drawing for each frame
-while trialClock.getTime() < 20: 
+# create a window
+win = visual.Window(
+    [600, 600], 
+    units='norm'
+)
+# add some instructions
+instr = visual.TextBox2(
+    win,  
+    text="Press any key to quit", 
+    pos=(-0.9, -0.9),
+    anchor="bottom left",
+    alignment="bottom left"
+)
+# create a grating stim
+gabor = visual.GratingStim(
+    win, 
+    size=[1.0, 1.0],
+    # the waveform of the texture, can be: sin (sine wave), sqr (square wave), saw (sawtooth wave), tri (triangle wave)
+    tex="sin", 
+    # this determines the shape the grating is contained within - "gauss" means a blurry circle
+    mask="gauss", 
+    # a higher resolution texture will use more memory, but look better
+    texRes=256, 
+    # spatial frequency for the grating - this depends on the units
+    sf=[4, 0],
+    # setting ori will rotate the stimulus
+    ori = 0
+)
+
+# start a frame loop
+while not event.getKeys():
+    # each frame, increase the phase, so the pattern moves
     gabor.phase += 0.01
-    message.draw()
-    # handle key presses each frame
-    if event.getKeys(keyList=['escape', 'q']):
-        win.close()
-        core.quit()
-
+    # draw everything
+    gabor.draw()
+    instr.draw()
+    # flip the window
     win.flip()
-
-win.close()
-core.quit()
-
-# The contents of this file are in the public domain.
