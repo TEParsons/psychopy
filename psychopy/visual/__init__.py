@@ -71,6 +71,7 @@ from psychopy.visual.grating import GratingStim
 from psychopy.visual.secondorder import EnvelopeGrating
 from psychopy.visual.movies import MovieStim
 from psychopy.visual.shape import BaseShapeStim
+from psychopy.visual.magnifier import MagnifierStim
 
 # stimuli derived from GratingStim
 from psychopy.visual.bufferimage import BufferImageStim
