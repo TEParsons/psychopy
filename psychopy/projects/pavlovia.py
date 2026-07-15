@@ -1064,7 +1064,7 @@ class PavloviaProject(dict):
         if self.repo is None:
             self.cloneRepo(infoStream)
         try:
-            info = self.repo.git.pull(self.remoteWithToken, 'master')
+            info = self.repo.git.pull(self.remoteWithToken)
             if infoStream:
                 infoStream.write("{}\n".format(info))
         except git.exc.GitCommandError as e:
@@ -1100,7 +1100,7 @@ class PavloviaProject(dict):
         if infoStream:
             infoStream.write("Pushing changes to remote...\n")
         try:
-            info = self.repo.git.push(self.remoteWithToken, 'master')
+            info = self.repo.git.push(self.remoteWithToken)
             if infoStream and len(info):
                 infoStream.write("{}\n".format(info))
         except git.exc.GitCommandError as e:
@@ -1263,6 +1263,8 @@ class PavloviaProject(dict):
         # push
         info = self.repo.git.push('-u', self.remoteWithToken, 'master')
         self.project.attributes['default_branch'] = 'master'
+        # set default push behaviour
+        self.project.config_writer().set_value("push", "default", "current").release()
         if infoStream:
             if len(info):
                 infoStream.write("{}\n".format(info))
