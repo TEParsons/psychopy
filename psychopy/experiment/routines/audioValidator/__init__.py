@@ -154,6 +154,10 @@ class AudioValidatorRoutine(BaseDeviceRoutine):
 
         # validate start time
         code = (
+            "# start validator\n"
+            "if {name}.status == STARTED and %(name)s.status == NOT_STARTED:\n"
+            "    %(name)s.sensor.clearResponses()\n"
+            "    %(name)s.status = STARTED\n"
             "# validate {name} start time\n"
             "if {name}.status == STARTED and %(name)s.status == STARTED:\n"
             "    %(name)s.tStart, %(name)s.tStartDelay = %(name)s.validate(state=True, t={name}.tStartRefresh)\n"
@@ -173,6 +177,9 @@ class AudioValidatorRoutine(BaseDeviceRoutine):
             alert(4160, strFields={'name': stim.name})
         # validate stop time
         code = (
+            "# start validator\n"
+            "if {name}.status == FINISHED and %(name)s.status == NOT_STARTED:\n"
+            "    %(name)s.status = STARTED\n"
             "# validate {name} stop time\n"
             "if {name}.status == FINISHED and %(name)s.status == STARTED:\n"
             "    %(name)s.tStop, %(name)s.tStopDelay = %(name)s.validate(state=False, t={name}.tStopRefresh)\n"

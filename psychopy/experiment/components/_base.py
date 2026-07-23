@@ -487,15 +487,6 @@ class BaseComponent:
                 # use the time ignoring any flips
                 code += f"thisExp.addData('{params['name']}.started', t)\n"
         buff.writeIndentedLines(code)
-        # validate presentation time
-        validator = self.getValidator()
-        if validator:
-            # queue validation
-            code = (
-                "# tell attached validator (%(name)s) to start looking for a start flag\n"
-                "%(name)s.status = STARTED\n"
-            )
-            buff.writeIndentedLines(code % validator.params)
         # Set status
         code = (
             "# update status\n"
@@ -688,18 +679,7 @@ class BaseComponent:
                 # use the time ignoring any flips
                 code += f"thisExp.addData('{params['name']}.stopped', t)\n"
         buff.writeIndentedLines(code)
-
-        # validate presentation time
-        validator = self.getValidator()
-        if validator:
-            # queue validation
-            code = (
-                "# tell attached validator (%(name)s) to start looking for a stop flag\n"
-                "%(name)s.status = STARTED\n"
-            )
-            buff.writeIndentedLines(code % validator.params)
-
-        # Set status
+        # set status
         code = (
             "# update status\n"
             "%(name)s.status = FINISHED\n"
