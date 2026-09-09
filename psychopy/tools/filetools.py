@@ -242,17 +242,6 @@ def openOutputFile(fileName=None, append=False, fileCollisionMethod='rename',
         A writable file handle.
 
     """
-    # on Windows, path parts are automatically stripped of spaces, so strip them here too
-    if sys.platform == "win32":
-        fileName = Path(fileName)
-        fileName = os.path.sep.join([
-            # strip each part of the folder path
-            part.strip() for part in fileName.parent.parts
-        ] + [
-            # strip the file name itself
-            fileName.stem.strip() + fileName.suffix
-        ])
-
     fileName = pathToString(fileName)
     if (fileName is None) or (fileName == 'stdout'):
         return sys.stdout

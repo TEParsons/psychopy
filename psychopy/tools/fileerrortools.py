@@ -8,6 +8,7 @@
 """Functions and classes related to file and directory error handling
 """
 import os
+import sys
 import glob
 from pathlib import Path
 
@@ -26,6 +27,16 @@ def handleFileCollision(fileName, fileCollisionMethod):
             a new file ('trials1.psydat', 'trials2.pysdat' etc) and
             'error' will raise an IOError.
     """
+    # on Windows, path parts are automatically stripped of spaces, so strip them here too
+    if sys.platform == "win32":
+        fileName = Path(fileName)
+        fileName = os.path.sep.join([
+            # strip each part of the folder path
+            part.strip() for part in fileName.parent.parts
+        ] + [
+            # strip the file name itself
+            fileName.stem.strip() + fileName.suffix
+        ])
     if fileCollisionMethod == 'overwrite':
         logging.warning('Data file, %s, will be overwritten' % fileName)
     elif fileCollisionMethod == 'fail':
