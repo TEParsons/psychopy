@@ -18,7 +18,7 @@ from os import path
 from psychopy import logging
 
 from io import StringIO
-from psychopy.experiment.py2js_transpiler import translatePythonToJavaScript
+from .transpiler import translatePythonToJavaScript
 
 
 class TupleTransformer(ast.NodeTransformer):

@@ -16,6 +16,7 @@ The code that writes out a *_lastrun.py experiment file is (in order):
     settings.SettingsComponent.writeEndCode()
 """
 
+import sys
 from .params import getCodeFromParamStr, Param
 from .components import getInitVals, getComponents, getAllComponents
 from .loops import getAllLoopTypes
@@ -24,6 +25,11 @@ from .routines import getAllStandaloneRoutines
 from ._experiment import Experiment
 from .utils import unescapedDollarSign_re, valid_var_re, nonalphanumeric_re
 from psychopy.experiment.utils import CodeGenerationException
+
+
+# alias py2js.transpiler for legacy imports
+from .py2js import transpiler as py2js_transpiler
+sys.modules[__name__ + ".py2js_transpiler"] = py2js_transpiler
 
 
 def getAllElements(fetchIcons=True):
