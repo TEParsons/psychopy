@@ -11,7 +11,7 @@ import re
 from .base import JSNode
 from .operators import JSLeftSideUnaryOp
 from ..processor.util import delimited, delimited_multi_line
-from . util import _check_keywords
+from .util import _check_keywords
 
 
 class JSExpression(JSNode):

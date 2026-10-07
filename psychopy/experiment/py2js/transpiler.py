@@ -8,7 +8,7 @@
 import ast
 import sys
 import re
-from .javascripthon import translates
+from psychopy.contrib.javascripthon import translates
 import astunparse
 
 
