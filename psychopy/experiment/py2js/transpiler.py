@@ -8,12 +8,7 @@
 import ast
 import sys
 import re
-
-try:
-    from metapensiero.pj.api import translates
-except ImportError:
-    translates = None # metapensiero not installed
-
+from .javascripthon import translates
 import astunparse
 
 
